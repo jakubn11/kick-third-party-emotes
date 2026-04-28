@@ -9,6 +9,7 @@ Safari userscript that adds **BetterTTV**, **7TV**, and **FrankerFaceZ** emotes 
 - Animated emote support (GIF)
 - Zero-width 7TV emote overlays
 - Autocomplete popup when typing in chat (prefix match, keyboard navigation)
+- Native Kick emote picker integration with a third-party emotes tab
 - Hover tooltips showing emote name and provider
 - 1-hour localStorage cache to avoid redundant API requests
 - Works with Kick's SPA routing — no full page reload needed between channels
@@ -40,6 +41,8 @@ Provider failures are isolated — if one fails, the others still load.
 ## Usage
 
 Open any Kick channel. Emotes load automatically and replace matching words in chat. Type an emote name in the chat input to trigger autocomplete.
+
+You can also open Kick's native emote picker and choose the **7TV+** tab to browse or search loaded third-party emotes. Clicking an emote inserts its text code into chat, and the emote list scrolls independently like Kick's native picker tabs.
 
 | Key | Action |
 |-----|--------|
