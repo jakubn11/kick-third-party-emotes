@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.4.6
+// @version      2.4.7
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -998,6 +998,11 @@
     if (nativeTab) tab.className = nativeTab.className;
 
     tab.appendChild(pickerBuildTabIcon());
+
+    const label = document.createElement('span');
+    label.className = 'text-xs font-medium text-neutral-400';
+    label.textContent = '3PE';
+    tab.appendChild(label);
 
     const underline = document.createElement('div');
     underline.className = 'betterhover:group-hover:bg-[#475054] z-common h-0.5 w-full transition-colors duration-300 group-data-[active=true]:!bg-green-500';
