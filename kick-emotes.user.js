@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.3.4
+// @version      2.4.0
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
+// @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxODE4MWIiLz4KICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjJjNTVlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIyMyIgY3k9IjI1IiByPSI0IiBmaWxsPSIjMjJjNTVlIi8+CiAgPGNpcmNsZSBjeD0iNDEiIGN5PSIyNSIgcj0iNCIgZmlsbD0iIzIyYzU1ZSIvPgogIDxwYXRoIGQ9Ik0yMCAzOCBRMzIgNDkgNDQgMzgiIHN0cm9rZT0iIzIyYzU1ZSIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==
 // @match        https://kick.com/*
 // @grant        GM_xmlhttpRequest
 // @connect      api.betterttv.net
@@ -205,12 +206,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #efeff1;
       background: #24282c;
-      font-size: 9px;
-      font-weight: 800;
-      font-family: sans-serif;
-      line-height: 1;
+      flex-shrink: 0;
+    }
+    .kte-picker-underline {
+      height: 2px;
+      width: 100%;
+      background: transparent;
+      transition: background-color 300ms;
+    }
+    #kte-picker-tab:hover .kte-picker-underline {
+      background: #475054;
+    }
+    #kte-picker-tab[data-active="true"] .kte-picker-underline {
+      background: #22c55e !important;
     }
     #kte-picker-content {
       min-height: 140px;
@@ -974,6 +983,34 @@
     pickerApplyActiveState(panel);
   }
 
+  function pickerBuildTabIcon() {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 20 20');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('aria-hidden', 'true');
+
+    const addCircle = (cx, cy, r, fill) => {
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', cx); c.setAttribute('cy', cy);
+      c.setAttribute('r', r);   c.setAttribute('fill', fill);
+      svg.appendChild(c);
+    };
+    addCircle(7.5, 8, 2, '#efeff1');   // left eye
+    addCircle(12.5, 8, 2, '#efeff1');  // right eye
+
+    const mouth = document.createElementNS(ns, 'path');
+    mouth.setAttribute('d', 'M6 13 Q10 17.5 14 13');
+    mouth.setAttribute('stroke', '#efeff1');
+    mouth.setAttribute('stroke-width', '1.8');
+    mouth.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(mouth);
+
+    return svg;
+  }
+
   function pickerBuildTab(nativeTab) {
     const tab = document.createElement('button');
     tab.id = 'kte-picker-tab';
@@ -985,10 +1022,10 @@
 
     const label = document.createElement('span');
     label.className = 'kte-picker-tab-label';
-    label.textContent = '7TV+';
+    label.appendChild(pickerBuildTabIcon());
 
     const underline = document.createElement('div');
-    underline.className = 'betterhover:group-hover:bg-[#475054] z-common h-0.5 w-full transition-colors duration-300 group-data-[active=true]:!bg-green-500';
+    underline.className = 'kte-picker-underline';
 
     tab.append(label, underline);
     return tab;

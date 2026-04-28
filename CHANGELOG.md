@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.0] - 2026-04-28
+
+### Added
+- Project icon (`icon.svg`): green emote face on dark rounded background, using Kick's green (#22c55e).
+- `@icon` metadata in the userscript — Tampermonkey/Userscripts now shows the icon next to the script name.
+- Emote picker tab now shows the icon (inline SVG face) instead of the "7TV+" text badge.
+
+### Fixed
+- Green underline on the picker tab was unreliable — it depended on Tailwind's `group-data-[active]` variant which requires an ancestor with the `group` class. Replaced with a direct CSS selector (`#kte-picker-tab[data-active="true"] .kte-picker-underline`) that works unconditionally, matching the full-width style of native tabs.
+
 ## [2.3.4] - 2026-04-28
 
 ### Fixed
