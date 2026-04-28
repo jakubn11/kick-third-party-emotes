@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.3.2
+// @version      2.3.3
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -749,6 +749,7 @@
   function pickerFillChunked(grid, emotes) {
     let i = 0;
     function step() {
+      if (!grid.isConnected) return; // grid was replaced — stop the chain
       const frag = document.createDocumentFragment();
       const end = Math.min(i + PICKER_CHUNK, emotes.length);
       for (; i < end; i++) {
@@ -913,7 +914,7 @@
         io.unobserve(entry.target);
         entry.target.classList.remove('kte-picker-section--pending');
         const data = sectionEmotesMap.get(entry.target);
-        if (data) pickerFillChunked(data.grid, data.emotes);
+        if (data?.grid.isConnected) pickerFillChunked(data.grid, data.emotes);
       }
     }, { rootMargin: '80px 0px' });
     pending.forEach(s => io.observe(s));

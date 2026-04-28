@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.3] - 2026-04-28
+
+### Fixed
+- Progressive lag when the emote picker stays open. Each time Kick re-rendered the picker panel, `pickerRefreshContent` replaced the content but the `requestIdleCallback` chain from the previous render kept firing indefinitely (the grid was detached but `isConnected` was never checked). Over time multiple orphaned chains accumulated. Fixed by bailing out of each chunk step when `grid.isConnected` is false.
+
 ## [2.3.2] - 2026-04-28
 
 ### Changed
