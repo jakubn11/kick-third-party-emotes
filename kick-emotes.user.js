@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.4.9
+// @version      2.4.10
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -203,6 +203,11 @@
       padding: 4px 20px 12px;
       color: #efeff1;
       font-family: sans-serif;
+      box-sizing: border-box;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
     }
     .kte-picker-section--pending .kte-picker-provider {
       display: none;
@@ -857,6 +862,19 @@
     return null;
   }
 
+  function pickerFindScrollViewport(mainGrid, panel) {
+    let el = mainGrid;
+    while (el && el !== panel) {
+      const className = typeof el.className === 'string' ? el.className : '';
+      const overflowY = getComputedStyle(el).overflowY;
+      if (className.includes('overflow-y-auto') || className.includes('overflow-y-scroll') || /auto|scroll/.test(overflowY)) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return panel;
+  }
+
   function pickerFindParts(panel) {
     const tabButtons = [...panel.querySelectorAll('button[data-active]')];
     const tabsRow = tabButtons
@@ -876,13 +894,68 @@
     }
 
     if (!header || !mainGrid || header === panel || !mainGrid.contains(header)) return null;
-    return { tabsRow, header, mainGrid, searchInput };
+    return {
+      tabsRow,
+      header,
+      mainGrid,
+      searchInput,
+      scrollViewport: pickerFindScrollViewport(mainGrid, panel),
+    };
   }
 
   function pickerNativeViews(parts, pickerContent) {
     return [...parts.mainGrid.children].filter(child => (
       child !== parts.header && child !== pickerContent
     ));
+  }
+
+  function pickerLockElementHeight(el) {
+    if (!el || el._kteHeightLock) return;
+    const rect = el.getBoundingClientRect();
+    if (!rect.height) return;
+    el._kteHeightLock = {
+      height: el.style.height,
+      minHeight: el.style.minHeight,
+      maxHeight: el.style.maxHeight,
+    };
+    const height = `${Math.round(rect.height)}px`;
+    el.style.height = height;
+    el.style.minHeight = height;
+    el.style.maxHeight = height;
+  }
+
+  function pickerUnlockElementHeight(el) {
+    if (!el?._kteHeightLock) return;
+    el.style.height = el._kteHeightLock.height;
+    el.style.minHeight = el._kteHeightLock.minHeight;
+    el.style.maxHeight = el._kteHeightLock.maxHeight;
+    delete el._kteHeightLock;
+  }
+
+  function pickerLockSize(panel, parts) {
+    pickerLockElementHeight(panel);
+    pickerLockElementHeight(parts.scrollViewport);
+  }
+
+  function pickerUnlockSize(panel, parts) {
+    pickerUnlockElementHeight(parts?.scrollViewport);
+    pickerUnlockElementHeight(panel);
+  }
+
+  function pickerFitContent(panel, parts, content) {
+    if (!content || content.hidden || !content.isConnected) return;
+
+    content.style.height = '';
+    const viewport = parts.scrollViewport ?? panel;
+    const viewportRect = viewport.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    const viewportStyle = getComputedStyle(viewport);
+    const bottomPadding = parseFloat(viewportStyle.paddingBottom) || 0;
+    const available = Math.floor(viewportRect.bottom - contentRect.top - bottomPadding);
+
+    if (Number.isFinite(available) && available > 0) {
+      content.style.height = `${available}px`;
+    }
   }
 
   function pickerObserveSections(content) {
@@ -897,7 +970,7 @@
         const data = sectionEmotesMap.get(entry.target);
         if (data?.grid.isConnected) pickerFillChunked(data.grid, data.emotes);
       }
-    }, { rootMargin: '80px 0px' });
+    }, { root: content, rootMargin: '80px 0px' });
     pending.forEach(s => io.observe(s));
     content._kteIO = io;
   }
@@ -910,14 +983,20 @@
     oldContent?._kteIO?.disconnect();
 
     const tab = panel.querySelector('#kte-picker-tab');
+    const active = tab?.getAttribute('data-active') === 'true';
+    if (active) pickerLockSize(panel, parts);
+
     const content = pickerBuildContent(parts.searchInput?.value ?? '');
     content.dataset.kteChannel = channelSlug ?? '';
-    content.hidden = tab?.getAttribute('data-active') !== 'true';
+    content.hidden = !active;
 
     if (oldContent) oldContent.replaceWith(content);
     else parts.mainGrid.appendChild(content);
 
-    if (!content.hidden) pickerObserveSections(content);
+    if (!content.hidden) {
+      pickerFitContent(panel, parts, content);
+      pickerObserveSections(content);
+    }
     return content;
   }
 
@@ -931,8 +1010,9 @@
 
     if (content) {
       content.hidden = !active;
-      if (active) pickerObserveSections(content);
+      if (!active) content.style.height = '';
     }
+    if (active) pickerLockSize(panel, parts);
     for (const child of pickerNativeViews(parts, content)) {
       if (active) {
         child.dataset.kteNativeHidden = '1';
@@ -941,6 +1021,12 @@
         child.hidden = false;
         delete child.dataset.kteNativeHidden;
       }
+    }
+    if (content && active) {
+      pickerFitContent(panel, parts, content);
+      pickerObserveSections(content);
+    } else if (!active) {
+      pickerUnlockSize(panel, parts);
     }
   }
 
@@ -1067,6 +1153,8 @@
 
     const panel = document.getElementById('chat-emotes-picker-panel');
     if (!panel) return;
+    const parts = pickerFindParts(panel);
+    pickerUnlockSize(panel, parts);
     panel.querySelectorAll('[data-kte-native-hidden="1"]').forEach(child => {
       child.hidden = false;
       delete child.dataset.kteNativeHidden;

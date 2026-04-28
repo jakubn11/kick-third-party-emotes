@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.10] - 2026-04-28
+
+### Fixed
+- The **7TV+** picker tab now keeps scrolling contained to the emote list without changing the picker height. The injected picker content locks to the existing native picker viewport and uses that internal scroller for lazy-loading provider sections.
+
 ## [2.4.9] - 2026-04-28
 
 ### Fixed
