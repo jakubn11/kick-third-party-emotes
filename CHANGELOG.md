@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 7TV: global emote set and per-channel emote sets (webp/avif preferred).
 - FrankerFaceZ: global sets and per-channel room emotes.
 
-## [1.0.0] - ????-??-??
+## [1.0.0] - 2026-04-28
 
-_Initial release. Fill in date and details from git history._
+### Added
+- Initial release.
