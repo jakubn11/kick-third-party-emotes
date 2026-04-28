@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.2] - 2026-04-28
+
+### Changed
+- Emote picker provider sections beyond the first are now lazily rendered using `IntersectionObserver`. DOM nodes for off-screen providers are only created when the user scrolls them into view (with an 80px pre-load margin). Each pending section reserves `160px` of height so the scrollbar stays accurate. IO is disconnected and recreated whenever the picker content is replaced (e.g. on search).
+
 ## [2.3.1] - 2026-04-28
 
 ### Fixed

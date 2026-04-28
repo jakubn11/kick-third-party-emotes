@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.3.1
+// @version      2.3.2
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -77,6 +77,7 @@
   // emote value shape: { url, source, animated, zeroWidth }
   /** @type {Map<string, {url:string, source:string, animated:boolean, zeroWidth:boolean}>} */
   const emoteMap = new Map();
+  const sectionEmotesMap = new WeakMap(); // section el → emotes[], for IO lazy fill
 
   let channelSlug  = null;
   let chatObserver = null;
@@ -267,6 +268,9 @@
     .kte-picker-section {
       content-visibility: auto;
       contain-intrinsic-size: 0 280px;
+    }
+    .kte-picker-section--pending {
+      min-height: 160px;
     }
   `;
   (document.head ?? document.documentElement).appendChild(_style);
@@ -820,6 +824,7 @@
     });
 
     let any = false;
+    let firstRendered = false;
     for (const [source, emotes] of orderedGroups) {
       if (!emotes.length) continue;
       any = true;
@@ -835,10 +840,19 @@
 
       const grid = document.createElement('div');
       grid.className = 'kte-picker-grid';
-      // Event delegation — one listener pair per grid instead of per button.
       grid.addEventListener('mousedown', e => { if (e.target.closest('.kte-picker-btn')) e.preventDefault(); });
       grid.addEventListener('click',     e => { const b = e.target.closest('.kte-picker-btn'); if (b?.dataset.code) pickerInsert(b.dataset.code); });
-      pickerFillChunked(grid, emotes);
+
+      if (!firstRendered) {
+        // First provider: start chunked fill immediately (it's already in view).
+        pickerFillChunked(grid, emotes);
+        firstRendered = true;
+      } else {
+        // Remaining providers: defer until scrolled into view.
+        section.classList.add('kte-picker-section--pending');
+        sectionEmotesMap.set(section, { grid, emotes });
+      }
+
       section.appendChild(grid);
       wrap.appendChild(section);
     }
@@ -889,11 +903,30 @@
     ));
   }
 
+  function pickerObserveSections(content) {
+    if (content._kteIO) return;
+    const pending = [...content.querySelectorAll('.kte-picker-section--pending')];
+    if (!pending.length) return;
+    const io = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        io.unobserve(entry.target);
+        entry.target.classList.remove('kte-picker-section--pending');
+        const data = sectionEmotesMap.get(entry.target);
+        if (data) pickerFillChunked(data.grid, data.emotes);
+      }
+    }, { rootMargin: '80px 0px' });
+    pending.forEach(s => io.observe(s));
+    content._kteIO = io;
+  }
+
   function pickerRefreshContent(panel) {
     const parts = pickerFindParts(panel);
     if (!parts) return null;
 
     const oldContent = panel.querySelector('#kte-picker-content');
+    oldContent?._kteIO?.disconnect();
+
     const tab = panel.querySelector('#kte-picker-tab');
     const content = pickerBuildContent(parts.searchInput?.value ?? '');
     content.dataset.kteChannel = channelSlug ?? '';
@@ -901,6 +934,8 @@
 
     if (oldContent) oldContent.replaceWith(content);
     else parts.mainGrid.appendChild(content);
+
+    if (!content.hidden) pickerObserveSections(content);
     return content;
   }
 
@@ -912,7 +947,10 @@
     const content = panel.querySelector('#kte-picker-content');
     const active = tab?.getAttribute('data-active') === 'true';
 
-    if (content) content.hidden = !active;
+    if (content) {
+      content.hidden = !active;
+      if (active) pickerObserveSections(content);
+    }
     for (const child of pickerNativeViews(parts, content)) {
       if (active) {
         child.dataset.kteNativeHidden = '1';
