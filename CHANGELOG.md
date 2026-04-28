@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.9] - 2026-04-28
+
+### Fixed
+- Provider section headers in the emote picker now have the same spacing above them as native Kick picker sections. Each section uses `grid gap-2` (matching Kick's `div.grid.gap-2` structure), and all sections are wrapped in a `grid gap-2` container for consistent inter-section gaps. Removed the manual `margin: 10px 0 5px` from `.kte-picker-provider`.
+
 ## [2.4.0] - 2026-04-28
 
 ### Added

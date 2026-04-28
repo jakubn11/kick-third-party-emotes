@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.4.8
+// @version      2.4.9
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -210,7 +210,6 @@
     #kte-picker-content[hidden] { display: none !important; }
     .kte-picker-provider {
       display: block;
-      margin: 10px 0 5px;
     }
     .kte-picker-grid {
       display: flex;
@@ -785,6 +784,8 @@
   function pickerBuildContent(query) {
     const wrap  = document.createElement('div');
     wrap.id     = 'kte-picker-content';
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.className = 'grid gap-2';
 
     const lower = (query ?? '').trim().toLowerCase();
     const groups = new Map();
@@ -810,7 +811,7 @@
       emotes.sort((a, b) => a.code.localeCompare(b.code));
 
       const section = document.createElement('div');
-      section.className = 'kte-picker-section';
+      section.className = 'kte-picker-section grid gap-2';
 
       const hdr = document.createElement('span');
       hdr.className = 'kte-picker-provider text-xs font-medium text-neutral-400';
@@ -833,7 +834,7 @@
       }
 
       section.appendChild(grid);
-      wrap.appendChild(section);
+      sectionsContainer.appendChild(section);
     }
 
     if (!any) {
@@ -841,6 +842,8 @@
       msg.className = 'kte-picker-empty';
       msg.textContent   = query ? 'No matching emotes' : 'Emotes loading…';
       wrap.appendChild(msg);
+    } else {
+      wrap.appendChild(sectionsContainer);
     }
     return wrap;
   }
