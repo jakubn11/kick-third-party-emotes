@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.2.1
+// @version      2.3.0
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -77,7 +77,6 @@
   // emote value shape: { url, source, animated, zeroWidth }
   /** @type {Map<string, {url:string, source:string, animated:boolean, zeroWidth:boolean}>} */
   const emoteMap = new Map();
-  const PICKER_MAX_PER_PROVIDER = 240;
 
   let channelSlug  = null;
   let chatObserver = null;
@@ -265,12 +264,9 @@
       padding: 18px 8px;
       margin: 0;
     }
-    .kte-picker-limit {
-      color: #71717a;
-      font-size: 11px;
-      line-height: 1.35;
-      margin: 12px 0 2px;
-      text-align: center;
+    .kte-picker-section {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 280px;
     }
   `;
   (document.head ?? document.documentElement).appendChild(_style);
@@ -790,24 +786,23 @@
     });
 
     let any = false;
-    let totalMatches = 0;
-    let renderedMatches = 0;
     for (const [source, emotes] of orderedGroups) {
       if (!emotes.length) continue;
       any = true;
       emotes.sort((a, b) => a.code.localeCompare(b.code));
-      totalMatches += emotes.length;
-      const visibleEmotes = emotes.slice(0, PICKER_MAX_PER_PROVIDER);
-      renderedMatches += visibleEmotes.length;
+
+      const section = document.createElement('div');
+      section.className = 'kte-picker-section';
 
       const hdr = document.createElement('div');
       hdr.className = 'kte-picker-provider';
       hdr.textContent = `${source} (${emotes.length})`;
-      wrap.appendChild(hdr);
+      section.appendChild(hdr);
 
       const grid = document.createElement('div');
       grid.className = 'kte-picker-grid';
-      for (const { code, emote } of visibleEmotes) {
+      const frag = document.createDocumentFragment();
+      for (const { code, emote } of emotes) {
         const btn = document.createElement('button');
         btn.type  = 'button';
         btn.className = 'kte-picker-btn';
@@ -824,16 +819,11 @@
         btn.appendChild(img);
         btn.addEventListener('mousedown', e => e.preventDefault());
         btn.addEventListener('click', () => pickerInsert(code));
-        grid.appendChild(btn);
+        frag.appendChild(btn);
       }
-      wrap.appendChild(grid);
-    }
-
-    if (renderedMatches < totalMatches) {
-      const limit = document.createElement('p');
-      limit.className = 'kte-picker-limit';
-      limit.textContent = `Showing ${renderedMatches} of ${totalMatches} matches. Search to narrow.`;
-      wrap.appendChild(limit);
+      grid.appendChild(frag);
+      section.appendChild(grid);
+      wrap.appendChild(section);
     }
 
     if (!any) {

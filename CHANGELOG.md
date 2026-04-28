@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.0] - 2026-04-28
+
+### Changed
+- Native emote picker now shows all emotes for every provider instead of capping at 240 per provider.
+- Each provider section wrapped in a `content-visibility: auto` container so the browser skips layout and paint for off-screen sections, keeping scrolling fast even with large emote sets.
+- Grid buttons built with `DocumentFragment` and inserted in one DOM operation per provider to reduce reflow overhead.
+
 ## [2.1.3] - 2026-04-28
 
 ### Fixed
