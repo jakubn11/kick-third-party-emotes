@@ -113,3 +113,11 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
 
 Keep docs oriented around Safari and the Userscripts extension unless support for another host is explicitly added.
+
+## Before Every Commit
+
+Before committing any change, always:
+
+1. **Bump `@version`** in the `kick-emotes.user.js` metadata header (patch for fixes/tweaks, minor for new features).
+2. **Update `CHANGELOG.md`** — add an entry under the new version with a short summary of what changed.
+3. **Update `README.md`** — reflect any user-visible behavior, feature additions, or removed functionality.

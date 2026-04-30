@@ -47,7 +47,7 @@ You can also open Kick's native emote picker and choose the **7TV+** tab to brow
 | Key | Action |
 |-----|--------|
 | ↑ / ↓ | Navigate suggestions |
-| Tab or Enter | Insert selected emote |
+| Tab | Insert selected emote (auto-inserts if only one match) |
 | Esc | Close autocomplete |
 
 ## Troubleshooting
