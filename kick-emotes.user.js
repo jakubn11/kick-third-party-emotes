@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.23
+// @version      2.6.24
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -208,12 +208,15 @@
       white-space: nowrap;
     }
     .kte-ac-src {
-      color: #22c55e;
       font-size: 10px;
       font-weight: 700;
       flex-shrink: 0;
-      opacity: .7;
+      opacity: .85;
     }
+    .kte-ac-src-7tv  { color: #4da6ff; }
+    .kte-ac-src-bttv { color: #ff6b6b; }
+    .kte-ac-src-ffz  { color: #c084fc; }
+    .kte-ac-src-other { color: #22c55e; }
     #kte-ac-footer {
       font-size: 10px;
       font-weight: 600;
@@ -796,8 +799,10 @@
       nameEl.textContent = code;
 
       const srcEl = document.createElement('span');
-      srcEl.className = 'kte-ac-src';
-      srcEl.textContent = emote.source.split(' ')[0];
+      const srcName = emote.source.split(' ')[0];
+      const srcClass = { '7TV': 'kte-ac-src-7tv', 'BTTV': 'kte-ac-src-bttv', 'FFZ': 'kte-ac-src-ffz' }[srcName] ?? 'kte-ac-src-other';
+      srcEl.className = `kte-ac-src ${srcClass}`;
+      srcEl.textContent = srcName;
 
       row.append(img, nameEl, srcEl);
       row.addEventListener('mousedown', e => { e.preventDefault(); acCommit(code); });

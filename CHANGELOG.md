@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.24] - 2026-05-02
+
+### Changed
+- Color-code provider badges in the autocomplete popup: 7TV in blue, BTTV in red, FFZ in purple.
+
 ## [2.6.23] - 2026-05-02
 
 ### Security
