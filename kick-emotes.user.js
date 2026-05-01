@@ -5,7 +5,7 @@
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
-// @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxODE4MWIiLz4KICA8Y2lyY2xlIGN4PSIzMiIgY3k9IjMwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjJjNTVlIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIyMyIgY3k9IjI1IiByPSI0IiBmaWxsPSIjMjJjNTVlIi8+CiAgPGNpcmNsZSBjeD0iNDEiIGN5PSIyNSIgcj0iNCIgZmlsbD0iIzIyYzU1ZSIvPgogIDxwYXRoIGQ9Ik0yMCAzOCBRMzIgNDkgNDQgMzgiIHN0cm9rZT0iIzIyYzU1ZSIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==
+// @icon         data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMDEwMTMiLz48cmVjdCB4PSIxNCIgeT0iMTQiIHdpZHRoPSIzNiIgaGVpZ2h0PSIzNiIgcng9IjEyIiBmaWxsPSIjMjJjNTVlIi8+PGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iNCIgZmlsbD0iIzEwMTAxMyIvPjxjaXJjbGUgY3g9IjM5IiBjeT0iMjUiIHI9IjQiIGZpbGw9IiMxMDEwMTMiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjM5IiByPSI0IiBmaWxsPSIjMTAxMDEzIi8+PGNpcmNsZSBjeD0iMzkiIGN5PSIzOSIgcj0iNCIgZmlsbD0iIzEwMTAxMyIvPjwvc3ZnPg==
 // @match        https://kick.com/*
 // @grant        GM_xmlhttpRequest
 // @connect      api.betterttv.net
