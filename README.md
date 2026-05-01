@@ -35,6 +35,9 @@
 
 ## Requirements
 
+The script works with any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, etc.) but is developed and tested on **Safari + Userscripts** only. Other browsers and managers may work but are untested.
+
+**Recommended setup:**
 - macOS with Safari
 - [Userscripts](https://apps.apple.com/app/userscripts/id1463298887) extension (free, by Justin Wasack)
 
