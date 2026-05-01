@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.21
+// @version      2.6.22
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -297,8 +297,8 @@
       height: 16px;
       border-radius: 999px;
       background:
-        linear-gradient(#101512, #101512) center / 9px 2px no-repeat,
-        linear-gradient(#101512, #101512) center / 2px 9px no-repeat,
+        linear-gradient(#101013, #101013) center / 9px 2px no-repeat,
+        linear-gradient(#101013, #101013) center / 2px 9px no-repeat,
         #22c55e;
       display: inline-flex;
       align-items: center;
@@ -1158,7 +1158,7 @@
       dot.setAttribute('cx', cx);
       dot.setAttribute('cy', cy);
       dot.setAttribute('r', '2.2');
-      dot.setAttribute('fill', '#101512');
+      dot.setAttribute('fill', '#101013');
       svg.appendChild(dot);
     };
     addDot('10', '10');

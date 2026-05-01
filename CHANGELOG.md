@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.22] - 2026-05-02
+
+### Fixed
+- Replace stale `#101512` (greenish-black) with the correct `#101013` background in the picker tab icon dots and Load More button cross — consistent with all other UI components.
+
 ## [2.6.21] - 2026-05-02
 
 ### Changed
