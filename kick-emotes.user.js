@@ -28,11 +28,11 @@
     'subscriptions', 'notifications', 'messages', 'wallet',
   ]);
 
-  const BTTV_CDN    = 'https://cdn.betterttv.net/emote';
-  const BTTV_API    = 'https://api.betterttv.net/3';
+  const BTTV_CDN = 'https://cdn.betterttv.net/emote';
+  const BTTV_API = 'https://api.betterttv.net/3';
   const SEVENTV_API = 'https://7tv.io/v3';
   const SEVENTV_GQL = 'https://7tv.io/v4/gql';
-  const FFZ_API     = 'https://api.frankerfacez.com/v1';
+  const FFZ_API = 'https://api.frankerfacez.com/v1';
 
   const ALLOWED_CDN_HOSTS = new Set([
     'cdn.betterttv.net',
@@ -93,19 +93,19 @@
   const emoteMap = new Map(); // code → { url, source, animated, zeroWidth }
   const memoryCache = new Map(); // provider key → entries, avoids sync localStorage parse on SPA nav
 
-  let channelSlug        = null;
-  let chatObserver       = null;
-  let inputObserver      = null;
-  let initSeq            = 0;
-  let emoteVersion       = 0;
+  let channelSlug = null;
+  let chatObserver = null;
+  let inputObserver = null;
+  let initSeq = 0;
+  let emoteVersion = 0;
   let pickerInjectQueued = false;
-  let lastPath           = location.pathname;
+  let lastPath = location.pathname;
 
   let acDropdown = null;
   let acFocusIdx = -1;
-  let acMatches  = [];
-  let acInput    = null;
-  let tipEl      = null;
+  let acMatches = [];
+  let acInput = null;
+  let tipEl = null;
 
   // ─── Styles ───────────────────────────────────────────────────────────────
 
@@ -377,16 +377,16 @@
     if (animated) {
       // For animated emotes prefer GIF (universally supported) over animated WebP.
       // 7TV v4 uses _static suffix for frozen first-frame variants — avoid those.
-      return images.find(i => i.mime === 'image/gif'  && i.scale === 2)
-          ?? images.find(i => i.mime === 'image/gif')
-          ?? images.find(i => i.mime === 'image/webp' && i.scale === 2 && !i.url.includes('_static'))
-          ?? images.find(i => i.mime === 'image/webp' && !i.url.includes('_static'))
-          ?? images[0];
+      return images.find(i => i.mime === 'image/gif' && i.scale === 2)
+        ?? images.find(i => i.mime === 'image/gif')
+        ?? images.find(i => i.mime === 'image/webp' && i.scale === 2 && !i.url.includes('_static'))
+        ?? images.find(i => i.mime === 'image/webp' && !i.url.includes('_static'))
+        ?? images[0];
     }
     return images.find(i => i.mime === 'image/webp' && i.scale === 2)
-        ?? images.find(i => i.scale === 2)
-        ?? images.find(i => i.mime === 'image/webp')
-        ?? images[0];
+      ?? images.find(i => i.scale === 2)
+      ?? images.find(i => i.mime === 'image/webp')
+      ?? images[0];
   }
 
   // ─── Cache-aware load helper ──────────────────────────────────────────────
@@ -457,10 +457,10 @@
         if (!host) continue;
         const animated = e.data?.animated ?? false;
         const file = animated
-          ? (host.files?.find(f => f.name === '2x.gif')   ?? host.files?.find(f => f.format === 'GIF')
-          ?? host.files?.find(f => f.name === '2x.webp')  ?? host.files?.[0])
-          : (host.files?.find(f => f.name === '2x.webp')  ?? host.files?.find(f => f.name === '2x.avif')
-          ?? host.files?.[0]);
+          ? (host.files?.find(f => f.name === '2x.gif') ?? host.files?.find(f => f.format === 'GIF')
+            ?? host.files?.find(f => f.name === '2x.webp') ?? host.files?.[0])
+          : (host.files?.find(f => f.name === '2x.webp') ?? host.files?.find(f => f.name === '2x.avif')
+            ?? host.files?.[0]);
         if (!file) continue;
         // ActiveEmoteFlag.ZeroWidth = 1 << 8 = 256 on the emote-set entry flags
         entries.push([e.name, {
@@ -491,7 +491,7 @@
         const items = res?.data?.users?.search?.items ?? [];
         const slugLower = slug.toLowerCase();
         const user =
-          items.find(u => u.connections?.some(c => c.platform === 'KICK'   && c.platformUsername.toLowerCase() === slugLower)) ??
+          items.find(u => u.connections?.some(c => c.platform === 'KICK' && c.platformUsername.toLowerCase() === slugLower)) ??
           items.find(u => u.connections?.some(c => c.platform === 'TWITCH' && c.platformUsername.toLowerCase() === slugLower));
         if (!user) return [];
         const emotes = user.style?.activeEmoteSet?.emotes?.items ?? [];
@@ -722,8 +722,8 @@
     acDropdown?.remove();
     acDropdown = null;
     acFocusIdx = -1;
-    acMatches  = [];
-    acInput    = null;
+    acMatches = [];
+    acInput = null;
   }
 
   function acSetFocus(idx) {
@@ -739,9 +739,9 @@
     acInput.focus();
 
     if (acInput.tagName === 'TEXTAREA' || acInput.tagName === 'INPUT') {
-      const pos   = acInput.selectionStart ?? acInput.value.length;
-      const head  = acInput.value.slice(0, pos).replace(/\S+$/, '');
-      const tail  = acInput.value.slice(pos);
+      const pos = acInput.selectionStart ?? acInput.value.length;
+      const head = acInput.value.slice(0, pos).replace(/\S+$/, '');
+      const tail = acInput.value.slice(pos);
       acInput.value = head + code + ' ' + tail;
       const newPos = head.length + code.length + 1;
       acInput.setSelectionRange(newPos, newPos);
@@ -751,9 +751,9 @@
       const sel = window.getSelection();
       if (sel?.rangeCount) {
         const range = sel.getRangeAt(0);
-        const node  = range.startContainer;
+        const node = range.startContainer;
         if (node.nodeType === Node.TEXT_NODE) {
-          const offset    = range.startOffset;
+          const offset = range.startOffset;
           const wordStart = node.textContent.slice(0, offset).search(/\S+$/);
           if (wordStart >= 0) {
             const wr = document.createRange();
@@ -774,11 +774,11 @@
     acHide();
     if (!matches.length) return;
     acMatches = matches;
-    acInput   = inputEl;
+    acInput = inputEl;
 
-    const rect  = inputEl.getBoundingClientRect();
+    const rect = inputEl.getBoundingClientRect();
     const popup = document.createElement('div');
-    popup.id    = 'kte-ac';
+    popup.id = 'kte-ac';
 
     const header = document.createElement('div');
     header.id = 'kte-ac-header';
@@ -821,15 +821,15 @@
   }
 
   function acOnInput(e) {
-    const word    = acWordBeforeCursor(e.currentTarget);
+    const word = acWordBeforeCursor(e.currentTarget);
     const matches = acSearch(word);
     matches.length ? acRender(matches, e.currentTarget) : acHide();
   }
 
   function acOnKeydown(e) {
     if (!acDropdown) return;
-    if (e.key === 'ArrowDown')  { e.preventDefault(); acSetFocus(Math.min(acFocusIdx + 1, acMatches.length - 1)); }
-    else if (e.key === 'ArrowUp')   { e.preventDefault(); acSetFocus(Math.max(acFocusIdx - 1, 0)); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); acSetFocus(Math.min(acFocusIdx + 1, acMatches.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); acSetFocus(Math.max(acFocusIdx - 1, 0)); }
     else if (e.key === 'Tab') {
       if (acMatches.length === 1) { e.preventDefault(); acCommit(acMatches[0].code); }
       else if (acFocusIdx >= 0 && acMatches[acFocusIdx]) { e.preventDefault(); acCommit(acMatches[acFocusIdx].code); }
@@ -840,14 +840,14 @@
   function attachAutocomplete(el) {
     if (el._kteAC) return;
     el._kteAC = true;
-    el.addEventListener('input',   acOnInput);
+    el.addEventListener('input', acOnInput);
     el.addEventListener('keydown', acOnKeydown);
     // Lexical intercepts beforeinput for deletions so input doesn't always fire;
     // keyup is a reliable fallback for backspace/delete.
     el.addEventListener('keyup', e => {
       if (e.key === 'Backspace' || e.key === 'Delete') acOnInput(e);
     });
-    el.addEventListener('blur',    () => setTimeout(acHide, 150));
+    el.addEventListener('blur', () => setTimeout(acHide, 150));
     console.log(`${TAG} Autocomplete attached`);
   }
 
@@ -875,20 +875,20 @@
 
   function pickerBuildButton(code, emote) {
     const btn = document.createElement('button');
-    btn.type      = 'button';
+    btn.type = 'button';
     btn.className = 'kte-picker-btn';
     btn.setAttribute('aria-label', `Insert ${code}`);
-    btn.dataset.code   = code;
+    btn.dataset.code = code;
     btn.dataset.kteTip = `${code}  ·  ${emote.source}`;
     btn.addEventListener('mouseenter', () => showTooltip(btn));
     btn.addEventListener('mouseleave', hideTooltip);
 
     const img = document.createElement('img');
-    img.src       = safeUrl(emote.url);
-    img.alt       = code;
+    img.src = safeUrl(emote.url);
+    img.alt = code;
     img.draggable = false;
-    img.decoding  = 'async';
-    img.loading   = 'lazy';
+    img.decoding = 'async';
+    img.loading = 'lazy';
     img.setAttribute('fetchpriority', 'low');
     btn.appendChild(img);
 
@@ -916,7 +916,7 @@
       const next = Math.min(shown + PICKER_PROVIDER_LIMIT, emotes.length);
       pickerAppendButtons(grid, emotes, shown, next);
       shown = next;
-      limitEl.textContent = `Showing ${shown} of ${emotes.length}.`;
+      limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
       if (shown >= emotes.length) {
         more.remove();
       }
@@ -930,10 +930,10 @@
     if (!el) return;
     el.focus();
     if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
-      const pos    = el.selectionStart ?? el.value.length;
+      const pos = el.selectionStart ?? el.value.length;
       const before = el.value.slice(0, pos);
-      const after  = el.value.slice(pos);
-      const gap    = before && !before.endsWith(' ') ? ' ' : '';
+      const after = el.value.slice(pos);
+      const gap = before && !before.endsWith(' ') ? ' ' : '';
       const insert = gap + code + ' ';
       el.value = before + insert + after;
       const newPos = before.length + insert.length;
@@ -951,8 +951,8 @@
   }
 
   function pickerBuildContent(query) {
-    const wrap  = document.createElement('div');
-    wrap.id     = 'kte-picker-content';
+    const wrap = document.createElement('div');
+    wrap.id = 'kte-picker-content';
     const sectionsContainer = document.createElement('div');
     sectionsContainer.className = 'grid gap-2';
 
@@ -1003,7 +1003,7 @@
         footer.className = 'kte-picker-footer';
         const limit = document.createElement('p');
         limit.className = 'kte-picker-limit';
-        limit.textContent = `Showing ${shown} of ${emotes.length}.`;
+        limit.textContent = `Showing ${shown} of ${emotes.length}`;
         footer.appendChild(limit);
         footer.appendChild(pickerBuildLoadMore(grid, emotes, shown, limit));
         section.appendChild(footer);
@@ -1015,7 +1015,7 @@
     if (!any) {
       const msg = document.createElement('p');
       msg.className = 'kte-picker-empty';
-      msg.textContent   = query ? 'No matching emotes' : 'Emotes loading…';
+      msg.textContent = query ? 'No matching emotes' : 'Emotes loading…';
       wrap.appendChild(msg);
     } else {
       wrap.appendChild(sectionsContainer);
