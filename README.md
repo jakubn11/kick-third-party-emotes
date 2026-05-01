@@ -9,9 +9,13 @@
 </p>
 
 <p align="center">
-  <img alt="Safari userscript" src="https://img.shields.io/badge/Safari-userscript-18181b?style=for-the-badge&labelColor=22c55e">
-  <img alt="Animated emotes" src="https://img.shields.io/badge/Animated-emotes-18181b?style=for-the-badge&labelColor=22c55e">
-  <img alt="Load more picker" src="https://img.shields.io/badge/Load%20more-picker-18181b?style=for-the-badge&labelColor=22c55e">
+  <img alt="Safari userscript" src="https://img.shields.io/badge/Safari-Userscript-22c55e?style=flat-square&logo=safari&logoColor=fff&labelColor=101013">
+  &nbsp;
+  <img alt="Providers" src="https://img.shields.io/badge/Providers-BTTV%20%C2%B7%207TV%20%C2%B7%20FFZ-22c55e?style=flat-square&labelColor=101013">
+  &nbsp;
+  <img alt="Animated emotes" src="https://img.shields.io/badge/Animated-GIF%20%2B%20Zero%E2%80%91Width-22c55e?style=flat-square&labelColor=101013">
+  &nbsp;
+  <img alt="Autocomplete" src="https://img.shields.io/badge/Tab-Autocomplete-22c55e?style=flat-square&labelColor=101013">
 </p>
 
 ## Features
