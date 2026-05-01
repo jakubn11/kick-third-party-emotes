@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.14] - 2026-05-01
+
+### Fixed
+- Emote images in the picker now load reliably — removed `loading="lazy"` from picker buttons since the browser's native lazy loading uses viewport proximity, not the picker's custom scroll container.
+
+## [2.4.13] - 2026-05-01
+
+### Fixed
+- Script now reliably loads on first page visit by waiting for Kick's chat DOM instead of a fixed 800ms timeout.
+- SPA navigation observer watches `document.body` subtree instead of shallow `document.documentElement`, fixing missed route changes.
+
 ## [2.4.12] - 2026-04-30
 
 ### Changed

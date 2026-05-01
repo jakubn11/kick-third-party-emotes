@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.4.12
+// @version      2.4.14
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -730,7 +730,6 @@
         img.src       = emote.url;
         img.alt       = code;
         img.draggable = false;
-        img.loading   = 'lazy';
         img.decoding  = 'async';
         btn.appendChild(img);
         frag.appendChild(btn);
@@ -1205,14 +1204,29 @@
   function handleNavigation() {
     chatObserver?.disconnect(); chatObserver = null;
     resetPicker();
-    setTimeout(init, 1200);
+    waitForDOMThenInit();
+  }
+
+  function waitForDOMThenInit() {
+    let attempts = 0;
+    const maxAttempts = 50; // ~25 seconds
+    function tryInit() {
+      attempts++;
+      const slug = currentChannelSlug();
+      if (!slug) { init(); return; }
+      const hasChatDOM = MSG_SELECTORS.some(sel => document.querySelector(sel))
+        || INPUT_SELECTORS.some(sel => document.querySelector(sel));
+      if (hasChatDOM || attempts >= maxAttempts) { init(); return; }
+      setTimeout(tryInit, 500);
+    }
+    setTimeout(tryInit, 300);
   }
 
   new MutationObserver(() => {
     if (location.pathname === lastPath) return;
     lastPath = location.pathname;
     handleNavigation();
-  }).observe(document.documentElement, { childList: true, subtree: false });
+  }).observe(document.body, { childList: true, subtree: true });
 
   window.addEventListener('popstate', () => {
     if (location.pathname !== lastPath) {
@@ -1222,6 +1236,6 @@
   });
 
   document.readyState === 'loading'
-    ? document.addEventListener('DOMContentLoaded', () => setTimeout(init, 800))
-    : setTimeout(init, 800);
+    ? document.addEventListener('DOMContentLoaded', waitForDOMThenInit)
+    : waitForDOMThenInit();
 })();
