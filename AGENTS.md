@@ -120,4 +120,4 @@ Before committing any change, always:
 
 1. **Bump `@version`** in the `kick-emotes.user.js` metadata header (patch for fixes/tweaks, minor for new features).
 2. **Update `CHANGELOG.md`** — add an entry under the new version with a short summary of what changed.
-3. **Update `README.md`** — reflect any user-visible behavior, feature additions, or removed functionality.
+3. **Check `README.md`** — ask: does this change affect anything a user would read about? Update if yes. This includes: new or removed features, changed behaviour, new keyboard shortcuts, provider changes, or updated troubleshooting steps. Internal refactors and bug fixes that don't change user-facing behaviour do not require a README update.
