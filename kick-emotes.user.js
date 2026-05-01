@@ -763,7 +763,11 @@
     el._kteAC = true;
     el.addEventListener('input',   acOnInput);
     el.addEventListener('keydown', acOnKeydown);
-    el.addEventListener('blur',    () => setTimeout(acHide, 150));
+    el.addEventListener('keydown', e => {
+      // After Enter, Kick clears the input programmatically (no input event fires)
+      if (e.key === 'Enter' && !e.shiftKey) setTimeout(previewHide, 100);
+    });
+    el.addEventListener('blur', () => setTimeout(() => { acHide(); previewHide(); }, 150));
     console.log(`${TAG} Autocomplete attached`);
   }
 
