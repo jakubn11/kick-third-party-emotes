@@ -10,7 +10,9 @@
 </p>
 
 <p>
-  <img alt="Safari userscript" src="https://img.shields.io/badge/Safari-Userscript-22c55e?style=flat-square&logo=safari&logoColor=fff&labelColor=101013">
+  <img alt="Userscript" src="https://img.shields.io/badge/Userscript-Any%20Manager-22c55e?style=flat-square&labelColor=101013">
+  &nbsp;
+  <img alt="Tested on Safari" src="https://img.shields.io/badge/Tested%20on-Safari-22c55e?style=flat-square&logo=safari&logoColor=fff&labelColor=101013">
   &nbsp;
   <img alt="Providers" src="https://img.shields.io/badge/Providers-BTTV%20%C2%B7%207TV%20%C2%B7%20FFZ-22c55e?style=flat-square&labelColor=101013">
   &nbsp;
