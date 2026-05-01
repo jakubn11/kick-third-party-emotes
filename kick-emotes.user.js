@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.2
+// @version      2.6.3
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -696,6 +696,11 @@
     el._kteAC = true;
     el.addEventListener('input',   acOnInput);
     el.addEventListener('keydown', acOnKeydown);
+    // Lexical intercepts beforeinput for deletions so input doesn't always fire;
+    // keyup is a reliable fallback for backspace/delete.
+    el.addEventListener('keyup', e => {
+      if (e.key === 'Backspace' || e.key === 'Delete') acOnInput(e);
+    });
     el.addEventListener('blur',    () => setTimeout(acHide, 150));
     console.log(`${TAG} Autocomplete attached`);
   }

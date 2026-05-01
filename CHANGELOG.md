@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.3] - 2026-05-01
+
+### Fixed
+- Autocomplete now updates when deleting letters. Lexical intercepts `beforeinput` for deletions so the `input` event doesn't always fire; added a `keyup` fallback for Backspace and Delete.
+
 ## [2.6.2] - 2026-05-01
 
 ### Fixed
