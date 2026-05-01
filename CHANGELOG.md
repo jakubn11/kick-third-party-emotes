@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.5.1] - 2026-05-01
+
+### Fixed
+- Preview bar now hides after sending a message (Enter clears the Lexical editor programmatically with no input event).
+- Preview bar now hides when the chat input loses focus.
+- Preview bar now updates correctly as you type each character of an emote name (deferred textContent read to after Lexical's DOM reconciliation).
+
 ## [2.5.0] - 2026-05-01
 
 ### Added
