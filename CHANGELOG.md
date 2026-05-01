@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.21] - 2026-05-02
+
+### Changed
+- Replace native `title` tooltips on emote picker buttons with the shared custom `#kte-tip` popup, matching the style used in chat.
+
+## [2.6.20] - 2026-05-02
+
+### Changed
+- Reintroduce green as a signature accent across all popups: green left stripe on tooltip, green top border and header label on autocomplete, green source badges and hover highlight.
+
+## [2.6.19] - 2026-05-02
+
+### Changed
+- Redesign autocomplete popup and emote tooltip: bold white-on-dark style, no green accents, stronger shadows, blurred glass background.
+
+## [2.6.18] - 2026-05-01
+
+### Fixed
+- Match the third-party emote picker tab to Kick's native content height and padding, removing the dynamic max-height fitting that could resize the picker area.
+
+## [2.6.17] - 2026-05-01
+
+### Changed
+- Restyle the chat emote tooltip with the same dark/green visual language as the picker controls.
+
+## [2.6.16] - 2026-05-01
+
+### Fixed
+- Show chat emote hover text through a single top-level tooltip, preventing overlapping duplicate tooltips around emotes and zero-width overlays.
+
 ## [2.6.15] - 2026-05-01
 
 ### Changed

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.15
+// @version      2.6.21
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -90,6 +90,7 @@
   let acFocusIdx = -1;
   let acMatches  = [];
   let acInput    = null;
+  let tipEl      = null;
 
   // ─── Styles ───────────────────────────────────────────────────────────────
 
@@ -101,8 +102,6 @@
       position: relative;
       vertical-align: middle;
     }
-    .kte-wrap:hover .kte-tip { display: block; }
-
     .kte-img {
       height: 28px;
       width: auto;
@@ -123,84 +122,96 @@
       pointer-events: none;
     }
 
-    .kte-tip {
+    #kte-tip {
       display: none;
-      position: absolute;
-      bottom: calc(100% + 5px);
-      left: 50%;
+      position: fixed;
       transform: translateX(-50%);
-      background: #18181b;
-      color: #efeff1;
-      font-size: 11px;
+      background: #101013;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
       font-family: sans-serif;
-      padding: 4px 8px;
-      border-radius: 4px;
+      line-height: 1;
+      padding: 7px 11px 7px 13px;
+      border-radius: 8px;
       white-space: nowrap;
       pointer-events: none;
       z-index: 9999;
-      border: 1px solid #3f3f46;
-      box-shadow: 0 2px 8px rgba(0,0,0,.45);
+      border: 1px solid rgba(255,255,255,.1);
+      border-left: 3px solid #22c55e;
+      box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
     }
 
     /* Autocomplete popup */
     #kte-ac {
       position: fixed;
-      background: #18181b;
-      border: 1px solid #3f3f46;
-      border-radius: 6px;
-      box-shadow: 0 4px 20px rgba(0,0,0,.55);
+      background: #101013;
+      border: 1px solid rgba(255,255,255,.1);
+      border-top: 2px solid #22c55e;
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(12px);
       overflow: hidden;
       z-index: 99999;
-      min-width: 220px;
+      min-width: 230px;
       max-width: 320px;
       font-family: sans-serif;
     }
     #kte-ac-header {
       font-size: 10px;
-      color: #71717a;
-      padding: 6px 10px 3px;
+      font-weight: 700;
+      color: #22c55e;
+      padding: 8px 12px 4px;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .08em;
     }
     .kte-ac-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 5px 10px;
+      gap: 10px;
+      padding: 6px 12px;
       cursor: pointer;
       user-select: none;
+      transition: background .08s;
     }
     .kte-ac-row:hover,
-    .kte-ac-row.kte-focused { background: #27272a; }
+    .kte-ac-row.kte-focused { background: rgba(34,197,94,.1); }
     .kte-ac-row img {
-      height: 24px;
+      height: 26px;
       width: auto;
       max-width: 72px;
       flex-shrink: 0;
     }
     .kte-ac-code {
-      color: #efeff1;
+      color: #fff;
       font-size: 13px;
+      font-weight: 700;
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .kte-ac-src {
-      color: #52525b;
+      color: #22c55e;
       font-size: 10px;
+      font-weight: 700;
       flex-shrink: 0;
+      opacity: .7;
     }
     #kte-ac-footer {
       font-size: 10px;
-      color: #52525b;
-      padding: 3px 10px 6px;
-      border-top: 1px solid #27272a;
+      font-weight: 600;
+      color: rgba(255,255,255,.25);
+      padding: 4px 12px 7px;
+      border-top: 1px solid rgba(255,255,255,.08);
     }
 
-    /* Native emote picker tab — no custom styles needed; native Tailwind classes handle it */
+    /* Native emote picker tab content */
     #kte-picker-content {
-      padding: 4px 20px 28px;
+      height: 15rem;
+      padding: 8px 10px 8px 20px;
+      margin-right: 10px;
       color: #efeff1;
       font-family: sans-serif;
       box-sizing: border-box;
@@ -208,7 +219,6 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-gutter: stable;
-      max-height: min(420px, calc(100vh - 220px));
     }
     #kte-picker-content[hidden] { display: none !important; }
     .kte-picker-provider {
@@ -526,9 +536,37 @@
 
   // ─── DOM Processing ───────────────────────────────────────────────────────
 
+  function hideTooltip() {
+    if (tipEl) tipEl.style.display = 'none';
+  }
+
+  function showTooltip(wrap) {
+    const text = wrap.dataset.kteTip;
+    if (!text) return;
+
+    if (!tipEl) {
+      tipEl = document.createElement('span');
+      tipEl.id = 'kte-tip';
+      document.body.appendChild(tipEl);
+    }
+
+    tipEl.textContent = text;
+    tipEl.style.display = 'block';
+
+    const rect = wrap.getBoundingClientRect();
+    const tipRect = tipEl.getBoundingClientRect();
+    const left = Math.min(Math.max(rect.left + rect.width / 2, tipRect.width / 2 + 4), window.innerWidth - tipRect.width / 2 - 4);
+    const top = Math.max(4, rect.top - tipRect.height - 5);
+    tipEl.style.left = `${left}px`;
+    tipEl.style.top = `${top}px`;
+  }
+
   function makeEmoteWrap(code, emote) {
     const wrap = document.createElement('span');
     wrap.className = 'kte-wrap';
+    wrap.dataset.kteTip = `${code}  ·  ${emote.source}`;
+    wrap.addEventListener('mouseenter', () => showTooltip(wrap));
+    wrap.addEventListener('mouseleave', hideTooltip);
 
     const img = document.createElement('img');
     img.src = safeUrl(emote.url);
@@ -536,12 +574,7 @@
     img.className = 'kte-img';
     img.loading = 'lazy';
 
-    const tip = document.createElement('span');
-    tip.className = 'kte-tip';
-    tip.textContent = `${code}  ·  ${emote.source}`;
-
     wrap.appendChild(img);
-    wrap.appendChild(tip);
     return wrap;
   }
 
@@ -567,8 +600,7 @@
           zw.className = 'kte-zw';
           zw.loading = 'lazy';
           lastWrap.appendChild(zw);
-          const tip = lastWrap.querySelector('.kte-tip');
-          if (tip) tip.textContent += ` + ${token}`;
+          lastWrap.dataset.kteTip += ` + ${token}`;
           // Keep lastWrap — multiple ZW emotes can stack on the same base
         } else {
           const wrap = makeEmoteWrap(token, emote);
@@ -822,9 +854,11 @@
     const btn = document.createElement('button');
     btn.type      = 'button';
     btn.className = 'kte-picker-btn';
-    btn.title     = `${code} · ${emote.source}`;
     btn.setAttribute('aria-label', `Insert ${code}`);
-    btn.dataset.code = code;
+    btn.dataset.code   = code;
+    btn.dataset.kteTip = `${code}  ·  ${emote.source}`;
+    btn.addEventListener('mouseenter', () => showTooltip(btn));
+    btn.addEventListener('mouseleave', hideTooltip);
 
     const img = document.createElement('img');
     img.src       = safeUrl(emote.url);
@@ -1035,22 +1069,6 @@
     pickerUnlockElementHeight(panel);
   }
 
-  function pickerFitContent(panel, parts, content) {
-    if (!content || content.hidden || !content.isConnected) return;
-
-    content.style.maxHeight = '';
-    const viewport = parts.scrollViewport ?? panel;
-    const viewportRect = viewport.getBoundingClientRect();
-    const contentRect = content.getBoundingClientRect();
-    const viewportStyle = getComputedStyle(viewport);
-    const bottomPadding = parseFloat(viewportStyle.paddingBottom) || 0;
-    const available = Math.floor(viewportRect.bottom - contentRect.top - bottomPadding - 2);
-
-    if (Number.isFinite(available) && available > 120) {
-      content.style.maxHeight = `${available}px`;
-    }
-  }
-
   function pickerRefreshContent(panel) {
     const parts = pickerFindParts(panel);
     if (!parts) return null;
@@ -1070,7 +1088,6 @@
 
     if (!content.hidden) {
       content.scrollTop = 0;
-      pickerFitContent(panel, parts, content);
     }
     return content;
   }
@@ -1087,7 +1104,6 @@
       content.hidden = !active;
       if (!active) {
         content.style.height = '';
-        content.style.maxHeight = '';
       }
     }
     for (const child of pickerNativeViews(parts, content)) {
@@ -1099,9 +1115,7 @@
         delete child.dataset.kteNativeHidden;
       }
     }
-    if (content && active) {
-      pickerFitContent(panel, parts, content);
-    } else if (!active) {
+    if (!active) {
       pickerUnlockSize(panel, parts);
     }
   }
@@ -1302,6 +1316,7 @@
       emoteMap.clear();
       emoteVersion++;
       acHide();
+      hideTooltip();
       resetPicker();
       return;
     }
@@ -1310,6 +1325,7 @@
     emoteMap.clear();
     emoteVersion++;
     acHide();
+    hideTooltip();
     resetPicker();
     console.log(`${TAG} Loading emotes for /${channelSlug}…`);
 
@@ -1341,6 +1357,7 @@
     emoteMap.clear();
     emoteVersion++;
     acHide();
+    hideTooltip();
     resetPicker();
     waitForDOMThenInit();
   }

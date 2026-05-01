@@ -108,6 +108,41 @@ Autocomplete is intentionally lightweight and local:
 
 If modifying autocomplete, test both insertion and keyboard handling in the actual Kick chat input.
 
+## UI Design System
+
+All script-injected UI must follow this design language consistently. Do not deviate from it when adding new popups, overlays, or controls.
+
+### Palette
+
+| Token | Value | Usage |
+|---|---|---|
+| `--kte-bg` | `#101013` | All popup/overlay backgrounds |
+| `--kte-green` | `#22c55e` | Signature accent — used exactly once per component |
+| `--kte-border` | `rgba(255,255,255,.1)` | Neutral borders on all sides |
+| `--kte-text` | `#ffffff` | Primary text (emote names, labels) |
+| `--kte-muted` | `rgba(255,255,255,.25)` | Secondary / hint text |
+| `--kte-hover` | `rgba(34,197,94,.1)` | Row / button hover/focus background |
+
+### Rules
+
+- **One green accent per component.** Use `#22c55e` for one structural element only — a border stripe, a header label, or a badge. Never paint large surfaces green.
+- **Backgrounds:** `#101013` with `backdrop-filter: blur(8–12px)`.
+- **Borders:** `rgba(255,255,255,.1)` on most sides; the single green accent replaces one border (left stripe or top bar).
+- **Box shadow:** `0 8–12px 24–32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`.
+- **Border radius:** `8px` for small popups (tooltip), `10px` for larger ones (autocomplete, picker panels).
+- **Typography:** `font-family: sans-serif`. Bold (`font-weight: 700`) for primary labels. `font-weight: 600` for secondary text.
+- **Source badges** (7TV, BTTV, FFZ): `#22c55e` at `opacity: .7`, `font-size: 10px`, `font-weight: 700`.
+- **Hover states:** `rgba(34,197,94,.1)` background, no border change.
+- **Transitions:** `transition: background .08s` on interactive rows/buttons.
+- **No drop shadows in green.** Shadows are always `rgba(0,0,0,…)`.
+- **Tooltips** (`#kte-tip`): use the shared `showTooltip(el)` / `hideTooltip()` helpers. Wire via `data-kte-tip` attribute and `mouseenter`/`mouseleave` events. Do not use native `title` attributes on any script-injected element.
+
+### Reference implementations
+
+- `#kte-tip` — tooltip/hint popup (green left border stripe)
+- `#kte-ac` — autocomplete dropdown (green top border + green header label)
+- `.kte-picker-more` — picker action button (green background tint, green border)
+
 ## Documentation
 
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
