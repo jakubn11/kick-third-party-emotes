@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.4.14
+// @version      2.5.0
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -196,6 +196,29 @@
       color: #52525b;
       padding: 3px 10px 6px;
       border-top: 1px solid #27272a;
+    }
+
+    /* Inline emote replacement inside the chat input */
+    .kte-inline-emote {
+      display: inline-block;
+      vertical-align: middle;
+      contenteditable: false;
+      user-select: all;
+    }
+    .kte-inline-emote img {
+      height: 22px;
+      width: auto;
+      max-width: 88px;
+      vertical-align: middle;
+      display: inline-block;
+      pointer-events: none;
+    }
+    .kte-inline-code {
+      font-size: 0;
+      line-height: 0;
+      color: transparent;
+      pointer-events: none;
+      user-select: none;
     }
 
     /* Native emote picker tab — no custom styles needed; native Tailwind classes handle it */
@@ -669,6 +692,7 @@
   }
 
   function acOnInput(e) {
+    inlineReplaceEmote(e.currentTarget);
     const word    = acWordBeforeCursor(e.currentTarget);
     const matches = acSearch(word);
     matches.length ? acRender(matches, e.currentTarget) : acHide();
@@ -685,11 +709,92 @@
     else if (e.key === 'Escape') { e.preventDefault(); acHide(); }
   }
 
+  let _inlineReplacing = false;
+
+  function inlineReplaceEmote(inputEl) {
+    if (_inlineReplacing) return;
+    if (inputEl.tagName === 'TEXTAREA' || inputEl.tagName === 'INPUT') return;
+
+    const sel = window.getSelection();
+    if (!sel?.rangeCount || !sel.isCollapsed) return;
+
+    const range = sel.getRangeAt(0);
+    const node  = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE || !inputEl.contains(node)) return;
+
+    const offset = range.startOffset;
+    const before = node.textContent.slice(0, offset);
+    const match  = before.match(/(\S+) $/);
+    if (!match) return;
+
+    const code  = match[1];
+    const emote = emoteMap.get(code);
+    if (!emote) return;
+
+    const wordStart = before.length - match[0].length;
+
+    const replaceRange = document.createRange();
+    replaceRange.setStart(node, wordStart);
+    replaceRange.setEnd(node, offset);
+
+    const span = document.createElement('span');
+    span.contentEditable = 'false';
+    span.className = 'kte-inline-emote';
+    span.dataset.kteCode = code;
+
+    const img = document.createElement('img');
+    img.src      = emote.url;
+    img.alt      = code;
+    img.draggable = false;
+    img.title    = `${code} · ${emote.source}`;
+
+    const hiddenCode = document.createElement('span');
+    hiddenCode.className   = 'kte-inline-code';
+    hiddenCode.textContent = code;
+
+    span.appendChild(img);
+    span.appendChild(hiddenCode);
+
+    replaceRange.deleteContents();
+    replaceRange.insertNode(span);
+
+    // Place a space text node after the span and move cursor there
+    const spaceNode = document.createTextNode(' ');
+    span.after(spaceNode);
+
+    const newRange = document.createRange();
+    newRange.setStart(spaceNode, 1);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+  }
+
+  function inlineRestoreText(inputEl) {
+    const spans = inputEl.querySelectorAll('.kte-inline-emote');
+    if (!spans.length) return;
+    spans.forEach(span => {
+      const code = span.dataset.kteCode ?? '';
+      span.replaceWith(document.createTextNode(code + ' '));
+    });
+    inputEl.normalize();
+    inputEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+  }
+
+  function inlineOnKeydown(e) {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    const inputEl = e.currentTarget;
+    if (!inputEl.querySelector?.('.kte-inline-emote')) return;
+    _inlineReplacing = true;
+    inlineRestoreText(inputEl);
+    _inlineReplacing = false;
+  }
+
   function attachAutocomplete(el) {
     if (el._kteAC) return;
     el._kteAC = true;
     el.addEventListener('input',   acOnInput);
     el.addEventListener('keydown', acOnKeydown);
+    el.addEventListener('keydown', inlineOnKeydown, true); // capture: restore text before Kick's submit
     el.addEventListener('blur',    () => setTimeout(acHide, 150));
     console.log(`${TAG} Autocomplete attached`);
   }
