@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.0] - 2026-05-01
+
+### Changed
+- `acHide` now clears `acInput` to avoid holding a stale element reference after the autocomplete closes.
+- Simplified `processTextNode` early-return — `node.textContent` is always a string so the redundant `!text` check is removed.
+- Removed redundant JSDoc `@type` annotation and duplicate comment on `emoteMap`; collapsed into a single inline comment.
+- Updated README for clarity and accuracy.
+
 ## [2.5.2] - 2026-05-01
 
 ### Removed

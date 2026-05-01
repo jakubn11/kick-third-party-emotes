@@ -8,11 +8,11 @@ Safari userscript that adds **BetterTTV**, **7TV**, and **FrankerFaceZ** emotes 
 - Per-channel emote sets loaded automatically on navigation
 - Animated emote support (GIF)
 - Zero-width 7TV emote overlays
-- Autocomplete popup when typing in chat (prefix match, keyboard navigation)
-- Native Kick emote picker integration with a third-party emotes tab
 - Hover tooltips showing emote name and provider
-- 1-hour localStorage cache to avoid redundant API requests
-- Works with Kick's SPA routing — no full page reload needed between channels
+- Autocomplete popup when typing (prefix match, keyboard navigation)
+- Third-party emote tab inside Kick's native emote picker with search and lazy rendering
+- 1-hour localStorage cache per provider to avoid redundant API requests
+- Works with Kick's SPA routing — no page reload needed when switching channels
 
 ## Requirements
 
@@ -40,9 +40,9 @@ Provider failures are isolated — if one fails, the others still load.
 
 ## Usage
 
-Open any Kick channel. Emotes load automatically and replace matching words in chat. Type an emote name in the chat input to trigger autocomplete.
+Open any Kick channel. Emotes load automatically and replace matching words in chat.
 
-You can also open Kick's native emote picker and choose the **7TV+** tab to browse or search loaded third-party emotes. Clicking an emote inserts its text code into chat, and the emote list scrolls independently like Kick's native picker tabs.
+**Autocomplete:** start typing an emote name in the chat input to open the suggestion popup.
 
 | Key | Action |
 |-----|--------|
@@ -50,14 +50,16 @@ You can also open Kick's native emote picker and choose the **7TV+** tab to brow
 | Tab | Insert selected emote (auto-inserts if only one match) |
 | Esc | Close autocomplete |
 
+**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse or search all loaded third-party emotes. Clicking an emote inserts its code into the chat input.
+
 ## Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| No emotes appear | Open Safari DevTools → Console and check for `[KickEmotes]` log lines. If absent, verify the Userscripts extension is enabled for kick.com. |
+| No emotes appear | Open Safari DevTools → Console and look for `[KickEmotes]` log lines. If absent, check that the Userscripts extension is enabled for kick.com. |
 | Only global emotes load | The streamer may not have BTTV/7TV/FFZ configured for their channel. |
-| Emotes stop working after a Kick update | Kick may have changed their chat DOM. Open an issue with the class names from Safari Inspector. |
-| Stale emotes after script update | Clear the cache in the console: `Object.keys(localStorage).filter(k => k.startsWith('kte_')).forEach(k => localStorage.removeItem(k))` |
+| Emotes stop working after a Kick update | Kick may have changed their chat DOM selectors. Open an issue with the relevant class names from Safari Inspector. |
+| Stale emotes after a script update | Clear the cache: `Object.keys(localStorage).filter(k => k.startsWith('kte_')).forEach(k => localStorage.removeItem(k))` |
 
 ## License
 

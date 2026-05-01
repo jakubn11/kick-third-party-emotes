@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.5.2
+// @version      2.6.0
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker (Safari)
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -75,21 +75,18 @@
 
   // ─── State ────────────────────────────────────────────────────────────────
 
-  // emote value shape: { url, source, animated, zeroWidth }
-  /** @type {Map<string, {url:string, source:string, animated:boolean, zeroWidth:boolean}>} */
-  const emoteMap = new Map();
-  const sectionEmotesMap = new WeakMap(); // section el → emotes[], for IO lazy fill
+  const emoteMap = new Map(); // code → { url, source, animated, zeroWidth }
+  const sectionEmotesMap = new WeakMap(); // section el → { grid, emotes } for IO lazy fill
 
-  let channelSlug  = null;
-  let chatObserver = null;
+  let channelSlug        = null;
+  let chatObserver       = null;
   let pickerInjectQueued = false;
-  let lastPath     = location.pathname;
+  let lastPath           = location.pathname;
 
-  // Autocomplete
-  let acDropdown   = null;
-  let acFocusIdx   = -1;
-  let acMatches    = [];
-  let acInput      = null;
+  let acDropdown = null;
+  let acFocusIdx = -1;
+  let acMatches  = [];
+  let acInput    = null;
 
   // ─── Styles ───────────────────────────────────────────────────────────────
 
@@ -472,7 +469,7 @@
 
   function processTextNode(node) {
     const text = node.textContent;
-    if (!text || !text.trim()) return;
+    if (!text.trim()) return;
 
     const tokens = text.split(/(\s+)/);
     if (!tokens.some(t => emoteMap.has(t))) return;
@@ -574,6 +571,7 @@
     acDropdown = null;
     acFocusIdx = -1;
     acMatches  = [];
+    acInput    = null;
   }
 
   function acSetFocus(idx) {
