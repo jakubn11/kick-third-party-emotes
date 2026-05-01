@@ -716,6 +716,11 @@
   }
 
   function previewUpdate(inputEl) {
+    // Defer one frame so Lexical can finish reconciling the DOM before we read textContent
+    requestAnimationFrame(() => _previewRender(inputEl));
+  }
+
+  function _previewRender(inputEl) {
     const text = inputEl.textContent ?? '';
     if (!text.trim()) { previewHide(); return; }
 
