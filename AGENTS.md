@@ -1,13 +1,13 @@
 # Kick Third-Party Emotes — Agent Context
 
-Safari userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com chat.
+Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com chat.
 
 ## Project Overview
 
 **Type:** Single-file JavaScript userscript  
 **Primary file:** `kick-emotes.user.js`  
 **Install docs:** `INSTALL.md`  
-**Target:** Safari on macOS using the Userscripts extension  
+**Target:** Any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, Safari Userscripts, etc.) on any browser; developed and tested on Safari + Userscripts  
 **Git:** This directory may not be initialized as a git repository.
 
 ## Commands
@@ -21,22 +21,22 @@ sed -n '1,80p' kick-emotes.user.js
 wc -l kick-emotes.user.js INSTALL.md
 ```
 
-Manual testing is required in Safari:
+Manual testing is required in a browser with a userscript manager installed:
 
-1. Copy `kick-emotes.user.js` into the folder configured in the Userscripts Safari extension.
+1. Install the userscript via your manager (e.g. drag the `.user.js` file into Tampermonkey/Violentmonkey, or copy it into the folder configured in the Userscripts extension on Safari).
 2. Open a Kick channel page.
-3. Check the Safari developer console for `[KickEmotes]` log lines.
+3. Check the browser developer console for `[KickEmotes]` log lines.
 4. Verify global and channel emotes render in chat.
 5. Verify autocomplete attaches to the chat input and supports arrow navigation, Tab selection, and Esc close.
 6. Navigate between Kick channels and confirm channel-specific emotes reload.
 
 ## Userscript Metadata
 
-The userscript header controls permissions and host access. Keep it valid for Userscripts/Tampermonkey-style hosts:
+The userscript header controls permissions and host access. Keep it valid across all common userscript managers (Tampermonkey, Violentmonkey, Greasemonkey, Userscripts, etc.):
 
 - `@match` should remain scoped to `https://kick.com/*` unless the target changes.
 - Add any new remote domains to `@connect`.
-- Keep `@grant GM_xmlhttpRequest` if fetching third-party APIs from Safari.
+- Keep `@grant GM_xmlhttpRequest` if fetching third-party APIs cross-origin.
 - Bump `@version` when changing user-facing behavior or provider logic.
 
 Do not add `Co-Authored-By:` trailers to git commits.
@@ -177,7 +177,7 @@ All script-injected UI must follow this design language consistently. Do not dev
 
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
 
-Keep docs oriented around Safari and the Userscripts extension unless support for another host is explicitly added.
+Keep docs browser-agnostic. When mentioning installation steps, cover the general flow and call out manager-specific differences (Userscripts for Safari, Tampermonkey, Violentmonkey, etc.) where they matter.
 
 ## Before Every Commit
 
