@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.29
+// @version      2.6.31
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -957,10 +957,15 @@
     const url = safeUrl(emote.url);
     if (!url) return null;
     const img = document.createElement('img');
-    img.dataset.kteSrc = url;  // loaded lazily by pickerObserveLazy
+    img.src = url;
     img.alt = code;
     img.draggable = false;
     img.decoding = 'async';
+    img.addEventListener('error', () => {
+      if (img._kteRetry) return;
+      img._kteRetry = true;
+      setTimeout(() => { img.src = url; }, 2000);
+    });
     btn.appendChild(img);
 
     return btn;
@@ -990,9 +995,6 @@
       shown = next;
       limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
       if (shown >= emotes.length) more.remove();
-      // Register newly added images with the existing lazy observer
-      const wrap = grid.closest('#kte-picker-content');
-      if (wrap) requestAnimationFrame(() => pickerObserveLazy(wrap));
     });
 
     return more;
@@ -1023,35 +1025,7 @@
     }
   }
 
-  function pickerObserveLazy(wrap) {
-    const io = new IntersectionObserver(entries => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        const img = entry.target;
-        const url = img.dataset.kteSrc;
-        if (!url) { io.unobserve(img); continue; }
-        img.src = url;
-        img.addEventListener('error', () => {
-          if (img._kteRetry) return;
-          img._kteRetry = true;
-          setTimeout(() => { img.src = url; }, 2000);
-        }, { once: true });
-        io.unobserve(img);
-      }
-    }, { root: wrap, rootMargin: '120px' });
-
-    for (const img of wrap.querySelectorAll('img[data-kte-src]')) {
-      io.observe(img);
-    }
-
-    // Disconnect when the content element is removed from the DOM
-    const mo = new MutationObserver(() => {
-      if (!wrap.isConnected) { io.disconnect(); mo.disconnect(); }
-    });
-    mo.observe(document.body, { childList: true, subtree: true });
-  }
-
-  function pickerBuildContent(query) {
+function pickerBuildContent(query) {
     const wrap = document.createElement('div');
     wrap.id = 'kte-picker-content';
     const sectionsContainer = document.createElement('div');
@@ -1120,8 +1094,6 @@
       wrap.appendChild(msg);
     } else {
       wrap.appendChild(sectionsContainer);
-      // Defer observer setup so the element is in the DOM and has a scroll box
-      requestAnimationFrame(() => pickerObserveLazy(wrap));
     }
     return wrap;
   }
@@ -1465,14 +1437,19 @@
     const allLoaders = [loadBTTVGlobal, load7TVGlobal, loadFFZGlobal,
       () => loadBTTVChannel(slug), () => load7TVChannel(slug), () => loadFFZChannel(slug)];
 
-    const allResults = await Promise.allSettled(allLoaders.map(fn => fn()));
+    const failedLoaders = [];
+
+    // Update picker incrementally as each provider resolves
+    const promises = allLoaders.map(fn => fn().then(entries => {
+      if (seq !== initSeq || currentChannelSlug() !== slug) return;
+      if (!Array.isArray(entries) || !entries.length) return;
+      for (const [code, e] of entries) emoteMap.set(code, e);
+      emoteVersion++;
+      queuePickerInject();
+    }).catch(() => { failedLoaders.push(fn); }));
+
+    await Promise.allSettled(promises);
     if (seq !== initSeq || currentChannelSlug() !== slug) return;
-
-    emoteMap.clear();
-    applyLoadResults(allResults);
-    emoteVersion++;
-
-    const failedLoaders = allLoaders.filter((_, i) => allResults[i].status === 'rejected');
 
     console.log(`${TAG} Ready – ${emoteMap.size} emotes for /${channelSlug}`);
 
@@ -1498,6 +1475,7 @@
           console.log(`${TAG} Retry loaded ${added} emotes`);
           document.querySelectorAll('[data-kte-done]').forEach(el => { delete el.dataset.kteDone; });
           processAllVisible();
+          queuePickerInject();
         }
       }, 5000);
     }

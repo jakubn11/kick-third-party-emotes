@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.31] - 2026-05-05
+
+### Reverted
+- Remove IntersectionObserver-based lazy loading from the picker — the custom root approach failed to fire, leaving all images blank. Back to direct `img.src` assignment.
+
+## [2.6.30] - 2026-05-05
+
+### Changed
+- Picker now populates incrementally as each provider finishes loading instead of waiting for all six to complete.
+
 ## [2.6.29] - 2026-05-05
 
 ### Fixed
