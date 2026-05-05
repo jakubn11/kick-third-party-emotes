@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.35
+// @version      2.6.36
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -50,6 +50,7 @@
     '[data-chat-entry] .message',
     '.chat-entry .message',
   ];
+  const MSG_SELECTOR = MSG_SELECTORS.join(', ');
 
   const INPUT_SELECTORS = [
     '[data-chat-input]',
@@ -100,6 +101,8 @@
   let emoteVersion = 0;
   let pickerInjectQueued = false;
   let pickerInjectTimer = null;
+  let messageProcessQueue = [];
+  let messageProcessQueued = false;
   let lastPath = location.pathname;
 
   let acDropdown = null;
@@ -739,7 +742,7 @@
 
   function processAllVisible() {
     const seq = initSeq;
-    const nodes = [...document.querySelectorAll(MSG_SELECTORS.join(', '))];
+    const nodes = [...document.querySelectorAll(MSG_SELECTOR)];
     let i = 0;
 
     function step() {
@@ -752,6 +755,37 @@
     }
 
     RIC(step);
+  }
+
+  function processMessageTree(root) {
+    if (root.matches?.(MSG_SELECTOR)) processMessageEl(root);
+    root.querySelectorAll?.(MSG_SELECTOR).forEach(processMessageEl);
+  }
+
+  function queueProcessMessageTree(root) {
+    if (!root?.isConnected) return;
+    messageProcessQueue.push(root);
+    if (messageProcessQueued) return;
+    messageProcessQueued = true;
+
+    const seq = initSeq;
+    function drain() {
+      if (seq !== initSeq) {
+        messageProcessQueue = [];
+        messageProcessQueued = false;
+        return;
+      }
+
+      for (let i = 0; i < 20 && messageProcessQueue.length; i++) {
+        const next = messageProcessQueue.shift();
+        if (next?.isConnected) processMessageTree(next);
+      }
+
+      if (messageProcessQueue.length) RIC(drain);
+      else messageProcessQueued = false;
+    }
+
+    RIC(drain);
   }
 
   function isOwnUINode(node) {
@@ -956,10 +990,10 @@
 
   // ─── Emote Picker ─────────────────────────────────────────────────────────
 
-  const PICKER_PROVIDER_LIMIT = 80;
+  const PICKER_PROVIDER_LIMIT = 40;
   const PICKER_INJECT_DELAY = 120;
-  const PICKER_IMAGE_LOAD_CHUNK = 12;
-  const PICKER_IMAGE_LOAD_DELAY = 20;
+  const PICKER_IMAGE_LOAD_CHUNK = 6;
+  const PICKER_IMAGE_LOAD_DELAY = 50;
 
   function pickerBuildButton(code, emote) {
     const btn = document.createElement('button');
@@ -1429,12 +1463,6 @@
     pickerApplyActiveState(panel);
   }
 
-  function pickerPanelFromNode(node) {
-    if (node.nodeType !== Node.ELEMENT_NODE) return null;
-    if (node.id === 'chat-emotes-picker-panel') return node;
-    return node.querySelector?.('#chat-emotes-picker-panel') ?? null;
-  }
-
   function queuePickerInject(panel) {
     if (pickerInjectTimer) clearTimeout(pickerInjectTimer);
     pickerInjectQueued = true;
@@ -1476,6 +1504,8 @@
   function startChatObserver() {
     if (chatObserver) chatObserver.disconnect();
     chatObserver = new MutationObserver(mutations => {
+      let shouldCheckPicker = false;
+
       for (const mut of mutations) {
         // Virtual list recycles elements by changing data-index — clear stale marks
         // so the recycled message container gets reprocessed with its new content.
@@ -1483,29 +1513,28 @@
           mut.target.querySelectorAll?.('[data-kte-done]').forEach(el => {
             delete el.dataset.kteDone;
           });
-          for (const sel of MSG_SELECTORS) {
-            if (mut.target.matches?.(sel)) processMessageEl(mut.target);
-            mut.target.querySelectorAll?.(sel).forEach(processMessageEl);
-          }
+          queueProcessMessageTree(mut.target);
         }
         for (const added of mut.addedNodes) {
           if (added.nodeType !== Node.ELEMENT_NODE) continue;
-          const pickerPanel = pickerPanelFromNode(added);
-          if (pickerPanel) {
-            queuePickerInject(pickerPanel);
-            continue;
-          }
           if (isOwnUINode(added)) continue;
           const containingPicker = added.closest?.('#chat-emotes-picker-panel');
           if (containingPicker) {
             queuePickerInject(containingPicker);
             continue;
           }
-          for (const sel of MSG_SELECTORS) {
-            if (added.matches?.(sel)) processMessageEl(added);
-            added.querySelectorAll?.(sel).forEach(processMessageEl);
+          if (added.id === 'chat-emotes-picker-panel') {
+            queuePickerInject(added);
+            continue;
           }
+          shouldCheckPicker = true;
+          queueProcessMessageTree(added);
         }
+      }
+
+      if (shouldCheckPicker) {
+        const pickerPanel = document.getElementById('chat-emotes-picker-panel');
+        if (pickerPanel) queuePickerInject(pickerPanel);
       }
     });
     chatObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-index'] });

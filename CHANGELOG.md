@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.36] - 2026-05-05
+
+### Fixed
+- Reduce Kick page lag by avoiding repeated full picker-panel subtree searches in the global DOM observer and scanning new nodes with one combined chat-message selector.
+- Lower the initial third-party picker batch size and slow thumbnail loading chunks so opening the picker does not overwhelm the page.
+
 ## [2.6.35] - 2026-05-05
 
 ### Fixed
