@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.26
+// @version      2.6.29
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -461,18 +461,20 @@
 
   async function loadBTTVChannel(slug) {
     return cachedLoad(`bttv_c_${slug}`, async () => {
-      for (const platform of ['kick', 'twitch']) {
-        try {
-          const data = await fetchJSON(`${BTTV_API}/cached/users/${platform}/${slug}`);
-          const all = [...(data.channelEmotes ?? []), ...(data.sharedEmotes ?? [])];
-          if (!all.length) continue;
-          return all.map(e => [e.code, {
-            url: `${BTTV_CDN}/${e.id}/2x${e.animated ? '.gif' : ''}`,
-            source: `BTTV (${platform})`,
-            animated: e.animated,
-            zeroWidth: false,
-          }]);
-        } catch { /* try next platform */ }
+      const results = await Promise.allSettled(['kick', 'twitch'].map(async platform => {
+        const data = await fetchJSON(`${BTTV_API}/cached/users/${platform}/${slug}`);
+        const all = [...(data.channelEmotes ?? []), ...(data.sharedEmotes ?? [])];
+        return { platform, all };
+      }));
+      for (const r of results) {
+        if (r.status !== 'fulfilled' || !r.value.all.length) continue;
+        const { platform, all } = r.value;
+        return all.map(e => [e.code, {
+          url: `${BTTV_CDN}/${e.id}/2x${e.animated ? '.gif' : ''}`,
+          source: `BTTV (${platform})`,
+          animated: e.animated,
+          zeroWidth: false,
+        }]);
       }
       return [];
     });
@@ -640,11 +642,18 @@
     wrap.addEventListener('mouseenter', () => showTooltip(wrap));
     wrap.addEventListener('mouseleave', hideTooltip);
 
+    const url = safeUrl(emote.url);
+    if (!url) return document.createTextNode(code);
+
     const img = document.createElement('img');
-    img.src = safeUrl(emote.url);
+    img.src = url;
     img.alt = code;
     img.className = 'kte-img';
-    img.loading = 'lazy';
+    img.addEventListener('error', () => {
+      if (img._kteRetry) return;
+      img._kteRetry = true;
+      setTimeout(() => { img.src = url; }, 2000);
+    });
 
     wrap.appendChild(img);
     return wrap;
@@ -666,11 +675,17 @@
       if (emote) {
         if (emote.zeroWidth && lastWrap) {
           // Overlay this image centred on the previous emote wrap
+          const zwUrl = safeUrl(emote.url);
+          if (!zwUrl) continue;
           const zw = document.createElement('img');
-          zw.src = safeUrl(emote.url);
+          zw.src = zwUrl;
           zw.alt = token;
           zw.className = 'kte-zw';
-          zw.loading = 'lazy';
+          zw.addEventListener('error', () => {
+            if (zw._kteRetry) return;
+            zw._kteRetry = true;
+            setTimeout(() => { zw.src = zwUrl; }, 2000);
+          });
           lastWrap.appendChild(zw);
           lastWrap.dataset.kteTip += ` + ${token}`;
           // Keep lastWrap — multiple ZW emotes can stack on the same base
@@ -841,9 +856,15 @@
       const row = document.createElement('div');
       row.className = 'kte-ac-row';
 
+      const acUrl = safeUrl(emote.url);
       const img = document.createElement('img');
-      img.src = safeUrl(emote.url);
+      img.src = acUrl;
       img.alt = code;
+      if (acUrl) img.addEventListener('error', () => {
+        if (img._kteRetry) return;
+        img._kteRetry = true;
+        setTimeout(() => { img.src = acUrl; }, 2000);
+      });
 
       const nameEl = document.createElement('span');
       nameEl.className = 'kte-ac-code';
@@ -933,13 +954,13 @@
     btn.addEventListener('mouseenter', () => showTooltip(btn));
     btn.addEventListener('mouseleave', hideTooltip);
 
+    const url = safeUrl(emote.url);
+    if (!url) return null;
     const img = document.createElement('img');
-    img.src = safeUrl(emote.url);
+    img.dataset.kteSrc = url;  // loaded lazily by pickerObserveLazy
     img.alt = code;
     img.draggable = false;
     img.decoding = 'async';
-    img.loading = 'lazy';
-    img.setAttribute('fetchpriority', 'low');
     btn.appendChild(img);
 
     return btn;
@@ -949,7 +970,8 @@
     const frag = document.createDocumentFragment();
     for (let i = start; i < end; i++) {
       const { code, emote } = emotes[i];
-      frag.appendChild(pickerBuildButton(code, emote));
+      const btn = pickerBuildButton(code, emote);
+      if (btn) frag.appendChild(btn);
     }
     grid.appendChild(frag);
   }
@@ -967,9 +989,10 @@
       pickerAppendButtons(grid, emotes, shown, next);
       shown = next;
       limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
-      if (shown >= emotes.length) {
-        more.remove();
-      }
+      if (shown >= emotes.length) more.remove();
+      // Register newly added images with the existing lazy observer
+      const wrap = grid.closest('#kte-picker-content');
+      if (wrap) requestAnimationFrame(() => pickerObserveLazy(wrap));
     });
 
     return more;
@@ -998,6 +1021,34 @@
       const gap = before && !/\s$/.test(before) ? ' ' : '';
       document.execCommand('insertText', false, gap + code + ' ');
     }
+  }
+
+  function pickerObserveLazy(wrap) {
+    const io = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const img = entry.target;
+        const url = img.dataset.kteSrc;
+        if (!url) { io.unobserve(img); continue; }
+        img.src = url;
+        img.addEventListener('error', () => {
+          if (img._kteRetry) return;
+          img._kteRetry = true;
+          setTimeout(() => { img.src = url; }, 2000);
+        }, { once: true });
+        io.unobserve(img);
+      }
+    }, { root: wrap, rootMargin: '120px' });
+
+    for (const img of wrap.querySelectorAll('img[data-kte-src]')) {
+      io.observe(img);
+    }
+
+    // Disconnect when the content element is removed from the DOM
+    const mo = new MutationObserver(() => {
+      if (!wrap.isConnected) { io.disconnect(); mo.disconnect(); }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
   }
 
   function pickerBuildContent(query) {
@@ -1069,6 +1120,8 @@
       wrap.appendChild(msg);
     } else {
       wrap.appendChild(sectionsContainer);
+      // Defer observer setup so the element is in the DOM and has a scroll box
+      requestAnimationFrame(() => pickerObserveLazy(wrap));
     }
     return wrap;
   }
@@ -1409,22 +1462,17 @@
     startChatObserver();
     console.log(`${TAG} Loading emotes for /${channelSlug}…`);
 
-    const globalLoaders = [loadBTTVGlobal, load7TVGlobal, loadFFZGlobal];
-    const channelLoaders = [() => loadBTTVChannel(slug), () => load7TVChannel(slug), () => loadFFZChannel(slug)];
+    const allLoaders = [loadBTTVGlobal, load7TVGlobal, loadFFZGlobal,
+      () => loadBTTVChannel(slug), () => load7TVChannel(slug), () => loadFFZChannel(slug)];
 
-    const globalResults = await Promise.allSettled(globalLoaders.map(fn => fn()));
-    if (seq !== initSeq || currentChannelSlug() !== slug) return;
-
-    const channelResults = await Promise.allSettled(channelLoaders.map(fn => fn()));
+    const allResults = await Promise.allSettled(allLoaders.map(fn => fn()));
     if (seq !== initSeq || currentChannelSlug() !== slug) return;
 
     emoteMap.clear();
-    applyLoadResults(globalResults);
-    applyLoadResults(channelResults);
+    applyLoadResults(allResults);
     emoteVersion++;
 
-    const failedGlobal = globalLoaders.filter((_, i) => globalResults[i].status === 'rejected');
-    const failedChannel = channelLoaders.filter((_, i) => channelResults[i].status === 'rejected');
+    const failedLoaders = allLoaders.filter((_, i) => allResults[i].status === 'rejected');
 
     console.log(`${TAG} Ready – ${emoteMap.size} emotes for /${channelSlug}`);
 
@@ -1432,15 +1480,13 @@
     waitForInput();
     queuePickerInject();
 
-    if (failedGlobal.length || failedChannel.length) {
-      const retryCount = failedGlobal.length + failedChannel.length;
-      console.log(`${TAG} ${retryCount} provider(s) failed, retrying in 5s…`);
+    if (failedLoaders.length) {
+      console.log(`${TAG} ${failedLoaders.length} provider(s) failed, retrying in 5s…`);
       setTimeout(async () => {
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
-        const retryResults = await Promise.allSettled([
-          ...failedGlobal.map(fn => fn()),
-          ...failedChannel.map(fn => fn()),
-        ]);
+        const retryResults = await Promise.allSettled(
+          failedLoaders.map(fn => fn()),
+        );
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
         let added = 0;
         for (const r of retryResults) {

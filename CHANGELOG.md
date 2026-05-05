@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.6.29] - 2026-05-05
+
+### Fixed
+- Replace eager picker image loading (caused page lag) with IntersectionObserver-based lazy loading rooted to the picker's own scroll container — images load as the user scrolls, not all at once.
+
+## [2.6.28] - 2026-05-05
+
+### Fixed
+- Remove `loading="lazy"` from picker emote images — fixed-position overlays are outside the viewport intersection zone so lazy images never loaded.
+- Fetch BTTV channel emotes for Kick and Twitch platforms in parallel instead of sequentially.
+
+## [2.6.27] - 2026-05-05
+
+### Fixed
+- Load global and channel emotes in parallel instead of sequentially, cutting initial load time.
+- Auto-retry emote images that fail to load (once after 2 seconds).
+- Skip broken emotes when `safeUrl` rejects a URL instead of showing broken image placeholders.
+- Remove `loading="lazy"` from chat emote images — they're small, in-viewport, and should load immediately.
+
 ## [2.6.26] - 2026-05-05
 
 ### Changed
