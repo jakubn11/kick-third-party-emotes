@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.37
+// @version      2.6.38
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -705,6 +705,7 @@
           });
           lastWrap.appendChild(zw);
           lastWrap.dataset.kteTip += ` + ${token}`;
+          lastWrap.dataset.kteTipCode += ` + ${token}`;
           // Keep lastWrap — multiple ZW emotes can stack on the same base
         } else {
           const wrap = makeEmoteWrap(token, emote);
@@ -1657,19 +1658,34 @@
     startChatObserver();
     console.log(`${TAG} Loading emotes for /${channelSlug}…`);
 
-    const allLoaders = [loadBTTVGlobal, load7TVGlobal, loadFFZGlobal,
-      () => loadBTTVChannel(slug), () => load7TVChannel(slug), () => loadFFZChannel(slug)];
+    const allLoaders = [
+      { fn: loadBTTVGlobal, isChannel: false },
+      { fn: load7TVGlobal, isChannel: false },
+      { fn: loadFFZGlobal, isChannel: false },
+      { fn: () => loadBTTVChannel(slug), isChannel: true },
+      { fn: () => load7TVChannel(slug), isChannel: true },
+      { fn: () => loadFFZChannel(slug), isChannel: true },
+    ];
 
     const failedLoaders = [];
 
+    // Channel emotes override globals; globals never overwrite an existing entry.
+    // Resolution order is non-deterministic, so a global resolving after a channel
+    // would otherwise clobber the streamer's custom version of a colliding name.
+    function applyEntries(entries, isChannel) {
+      for (const [code, e] of entries) {
+        if (isChannel || !emoteMap.has(code)) emoteMap.set(code, e);
+      }
+    }
+
     // Update picker incrementally as each provider resolves
-    const promises = allLoaders.map(fn => fn().then(entries => {
+    const promises = allLoaders.map(loader => loader.fn().then(entries => {
       if (seq !== initSeq || currentChannelSlug() !== slug) return;
       if (!Array.isArray(entries) || !entries.length) return;
-      for (const [code, e] of entries) emoteMap.set(code, e);
+      applyEntries(entries, loader.isChannel);
       emoteVersion++;
       queuePickerInject();
-    }).catch(() => { failedLoaders.push(fn); }));
+    }).catch(() => { failedLoaders.push(loader); }));
 
     await Promise.allSettled(promises);
     if (seq !== initSeq || currentChannelSlug() !== slug) return;
@@ -1685,13 +1701,17 @@
       setTimeout(async () => {
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
         const retryResults = await Promise.allSettled(
-          failedLoaders.map(fn => fn()),
+          failedLoaders.map(loader => loader.fn()),
         );
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
         let added = 0;
-        for (const r of retryResults) {
+        for (let i = 0; i < retryResults.length; i++) {
+          const r = retryResults[i];
           if (r.status !== 'fulfilled' || !Array.isArray(r.value)) continue;
-          for (const [code, e] of r.value) { emoteMap.set(code, e); added++; }
+          const isChannel = failedLoaders[i].isChannel;
+          for (const [code, e] of r.value) {
+            if (isChannel || !emoteMap.has(code)) { emoteMap.set(code, e); added++; }
+          }
         }
         if (added) {
           emoteVersion++;
