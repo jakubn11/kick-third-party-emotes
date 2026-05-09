@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.42
+// @version      2.6.43
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -1133,6 +1133,7 @@
   const PICKER_INJECT_DELAY = 120;
   const PICKER_ROUTE_INJECT_DELAY = 700;
   const PICKER_APPEND_REFRESH_DELAY = 260;
+  const PICKER_ACTIVE_PROVIDER_DEFER_WINDOW = 15000;
   const ROUTE_CHAT_REFRESH_DELAY = 500;
   const PICKER_APPEND_CHUNK = 10;
   const PICKER_APPEND_DELAY = 24;
@@ -1380,6 +1381,7 @@
       content._kteImageLoading = false;
       content._kteAppendingMore = false;
       content._kteRefreshAfterAppend = false;
+      content._kteDeferredProviderRefresh = false;
     }
   }
 
@@ -1644,7 +1646,12 @@
       content.hidden = !active;
       if (!active) {
         content.style.height = '';
-        pickerDetachImageLoader(content);
+        if (content._kteDeferredProviderRefresh) {
+          pickerMarkContentStale(content);
+          content.remove();
+        } else {
+          pickerDetachImageLoader(content);
+        }
       } else {
         pickerAttachImageLoader(content, parts.scrollViewport);
       }
@@ -1661,6 +1668,24 @@
     if (!active) {
       pickerUnlockSize(panel, parts);
     }
+  }
+
+  function queueProviderPickerRefresh() {
+    const panel = document.getElementById('chat-emotes-picker-panel');
+    const content = panel?.querySelector('#kte-picker-content');
+    const active = panel ? pickerIsActive(panel) : false;
+    const deferActiveRefresh = active && content
+      && (Date.now() - lastNavigationAt < PICKER_ACTIVE_PROVIDER_DEFER_WINDOW
+        || content._kteAppendingMore
+        || content._kteImageLoading
+        || Boolean(content._kteImageQueue?.length));
+
+    if (deferActiveRefresh) {
+      content._kteDeferredProviderRefresh = true;
+      return;
+    }
+
+    queuePickerInject(panel, pickerProviderInjectDelay());
   }
 
   function pickerSetActive(panel, active, refresh = false) {
@@ -1944,7 +1969,7 @@
       rebuildEmoteMap();
       emoteVersion++;
       queueVisibleEmoteRefresh(routeChatRefreshDelay());
-      queuePickerInject(null, pickerProviderInjectDelay());
+      queueProviderPickerRefresh();
       acRefreshOpen();
       return true;
     }
@@ -1960,7 +1985,7 @@
     console.log(`${TAG} Ready – ${emoteMap.size} emotes for /${channelSlug}`);
 
     queueVisibleEmoteRefresh(routeChatRefreshDelay());
-    queuePickerInject(null, pickerProviderInjectDelay());
+    queueProviderPickerRefresh();
 
     if (failedLoaders.length) {
       console.log(`${TAG} ${failedLoaders.length} provider(s) failed, retrying in 5s…`);
