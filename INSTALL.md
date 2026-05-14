@@ -20,9 +20,9 @@ Safari requires a userscript host app. **[Userscripts](https://apps.apple.com/ap
 
 ## Other browsers (untested)
 
-The script uses standard GM APIs and should work with any userscript manager, but has not been tested outside Safari.
+The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with any userscript manager that honours `@grant GM_xmlhttpRequest` and `@connect`. Tested only on Safari + Userscripts; the rest are listed for reference.
 
-**[Tampermonkey](https://www.tampermonkey.net)** (Chrome, Firefox, Edge, Safari):
+**[Tampermonkey](https://www.tampermonkey.net)** (Chrome, Firefox, Edge, Safari, Opera):
 1. Install the Tampermonkey extension for your browser.
 2. Open the Tampermonkey dashboard → **Create a new script**.
 3. Replace the default content with the contents of `kick-emotes.user.js` and save.
@@ -31,6 +31,18 @@ The script uses standard GM APIs and should work with any userscript manager, bu
 1. Install the Violentmonkey extension.
 2. Click the Violentmonkey icon → **+** → **New script**.
 3. Paste the contents of `kick-emotes.user.js` and save.
+
+**[Greasemonkey](https://www.greasespot.net)**:
+1. Install the Greasemonkey add-on from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/greasemonkey/).
+2. Click the Greasemonkey icon → **New user script…**.
+3. Fill in any name, click **OK**, then paste the contents of `kick-emotes.user.js` over the template and save.
+
+**[ScriptCat](https://scriptcat.org)** (Chrome, Firefox, Edge):
+1. Install the ScriptCat extension.
+2. Open the ScriptCat manager → **+** → **New script**.
+3. Paste the contents of `kick-emotes.user.js` and save.
+
+**Other managers** (e.g. AdGuard, Stay for Safari, Userscript Loader): the install flow is the same — create a new script in the manager's UI and paste the file contents. Auto-update via `@updateURL` works in any manager that honours that directive.
 
 ## How it works
 
@@ -48,7 +60,7 @@ The script uses standard GM APIs and should work with any userscript manager, bu
 
 ## Updating
 
-Replace `kick-emotes.user.js` with the new version. Userscripts and Tampermonkey hot-reload the script automatically.
+The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the latest GitHub Release asset. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a new `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). To update manually in any manager, replace `kick-emotes.user.js` with the new version.
 
 ## Troubleshooting
 

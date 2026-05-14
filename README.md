@@ -39,7 +39,7 @@
 
 ## Requirements
 
-The script works with any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, etc.) but is developed and tested on **Safari + Userscripts** only. Other browsers and managers may work but are untested.
+The script works with any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat or other) but is developed and tested on **Safari + Userscripts** only. Other browsers and managers may work but are untested.
 
 **Recommended setup:**
 - macOS with Safari
@@ -55,8 +55,10 @@ See [INSTALL.md](INSTALL.md) for step-by-step instructions.
 3. Copy `kick-emotes.user.js` into that folder
 
 **Other browsers (untested):**
-1. Install [Tampermonkey](https://www.tampermonkey.net) or [Violentmonkey](https://violentmonkey.github.io)
+1. Install [Tampermonkey](https://www.tampermonkey.net), [Violentmonkey](https://violentmonkey.github.io), [Greasemonkey](https://www.greasespot.net), [ScriptCat](https://scriptcat.org) or other
 2. Open `kick-emotes.user.js` and paste it into a new script, or drag the file into the extension dashboard
+
+See [INSTALL.md](INSTALL.md) for full per-manager steps.
 
 ## Providers
 

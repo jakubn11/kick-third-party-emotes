@@ -7,7 +7,7 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 **Type:** Single-file JavaScript userscript  
 **Primary file:** `kick-emotes.user.js`  
 **Install docs:** `INSTALL.md`  
-**Target:** Any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, Safari Userscripts, etc.) on any browser; developed and tested on Safari + Userscripts  
+**Target:** Any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) on any browser; developed and tested on Safari + Userscripts  
 **Git:** This directory may not be initialized as a git repository.
 
 ## Commands
@@ -23,7 +23,7 @@ wc -l kick-emotes.user.js INSTALL.md
 
 Manual testing is required in a browser with a userscript manager installed:
 
-1. Install the userscript via your manager (e.g. drag the `.user.js` file into Tampermonkey/Violentmonkey, or copy it into the folder configured in the Userscripts extension on Safari).
+1. Install the userscript via your manager (e.g. drag the `.user.js` file into Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other, or copy it into the folder configured in the Userscripts extension on Safari).
 2. Open a Kick channel page.
 3. Check the browser developer console for `[KickEmotes]` log lines.
 4. Verify global and channel emotes render in chat.
@@ -32,11 +32,12 @@ Manual testing is required in a browser with a userscript manager installed:
 
 ## Userscript Metadata
 
-The userscript header controls permissions and host access. Keep it valid across all common userscript managers (Tampermonkey, Violentmonkey, Greasemonkey, Userscripts, etc.):
+The userscript header controls permissions and host access. Keep it valid across all common userscript managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other):
 
 - `@match` should remain scoped to `https://kick.com/*` unless the target changes.
 - Add any new remote domains to `@connect`.
 - Keep `@grant GM_xmlhttpRequest` if fetching third-party APIs cross-origin.
+- `@updateURL` / `@downloadURL` point at the latest GitHub Release asset. If the repo moves or the release-asset filename changes, update both.
 - Bump `@version` when changing user-facing behavior or provider logic.
 
 Do not add `Co-Authored-By:` trailers to git commits.
@@ -177,7 +178,7 @@ All script-injected UI must follow this design language consistently. Do not dev
 
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
 
-Keep docs browser-agnostic. When mentioning installation steps, cover the general flow and call out manager-specific differences (Userscripts for Safari, Tampermonkey, Violentmonkey, etc.) where they matter.
+Keep docs browser-agnostic. When mentioning installation steps, cover the general flow and call out manager-specific differences (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) where they matter.
 
 ## Before Every Commit
 
