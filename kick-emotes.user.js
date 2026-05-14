@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.6.43
+// @version      2.6.44
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -722,6 +722,18 @@
 
   // ─── DOM Processing ───────────────────────────────────────────────────────
 
+  // Fullscreen API hides everything outside the fullscreen element's subtree,
+  // so floating overlays must live inside it while it's active.
+  function overlayParent() {
+    return document.fullscreenElement ?? document.body;
+  }
+
+  function reparentOverlay(el) {
+    if (!el) return;
+    const parent = overlayParent();
+    if (el.parentNode !== parent) parent.appendChild(el);
+  }
+
   function hideTooltip() {
     if (tipEl) tipEl.style.display = 'none';
   }
@@ -733,8 +745,8 @@
     if (!tipEl) {
       tipEl = document.createElement('span');
       tipEl.id = 'kte-tip';
-      document.body.appendChild(tipEl);
     }
+    reparentOverlay(tipEl);
 
     tipEl.textContent = '';
 
@@ -1076,7 +1088,7 @@
 
     // Anchor to left edge of input, open upward
     popup.style.cssText = `left:${rect.left}px; bottom:${window.innerHeight - rect.top + 6}px;`;
-    document.body.appendChild(popup);
+    overlayParent().appendChild(popup);
     acDropdown = popup;
   }
 
@@ -2059,6 +2071,13 @@
 
   window.addEventListener('popstate', () => {
     checkRouteChange();
+  });
+
+  // Re-parent floating overlays into / out of the fullscreen element so they
+  // remain visible when Kick's chat enters fullscreen.
+  document.addEventListener('fullscreenchange', () => {
+    if (tipEl) reparentOverlay(tipEl);
+    if (acDropdown) reparentOverlay(acDropdown);
   });
 
   document.readyState === 'loading'
