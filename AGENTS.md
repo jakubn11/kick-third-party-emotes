@@ -8,7 +8,7 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 **Primary file:** `kick-emotes.user.js`  
 **Install docs:** `INSTALL.md`  
 **Target:** Any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) on any browser; developed and tested on Safari + Userscripts  
-**Git:** This directory may not be initialized as a git repository.
+**Git:** `git@github.com:jakubn11/kick-emotes.git` (default branch: `main`).
 
 ## Commands
 

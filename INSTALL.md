@@ -66,7 +66,7 @@ The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with
 
 ## Updating
 
-The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the `main` branch on GitHub. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a new `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). To update manually in any manager, replace `kick-emotes.user.js` with the new version.
+The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the `main` branch on GitHub. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a new `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). **Safari's Userscripts extension is the exception** — it runs from a local folder and does not fetch `@updateURL`, so you must re-copy the latest `kick-emotes.user.js` into your scripts folder to update. To update manually in any manager, replace `kick-emotes.user.js` with the new version.
 
 ## Troubleshooting
 
