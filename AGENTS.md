@@ -138,6 +138,7 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 - `ALLOWED_CDN_HOSTS` — explicit set of trusted image hostnames
 - `try/catch` on all `localStorage` reads — handles quota errors and malformed JSON silently
 - All DOM text written via `textContent` — no HTML injection possible
+- Channel slug percent-encoded (`encodeURIComponent`) when interpolated into BTTV/FFZ API request paths — a crafted kick.com URL can't steer the request to a different path (7TV passes the slug through `JSON.stringify` into its GraphQL query)
 
 ## UI Design System
 

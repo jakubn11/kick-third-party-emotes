@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.7.1
+// @version      2.7.2
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -622,7 +622,7 @@
   async function loadBTTVChannel(slug, options) {
     return cachedLoad(`bttv_c_${slug}`, async () => {
       const results = await Promise.allSettled(['kick', 'twitch'].map(async platform => {
-        const data = await fetchJSON(`${BTTV_API}/cached/users/${platform}/${slug}`);
+        const data = await fetchJSON(`${BTTV_API}/cached/users/${platform}/${encodeURIComponent(slug)}`);
         const all = [...(data.channelEmotes ?? []), ...(data.sharedEmotes ?? [])];
         return { platform, all };
       }));
@@ -740,7 +740,7 @@
   async function loadFFZChannel(slug, options) {
     return cachedLoad(`ffz_c_${slug}`, async () => {
       try {
-        const data = await fetchJSON(`${FFZ_API}/room/${slug}`);
+        const data = await fetchJSON(`${FFZ_API}/room/${encodeURIComponent(slug)}`);
         const entries = [];
         for (const set of Object.values(data.sets ?? {})) {
           for (const e of (set.emoticons ?? [])) {
