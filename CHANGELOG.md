@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-07-07
+
+### Added
+- **Usage-aware autocomplete ranking.** The script now counts every emote you insert (autocomplete or picker) in a local `kte_v2_usage` record and ranks autocomplete suggestions most-used-first within the prefix and substring groups; shortest-name order remains the tiebreak. Usage data never leaves the machine, is capped at 200 emotes (least-recently-used evicted), and is exempt from the cache sweep.
+- **"Recently used" picker section.** The 7TV+ picker tab now opens with a section of your most recently inserted emotes (up to 16) above the provider groups, filtered by the picker search like everything else.
+- **Right-click context menu on chat emotes.** Right-clicking a third-party emote in chat opens a small menu to copy the emote name, copy the image URL, or open the emote's page on its provider (7TV/BTTV/FFZ, derived from the allowlisted CDN URL).
+
 ## [2.7.4] - 2026-07-07
 
 ### Fixed

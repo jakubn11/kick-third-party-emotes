@@ -29,6 +29,8 @@ Manual testing is required in a browser with a userscript manager installed:
 4. Verify global and channel emotes render in chat.
 5. Verify autocomplete attaches to the chat input and supports arrow navigation, Tab selection, and Esc close.
 6. Navigate between Kick channels and confirm channel-specific emotes reload.
+7. Right-click a rendered emote and verify the context menu (copy name, copy image URL, open provider page).
+8. Insert a few emotes, reopen the picker's 7TV+ tab, and verify the "Recently used" section and usage-first autocomplete ranking.
 
 ## Userscript Metadata
 
@@ -48,6 +50,8 @@ Do not add `Co-Authored-By:` trailers to git commits.
 
 - Userscript metadata and constants
 - Cache helper using `localStorage` keys prefixed with `kte_v2_` (old-prefix and long-expired keys are swept once per page load)
+- Local emote-usage tracker (`kte_v2_usage`, exempt from the sweep) powering autocomplete ranking and the picker's "Recently used" section
+- Emote context menu (`#kte-menu`) on right-clicked chat emotes
 - Provider loaders for BTTV, 7TV, and FFZ
 - DOM message processing and emote replacement
 - Autocomplete popup and chat input handling
@@ -104,7 +108,7 @@ Be careful when changing text processing: chat messages can contain links, exist
 
 Autocomplete is intentionally lightweight and local:
 
-- It searches loaded emote names with prefix matching first, padding remaining slots with substring matches.
+- It searches loaded emote names with prefix matching first, padding remaining slots with substring matches. Within each group, results are ranked by local usage counts (most-used first), with shortest-name-then-alphabetical as the stable tiebreak.
 - It displays up to 8 results.
 - It supports contenteditable inputs and textarea/input fallbacks.
 - It uses `document.execCommand('insertText')` for contenteditable insertion to preserve frontend reactivity.
@@ -121,7 +125,7 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 - **Never use native `title` attributes** on script-injected elements. Use `data-kte-tip` + `showTooltip`/`hideTooltip` instead (see UI Design System).
 - **Never use `eval`, `new Function(string)`, `setTimeout(string)`, or `setInterval(string)`.**
 - **Never trust provider API responses without validation.** Use optional chaining (`?.`) and nullish defaults. Validate shapes before use — see `isValidCacheEntry` as a reference.
-- **Never store sensitive data in `localStorage`.** The cache only stores emote codes, URLs, and source names — nothing user-specific.
+- **Never store sensitive data in `localStorage`.** The cache stores emote codes, URLs, and source names; the usage record stores emote codes with insert counts and timestamps. Nothing sensitive, and nothing leaves the machine.
 - **Never read back `localStorage` data without validation.** Always run it through the cache schema check (`isValidCacheEntry`) before putting it into `emoteMap`.
 
 ### Checks — run mentally before every commit
@@ -175,6 +179,7 @@ All script-injected UI must follow this design language consistently. Do not dev
 
 - `#kte-tip` — tooltip/hint popup (green left border stripe)
 - `#kte-ac` — autocomplete dropdown (green top border + green header label)
+- `#kte-menu` — emote context menu (green left border stripe)
 - `.kte-picker-more` — picker action button (green background tint, green border)
 
 ## Documentation

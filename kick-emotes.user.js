@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.7.4
+// @version      2.8.0
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -113,6 +113,7 @@
         const key = localStorage.key(i);
         if (!key?.startsWith('kte_')) continue;
         if (!key.startsWith(CACHE_PREFIX)) { doomed.push(key); continue; }
+        if (key === USAGE_KEY) continue; // usage stats persist indefinitely
         try {
           const { ts } = JSON.parse(localStorage.getItem(key));
           if (typeof ts !== 'number' || Date.now() - ts > CACHE_SWEEP_MAX_AGE) doomed.push(key);
@@ -144,6 +145,67 @@
       catch { /* quota exceeded – skip silently */ }
     },
   };
+
+  // ─── Emote usage tracker ──────────────────────────────────────────────────
+  // Local-only counter of inserted emotes (autocomplete + picker). Powers
+  // usage-first autocomplete ranking and the picker's "Recently used" section.
+
+  const USAGE_KEY = `${CACHE_PREFIX}usage`;
+  const USAGE_MAX_ENTRIES = 200;
+
+  let usageMap = null; // code → { n: insert count, t: last-used timestamp }
+  let usageSaveQueued = false;
+
+  function usageLoad() {
+    if (usageMap) return usageMap;
+    usageMap = new Map();
+    try {
+      const raw = localStorage.getItem(USAGE_KEY);
+      if (raw) {
+        const { counts } = JSON.parse(raw);
+        for (const [code, v] of Object.entries(counts ?? {})) {
+          if (!isSafeTextToken(code, 100)) continue;
+          if (typeof v?.[0] !== 'number' || typeof v?.[1] !== 'number') continue;
+          usageMap.set(code, { n: v[0], t: v[1] });
+        }
+      }
+    } catch { /* corrupted record – start fresh */ }
+    return usageMap;
+  }
+
+  function usageCount(code) {
+    return usageLoad().get(code)?.n ?? 0;
+  }
+
+  function usageBump(code) {
+    const map = usageLoad();
+    const cur = map.get(code) ?? { n: 0, t: 0 };
+    cur.n++;
+    cur.t = Date.now();
+    map.set(code, cur);
+    if (map.size > USAGE_MAX_ENTRIES) {
+      // Evict the least-recently-used code (bumps add at most one entry)
+      let worst = null;
+      for (const [c, v] of map) {
+        if (!worst || v.t < worst[1].t) worst = [c, v];
+      }
+      if (worst) map.delete(worst[0]);
+    }
+    usageSave();
+  }
+
+  function usageSave() {
+    if (usageSaveQueued) return;
+    usageSaveQueued = true;
+    RIC(() => {
+      usageSaveQueued = false;
+      try {
+        const counts = {};
+        for (const [code, v] of usageLoad()) counts[code] = [v.n, v.t];
+        localStorage.setItem(USAGE_KEY, JSON.stringify({ ts: Date.now(), counts }));
+      } catch { /* quota exceeded – skip silently */ }
+    });
+  }
 
   // ─── State ────────────────────────────────────────────────────────────────
 
@@ -311,6 +373,52 @@
       color: rgba(255,255,255,.25);
       padding: 4px 12px 7px;
       border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    /* Emote context menu */
+    #kte-menu {
+      position: fixed;
+      z-index: 99999;
+      min-width: 160px;
+      background: #101013;
+      border: 1px solid rgba(255,255,255,.1);
+      border-left: 3px solid #22c55e;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      font-family: sans-serif;
+      padding: 4px 0;
+    }
+    .kte-menu-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 5px;
+      margin-bottom: 3px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .kte-menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      color: #fff;
+      font-family: sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: background .08s;
+    }
+    .kte-menu-item:hover,
+    .kte-menu-item:focus-visible {
+      background: rgba(34,197,94,.1);
+      outline: none;
     }
 
     /* Native emote picker tab content */
@@ -846,12 +954,102 @@
     tipEl.style.top = `${top}px`;
   }
 
+  // ─── Emote context menu ───────────────────────────────────────────────────
+
+  let menuEl = null;
+
+  function hideEmoteMenu() {
+    if (!menuEl) return;
+    menuEl.remove();
+    menuEl = null;
+    document.removeEventListener('mousedown', emoteMenuDismiss, true);
+    document.removeEventListener('keydown', emoteMenuKeydown, true);
+  }
+
+  function emoteMenuDismiss(e) {
+    if (!menuEl?.contains(e.target)) hideEmoteMenu();
+  }
+
+  function emoteMenuKeydown(e) {
+    if (e.key === 'Escape') hideEmoteMenu();
+  }
+
+  // Derive the emote's public page from its (already allowlisted) CDN URL.
+  function emotePageUrl(emote) {
+    const url = safeUrl(emote.url);
+    if (!url) return null;
+    const { hostname, pathname } = new URL(url);
+    let m;
+    if (hostname === 'cdn.betterttv.net' && (m = pathname.match(/^\/emote\/([a-f0-9]+)\//i))) {
+      return `https://betterttv.com/emotes/${m[1]}`;
+    }
+    if (hostname === 'cdn.7tv.app' && (m = pathname.match(/^\/emote\/([A-Za-z0-9]+)\//))) {
+      return `https://7tv.app/emotes/${m[1]}`;
+    }
+    if (hostname === 'cdn.frankerfacez.com' && (m = pathname.match(/^\/emote\/(\d+)\//))) {
+      return `https://www.frankerfacez.com/emoticon/${m[1]}`;
+    }
+    return null;
+  }
+
+  function copyText(text) {
+    try { navigator.clipboard?.writeText(text)?.catch?.(() => {}); }
+    catch { /* clipboard unavailable */ }
+  }
+
+  function showEmoteMenu(x, y, code, emote) {
+    hideEmoteMenu();
+
+    const menu = document.createElement('div');
+    menu.id = 'kte-menu';
+
+    const header = document.createElement('div');
+    header.className = 'kte-menu-header';
+    const nameEl = document.createElement('span');
+    nameEl.textContent = code;
+    const srcEl = document.createElement('span');
+    srcEl.className = `kte-ac-src ${sourceClass(emote.source)}`;
+    srcEl.textContent = sourceName(emote.source);
+    header.append(nameEl, srcEl);
+    menu.appendChild(header);
+
+    const addItem = (label, action) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'kte-menu-item';
+      btn.textContent = label;
+      btn.addEventListener('click', () => { action(); hideEmoteMenu(); });
+      menu.appendChild(btn);
+    };
+
+    addItem('Copy name', () => copyText(code));
+    const imgUrl = safeUrl(emote.url);
+    if (imgUrl) addItem('Copy image URL', () => copyText(imgUrl));
+    const pageUrl = emotePageUrl(emote);
+    if (pageUrl) addItem(`Open on ${sourceName(emote.source)}`, () => window.open(pageUrl, '_blank', 'noopener'));
+
+    overlayParent().appendChild(menu);
+    const rect = menu.getBoundingClientRect();
+    menu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - rect.width - 8))}px`;
+    menu.style.top = `${Math.max(4, Math.min(y, window.innerHeight - rect.height - 8))}px`;
+    menuEl = menu;
+
+    document.addEventListener('mousedown', emoteMenuDismiss, true);
+    document.addEventListener('keydown', emoteMenuKeydown, true);
+  }
+
   function makeEmoteWrap(code, emote) {
     const wrap = document.createElement('span');
     wrap.className = 'kte-wrap';
     setEmoteTooltip(wrap, code, emote.source);
     wrap.addEventListener('mouseenter', () => showTooltip(wrap));
     wrap.addEventListener('mouseleave', hideTooltip);
+    wrap.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      hideTooltip();
+      showEmoteMenu(e.clientX, e.clientY, code, emote);
+    });
 
     const url = safeUrl(emote.url);
     if (!url) return document.createTextNode(code);
@@ -1001,8 +1199,9 @@
     if (node.nodeType !== Node.ELEMENT_NODE) return false;
     return node.id === 'kte-picker-content'
       || node.id === 'kte-ac'
+      || node.id === 'kte-menu'
       || node.classList.contains('kte-wrap')
-      || Boolean(node.closest?.('#kte-picker-content, #kte-ac, .kte-wrap'));
+      || Boolean(node.closest?.('#kte-picker-content, #kte-ac, #kte-menu, .kte-wrap'));
   }
 
   // ─── Autocomplete ─────────────────────────────────────────────────────────
@@ -1044,22 +1243,34 @@
     return acIndex;
   }
 
+  const AC_RESULTS = 8;
+  // Collect more candidates than displayed so usage ranking can promote a
+  // frequently-used emote that index order (shortest name first) would drop.
+  const AC_SCAN_CAP = 48;
+
   function acSearch(query) {
     if (query.length < 2) return [];
     const lower = query.toLowerCase();
     const index = acGetIndex();
-    const results = [];
+    const prefix = [];
     const substr = [];
     for (const entry of index) {
       if (entry.lower.startsWith(lower)) {
-        results.push({ code: entry.code, emote: entry.emote });
-        if (results.length === 8) return results;
-      } else if (substr.length < 8 && entry.lower.includes(lower)) {
-        substr.push({ code: entry.code, emote: entry.emote });
+        if (prefix.length < AC_SCAN_CAP) prefix.push(entry);
+      } else if (substr.length < AC_SCAN_CAP && entry.lower.includes(lower)) {
+        substr.push(entry);
       }
+      if (prefix.length >= AC_SCAN_CAP && substr.length >= AC_SCAN_CAP) break;
     }
-    // Prefix matches rank first; pad the remainder with substring matches
-    return results.concat(substr).slice(0, 8);
+    // Most-used first within each group (stable sort keeps the index order —
+    // shortest, then alphabetical — as tiebreak); prefix matches always
+    // outrank substring matches.
+    const byUsage = (a, b) => usageCount(b.code) - usageCount(a.code);
+    prefix.sort(byUsage);
+    substr.sort(byUsage);
+    return prefix.concat(substr)
+      .slice(0, AC_RESULTS)
+      .map(entry => ({ code: entry.code, emote: entry.emote }));
   }
 
   function acHide() {
@@ -1144,6 +1355,7 @@
       document.execCommand('insertText', false, code + ' ');
     }
 
+    usageBump(code);
     acHide();
   }
 
@@ -1272,6 +1484,7 @@
   // ─── Emote Picker ─────────────────────────────────────────────────────────
 
   const PICKER_PROVIDER_LIMIT = 40;
+  const PICKER_RECENT_LIMIT = 16;
   const PICKER_INJECT_DELAY = 120;
   const PICKER_ROUTE_INJECT_DELAY = 700;
   const PICKER_APPEND_REFRESH_DELAY = 260;
@@ -1661,6 +1874,73 @@
       const gap = before && !/\s$/.test(before) ? ' ' : '';
       document.execCommand('insertText', false, gap + code + ' ');
     }
+    usageBump(code);
+  }
+
+  function pickerBuildGrid() {
+    const grid = document.createElement('div');
+    grid.className = 'kte-picker-grid';
+    grid.addEventListener('mousedown', e => { if (e.target.closest('.kte-picker-btn')) e.preventDefault(); });
+    grid.addEventListener('mouseover', e => {
+      const b = e.target.closest('.kte-picker-btn');
+      if (b && grid.contains(b)) {
+        showTooltip(b);
+        pickerHoverAnimate(b, true);
+      }
+    });
+    grid.addEventListener('mouseout', e => {
+      const b = e.target.closest('.kte-picker-btn');
+      if (b && !b.contains(e.relatedTarget)) {
+        hideTooltip();
+        pickerHoverAnimate(b, false);
+      }
+    });
+    grid.addEventListener('click', e => {
+      const b = e.target.closest('.kte-picker-btn');
+      if (b?.dataset.code) pickerInsert(b.dataset.code);
+    });
+    return grid;
+  }
+
+  function pickerBuildSection(label, emotes) {
+    const section = document.createElement('div');
+    section.className = 'kte-picker-section grid gap-2';
+
+    const hdr = document.createElement('span');
+    hdr.className = 'kte-picker-provider text-xs font-medium text-neutral-400';
+    hdr.textContent = `${label} (${emotes.length})`;
+    section.appendChild(hdr);
+
+    const grid = pickerBuildGrid();
+    const shown = Math.min(PICKER_PROVIDER_LIMIT, emotes.length);
+    pickerAppendButtons(grid, emotes, 0, shown);
+    section.appendChild(grid);
+
+    if (shown < emotes.length) {
+      const footer = document.createElement('div');
+      footer.className = 'kte-picker-footer';
+      const limit = document.createElement('p');
+      limit.className = 'kte-picker-limit';
+      limit.textContent = `Showing ${shown} of ${emotes.length}`;
+      footer.appendChild(limit);
+      footer.appendChild(pickerBuildLoadMore(grid, emotes, shown, limit));
+      section.appendChild(footer);
+    }
+    return section;
+  }
+
+  // Most recently inserted emotes still present in the current emote set,
+  // filtered by the active picker search.
+  function pickerRecentEmotes(lowerQuery) {
+    const byRecency = [...usageLoad().entries()].sort((a, b) => b[1].t - a[1].t);
+    const recent = [];
+    for (const [code] of byRecency) {
+      if (recent.length === PICKER_RECENT_LIMIT) break;
+      if (lowerQuery && !code.toLowerCase().includes(lowerQuery)) continue;
+      const emote = emoteMap.get(code);
+      if (emote) recent.push({ code, emote });
+    }
+    return recent;
   }
 
   function pickerBuildContent(query) {
@@ -1686,57 +1966,18 @@
     });
 
     let any = false;
+
+    const recent = pickerRecentEmotes(lower);
+    if (recent.length) {
+      any = true;
+      sectionsContainer.appendChild(pickerBuildSection('Recently used', recent));
+    }
+
     for (const [source, emotes] of orderedGroups) {
       if (!emotes.length) continue;
       any = true;
       emotes.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
-
-      const section = document.createElement('div');
-      section.className = 'kte-picker-section grid gap-2';
-
-      const hdr = document.createElement('span');
-      hdr.className = 'kte-picker-provider text-xs font-medium text-neutral-400';
-      hdr.textContent = `${source} (${emotes.length})`;
-      section.appendChild(hdr);
-
-      const grid = document.createElement('div');
-      grid.className = 'kte-picker-grid';
-      grid.addEventListener('mousedown', e => { if (e.target.closest('.kte-picker-btn')) e.preventDefault(); });
-      grid.addEventListener('mouseover', e => {
-        const b = e.target.closest('.kte-picker-btn');
-        if (b && grid.contains(b)) {
-          showTooltip(b);
-          pickerHoverAnimate(b, true);
-        }
-      });
-      grid.addEventListener('mouseout', e => {
-        const b = e.target.closest('.kte-picker-btn');
-        if (b && !b.contains(e.relatedTarget)) {
-          hideTooltip();
-          pickerHoverAnimate(b, false);
-        }
-      });
-      grid.addEventListener('click', e => {
-        const b = e.target.closest('.kte-picker-btn');
-        if (b?.dataset.code) pickerInsert(b.dataset.code);
-      });
-
-      const shown = Math.min(PICKER_PROVIDER_LIMIT, emotes.length);
-      pickerAppendButtons(grid, emotes, 0, shown);
-      section.appendChild(grid);
-
-      if (shown < emotes.length) {
-        const footer = document.createElement('div');
-        footer.className = 'kte-picker-footer';
-        const limit = document.createElement('p');
-        limit.className = 'kte-picker-limit';
-        limit.textContent = `Showing ${shown} of ${emotes.length}`;
-        footer.appendChild(limit);
-        footer.appendChild(pickerBuildLoadMore(grid, emotes, shown, limit));
-        section.appendChild(footer);
-      }
-
-      sectionsContainer.appendChild(section);
+      sectionsContainer.appendChild(pickerBuildSection(source, emotes));
     }
 
     if (!any) {
@@ -2141,6 +2382,7 @@
       emoteVersion++;
       acHide();
       hideTooltip();
+      hideEmoteMenu();
       resetPicker();
       return;
     }
@@ -2150,6 +2392,7 @@
     emoteVersion++;
     acHide();
     hideTooltip();
+    hideEmoteMenu();
     resetPicker();
     startChatObserver();
     waitForInput();
@@ -2244,6 +2487,7 @@
     emoteVersion++;
     acHide();
     hideTooltip();
+    hideEmoteMenu();
     // Full stale-mark (not just detach) so image src is cleared even when Kick
     // has already removed the picker panel — resetPicker bails on a missing
     // panel and would otherwise leave decoded image data alive.
@@ -2301,6 +2545,7 @@
   document.addEventListener('fullscreenchange', () => {
     if (tipEl) reparentOverlay(tipEl);
     if (acDropdown) reparentOverlay(acDropdown);
+    hideEmoteMenu();
   });
 
   document.readyState === 'loading'

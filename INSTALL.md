@@ -60,7 +60,7 @@ The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with
 
 - On every Kick channel page the script fetches emotes from all three services.
 - Chat messages are scanned as they arrive; any matching word is replaced with the emote image.
-- Hover over an emote to see its name and which service it came from.
+- Hover over an emote to see its name and which service it came from; right-click it to copy the name/image URL or open its provider page.
 - Open Kick's emote picker and choose the **7TV+** tab to browse/search loaded third-party emotes; clicking one inserts its text code into chat. The picker starts with 40 matches per provider for performance, offers **Load more** per provider, and search narrows across all loaded emotes.
 - Navigating between channels reloads the channel-specific emote sets automatically.
 
