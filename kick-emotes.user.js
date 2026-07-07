@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.7.3
+// @version      2.7.4
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -1063,11 +1063,37 @@
   }
 
   function acHide() {
+    acResizeObserver?.disconnect();
+    window.removeEventListener('resize', acPosition);
     acDropdown?.remove();
     acDropdown = null;
     acFocusIdx = -1;
     acMatches = [];
     acInput = null;
+  }
+
+  let acResizeObserver = null;
+
+  // (Re)position the open popup from the input's current rect: anchor to the
+  // input's left edge, open upward, cap height to the space above the input,
+  // and shift left if it would overflow the right viewport edge.
+  function acPosition() {
+    if (!acDropdown || !acInput?.isConnected) return;
+    const rect = acInput.getBoundingClientRect();
+    acDropdown.style.left = `${rect.left}px`;
+    acDropdown.style.bottom = `${window.innerHeight - rect.top + 6}px`;
+    acDropdown.style.maxHeight = `${Math.max(120, rect.top - 14)}px`;
+    const overflow = acDropdown.getBoundingClientRect().right - (window.innerWidth - 8);
+    if (overflow > 0) acDropdown.style.left = `${Math.max(8, rect.left - overflow)}px`;
+  }
+
+  // The chat pane can be resized without a window resize (dragging Kick's
+  // divider), which moves the input under the fixed-position popup — track the
+  // input's size too, not just the window.
+  function acWatchReposition() {
+    if (!acResizeObserver) acResizeObserver = new ResizeObserver(() => acPosition());
+    acResizeObserver.observe(acInput);
+    window.addEventListener('resize', acPosition, { passive: true });
   }
 
   function acRefreshOpen() {
@@ -1127,7 +1153,6 @@
     acMatches = matches;
     acInput = inputEl;
 
-    const rect = inputEl.getBoundingClientRect();
     const popup = document.createElement('div');
     popup.id = 'kte-ac';
     // Keep the chat input focused when interacting with the popup — a scrollbar
@@ -1174,14 +1199,10 @@
     footer.textContent = '↑↓ navigate  ·  Tab select  ·  Esc close';
     popup.appendChild(footer);
 
-    // Anchor to left edge of input, open upward; cap height to the space
-    // above the input and shift left if it would overflow the right viewport
-    // edge (narrow chat + wide popup)
-    popup.style.cssText = `left:${rect.left}px; bottom:${window.innerHeight - rect.top + 6}px; max-height:${Math.max(120, rect.top - 14)}px;`;
     overlayParent().appendChild(popup);
-    const overflow = popup.getBoundingClientRect().right - (window.innerWidth - 8);
-    if (overflow > 0) popup.style.left = `${Math.max(8, rect.left - overflow)}px`;
     acDropdown = popup;
+    acPosition();
+    acWatchReposition();
   }
 
   function acOnInput(e) {

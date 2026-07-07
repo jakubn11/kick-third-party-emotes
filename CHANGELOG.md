@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.4] - 2026-07-07
+
+### Fixed
+- The autocomplete popup now follows the chat input when the chat pane or window is resized while it's open. It was positioned once on open and stayed at stale fixed coordinates; a `ResizeObserver` on the input plus a window `resize` listener now re-anchor it (including the width/height clamps) whenever the layout moves.
+
 ## [2.7.3] - 2026-07-07
 
 ### Added
