@@ -32,7 +32,7 @@
 - Animated emote support (GIF)
 - Zero-width 7TV emote overlays
 - Hover tooltips showing emote name and provider
-- Autocomplete popup when typing (prefix match, keyboard navigation)
+- Autocomplete popup when typing (prefix match with substring fallback, keyboard navigation)
 - Third-party emote tab inside Kick's native emote picker with search, animated emotes, and per-provider **Load more**
 - Stale-while-revalidate local cache per provider to show repeat-visit emotes immediately while refreshing in the background
 - Works with Kick's SPA routing — no page reload needed when switching channels
@@ -83,10 +83,10 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Key | Action |
 |-----|--------|
 | ↑ / ↓ | Navigate suggestions |
-| Tab | Insert selected emote (auto-inserts if only one match) |
+| Tab | Insert the selected emote (top match if none is selected) |
 | Esc | Close autocomplete |
 
-**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. The picker starts with 80 matches per provider for performance, then offers **Load more** per provider. Search narrows across all loaded emotes. Clicking an emote inserts its code into the chat input. Animated 7TV emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets.
+**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. The picker starts with 40 matches per provider for performance, then offers **Load more** per provider. Search narrows across all loaded emotes. Clicking an emote inserts its code into the chat input. Animated 7TV emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets.
 
 ## Troubleshooting
 

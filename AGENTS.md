@@ -47,7 +47,7 @@ Do not add `Co-Authored-By:` trailers to git commits.
 `kick-emotes.user.js` is organized into these areas:
 
 - Userscript metadata and constants
-- Cache helper using `localStorage` keys prefixed with `kte_`
+- Cache helper using `localStorage` keys prefixed with `kte_v2_` (old-prefix and long-expired keys are swept once per page load)
 - Provider loaders for BTTV, 7TV, and FFZ
 - DOM message processing and emote replacement
 - Autocomplete popup and chat input handling
@@ -57,8 +57,10 @@ Do not add `Co-Authored-By:` trailers to git commits.
 The central data structure is:
 
 ```js
-Map<string, { url: string, source: string, animated: boolean, zeroWidth: boolean }>
+Map<string, { url: string, source: string, animated: boolean, zeroWidth: boolean, staticUrl?: string }>
 ```
+
+`staticUrl` is optional: a frozen first-frame variant (populated for animated 7TV emotes) used by the picker's animate-on-hover behaviour.
 
 Each provider loader should add `[code, emote]` entries through `cachedLoad()`.
 
@@ -67,7 +69,7 @@ Each provider loader should add `[code, emote]` entries through `cachedLoad()`.
 Current provider endpoints:
 
 - BetterTTV: `https://api.betterttv.net/3`
-- 7TV: `https://7tv.io/v3`
+- 7TV: `https://7tv.io/v3` (global emote set) and `https://7tv.io/v4/gql` (channel emotes via GraphQL user search)
 - FrankerFaceZ: `https://api.frankerfacez.com/v1`
 
 Prefer preserving the current graceful-failure behavior. Provider failures should not stop other providers from loading.
@@ -94,7 +96,7 @@ When fixing Kick DOM breakage, prefer adding fallback selectors rather than repl
 - Emote images use `.kte-img` with a 28px height.
 - Zero-width 7TV emotes overlay the previous emote via `.kte-zw`.
 - Text nodes are split on whitespace; exact token matches are replaced.
-- Processed message elements receive `data-kte-done="1"` to avoid duplicate rendering.
+- Processed message elements receive `data-kte-version="<emoteVersion>"` to avoid duplicate rendering; bumping `emoteVersion` (provider refresh, channel change) makes them eligible for reprocessing.
 
 Be careful when changing text processing: chat messages can contain links, existing elements, and text nodes inserted incrementally by the Kick frontend.
 
@@ -102,7 +104,7 @@ Be careful when changing text processing: chat messages can contain links, exist
 
 Autocomplete is intentionally lightweight and local:
 
-- It searches loaded emote names with prefix matching.
+- It searches loaded emote names with prefix matching first, padding remaining slots with substring matches.
 - It displays up to 8 results.
 - It supports contenteditable inputs and textarea/input fallbacks.
 - It uses `document.execCommand('insertText')` for contenteditable insertion to preserve frontend reactivity.
@@ -163,7 +165,7 @@ All script-injected UI must follow this design language consistently. Do not dev
 - **Box shadow:** `0 8–12px 24–32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`.
 - **Border radius:** `8px` for small popups (tooltip), `10px` for larger ones (autocomplete, picker panels).
 - **Typography:** `font-family: sans-serif`. Bold (`font-weight: 700`) for primary labels. `font-weight: 600` for secondary text.
-- **Source badges** (7TV, BTTV, FFZ): `#22c55e` at `opacity: .7`, `font-size: 10px`, `font-weight: 700`.
+- **Source badges**: per-provider colors at `opacity: .85`, `font-size: 10px`, `font-weight: 700` — 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, other `#22c55e`.
 - **Hover states:** `rgba(34,197,94,.1)` background, no border change.
 - **Transitions:** `transition: background .08s` on interactive rows/buttons.
 - **No drop shadows in green.** Shadows are always `rgba(0,0,0,…)`.

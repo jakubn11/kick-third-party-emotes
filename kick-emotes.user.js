@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.7.2
+// @version      2.7.3
 // @description  BetterTTV, 7TV, FrankerFaceZ emotes on Kick.com — cache, zero-width, autocomplete, native picker. Developed for Safari + Userscripts; other browsers/managers untested.
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -98,9 +98,29 @@
   }
 
   // Prefix bumped from `kte_` to `kte_v2_` when adding `staticUrl` to the
-  // emote schema. Old keys become orphans but stay quota-cheap; they'll fall
-  // out naturally as the browser evicts unused localStorage entries.
+  // emote schema. Orphaned v1 keys are removed by sweepCache below.
   const CACHE_PREFIX = 'kte_v2_';
+
+  // Every visited channel leaves kte_v2_*_c_<slug> keys behind and localStorage
+  // never evicts them, so a long tail of channels would eventually hit quota
+  // and silently disable caching. Drop pre-v2 keys and anything long expired.
+  const CACHE_SWEEP_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+  function sweepCache() {
+    const doomed = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith('kte_')) continue;
+        if (!key.startsWith(CACHE_PREFIX)) { doomed.push(key); continue; }
+        try {
+          const { ts } = JSON.parse(localStorage.getItem(key));
+          if (typeof ts !== 'number' || Date.now() - ts > CACHE_SWEEP_MAX_AGE) doomed.push(key);
+        } catch { doomed.push(key); }
+      }
+      doomed.forEach(key => localStorage.removeItem(key));
+    } catch { /* storage access denied – skip */ }
+  }
 
   const Cache = {
     read(key) {
@@ -220,10 +240,12 @@
       border-radius: 10px;
       box-shadow: 0 12px 32px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
       backdrop-filter: blur(12px);
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
       z-index: 99999;
-      min-width: 230px;
-      max-width: 320px;
+      min-width: min(230px, calc(100vw - 16px));
+      max-width: min(320px, calc(100vw - 16px));
       font-family: sans-serif;
     }
     #kte-ac-header {
@@ -247,8 +269,8 @@
     .kte-ac-row.kte-focused { background: rgba(34,197,94,.1); }
     .kte-ac-row img {
       height: 26px;
-      width: auto;
-      max-width: 72px;
+      width: 40px;
+      object-fit: contain;
       flex-shrink: 0;
     }
     .kte-ac-code {
@@ -482,6 +504,10 @@
           ? { 'Content-Type': 'application/json', Accept: 'application/json' }
           : { Accept: 'application/json' },
         data: body ? JSON.stringify(body) : undefined,
+        // Without this a hung provider request never settles, which blocks the
+        // failed-provider retry pass in init() forever.
+        timeout: 15000,
+        ontimeout: () => reject(new Error('timeout')),
         onload(res) {
           if (res.status >= 200 && res.status < 300) {
             try { resolve(JSON.parse(res.responseText)); }
@@ -539,6 +565,7 @@
   function sameEmoteEntry(a, b) {
     return a?.[0] === b?.[0]
       && a?.[1]?.url === b?.[1]?.url
+      && a?.[1]?.staticUrl === b?.[1]?.staticUrl
       && a?.[1]?.source === b?.[1]?.source
       && Boolean(a?.[1]?.animated) === Boolean(b?.[1]?.animated)
       && Boolean(a?.[1]?.zeroWidth) === Boolean(b?.[1]?.zeroWidth);
@@ -1022,13 +1049,17 @@
     const lower = query.toLowerCase();
     const index = acGetIndex();
     const results = [];
+    const substr = [];
     for (const entry of index) {
       if (entry.lower.startsWith(lower)) {
         results.push({ code: entry.code, emote: entry.emote });
-        if (results.length === 8) break;
+        if (results.length === 8) return results;
+      } else if (substr.length < 8 && entry.lower.includes(lower)) {
+        substr.push({ code: entry.code, emote: entry.emote });
       }
     }
-    return results;
+    // Prefix matches rank first; pad the remainder with substring matches
+    return results.concat(substr).slice(0, 8);
   }
 
   function acHide() {
@@ -1099,6 +1130,9 @@
     const rect = inputEl.getBoundingClientRect();
     const popup = document.createElement('div');
     popup.id = 'kte-ac';
+    // Keep the chat input focused when interacting with the popup — a scrollbar
+    // drag would otherwise blur the input and close the popup mid-scroll.
+    popup.addEventListener('mousedown', e => e.preventDefault());
 
     const header = document.createElement('div');
     header.id = 'kte-ac-header';
@@ -1140,9 +1174,13 @@
     footer.textContent = '↑↓ navigate  ·  Tab select  ·  Esc close';
     popup.appendChild(footer);
 
-    // Anchor to left edge of input, open upward
-    popup.style.cssText = `left:${rect.left}px; bottom:${window.innerHeight - rect.top + 6}px;`;
+    // Anchor to left edge of input, open upward; cap height to the space
+    // above the input and shift left if it would overflow the right viewport
+    // edge (narrow chat + wide popup)
+    popup.style.cssText = `left:${rect.left}px; bottom:${window.innerHeight - rect.top + 6}px; max-height:${Math.max(120, rect.top - 14)}px;`;
     overlayParent().appendChild(popup);
+    const overflow = popup.getBoundingClientRect().right - (window.innerWidth - 8);
+    if (overflow > 0) popup.style.left = `${Math.max(8, rect.left - overflow)}px`;
     acDropdown = popup;
   }
 
@@ -1157,8 +1195,9 @@
     if (e.key === 'ArrowDown') { e.preventDefault(); acSetFocus(Math.min(acFocusIdx + 1, acMatches.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); acSetFocus(Math.max(acFocusIdx - 1, 0)); }
     else if (e.key === 'Tab') {
-      if (acMatches.length === 1) { e.preventDefault(); acCommit(acMatches[0].code); }
-      else if (acFocusIdx >= 0 && acMatches[acFocusIdx]) { e.preventDefault(); acCommit(acMatches[acFocusIdx].code); }
+      // No explicit focus → complete the top match (matches Twitch/7TV behaviour)
+      const pick = acMatches[acFocusIdx >= 0 ? acFocusIdx : 0];
+      if (pick) { e.preventDefault(); acCommit(pick.code); }
     }
     else if (e.key === 'Escape') { e.preventDefault(); acHide(); }
   }
@@ -2246,4 +2285,7 @@
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', waitForDOMThenInit)
     : waitForDOMThenInit();
+
+  // One-time storage cleanup, off the critical path.
+  RIC(sweepCache);
 })();

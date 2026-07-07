@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3] - 2026-07-07
+
+### Added
+- Autocomplete falls back to substring matching: when fewer than 8 emote names start with the typed text, the remaining slots are filled with names that contain it anywhere (prefix matches still rank first).
+
+### Changed
+- Autocomplete rows give the emote image a fixed 40px slot (`object-fit: contain`), so the emote names align in a clean column instead of starting at a different x-position per row.
+- Tab in the autocomplete now completes the top match even when several matches are listed and none is arrow-key focused, matching Twitch/7TV behaviour (and what the popup footer already claimed). Previously Tab did nothing in that state and just moved browser focus, closing the popup.
+- Old cache entries are now swept from localStorage once per page load: pre-v2 `kte_` keys and any `kte_v2_` record older than 7 days are removed. Previously every visited channel left its cache keys behind forever, which would eventually exhaust the storage quota and silently disable caching.
+
+### Fixed
+- The autocomplete popup no longer overflows the right edge of the viewport when the chat pane is narrow. Its width is now capped to the viewport, it shifts left when the input's left edge would push it off-screen, and long emote names truncate with an ellipsis as intended instead of being clipped by the screen edge.
+- The autocomplete popup also caps its height to the space above the input and scrolls its rows instead of clipping past the top of a short window. Interacting with the popup (e.g. dragging its scrollbar) no longer blurs the chat input, which would have closed the popup mid-scroll.
+- Provider API requests now time out after 15 s. A hung request previously never settled, which permanently blocked the "retry failed providers in 5 s" pass for that page load.
+- A provider refresh that only changes an emote's static-frame URL (`staticUrl`) is no longer misdetected as "no change" and dropped.
+
 ## [2.7.2] - 2026-07-01
 
 ### Security
