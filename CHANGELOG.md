@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.2] - 2026-07-07
+
+### Changed
+- Final wording pass on the `@description` metadata: dropped the "Userscript that" lead-in and the Safari compatibility sentence (still documented in README/INSTALL). Matches the GitHub repo description exactly.
+
 ## [2.8.1] - 2026-07-07
 
 ### Changed

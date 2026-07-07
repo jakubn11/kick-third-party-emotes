@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.8.1
-// @description  Userscript that adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, right-click emote menu, native picker tab with recents. Developed for Safari + Userscripts; other managers untested.
+// @version      2.8.2
+// @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, right-click emote menu, native picker tab with recents
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
 // @icon         https://raw.githubusercontent.com/jakubn11/kick-emotes/main/icon.svg
