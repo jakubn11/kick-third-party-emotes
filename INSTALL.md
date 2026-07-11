@@ -19,7 +19,7 @@ Safari requires a userscript host app. **[Userscripts](https://apps.apple.com/ap
 3. Click the Userscripts toolbar icon and choose a folder to store your scripts  
    (e.g. `~/Documents/Userscripts`).
 
-4. Copy `kick-emotes.user.js` into that folder — Userscripts picks it up automatically.
+4. Copy `kick-third-party-emotes.user.js` into that folder — Userscripts picks it up automatically.
 
    Alternatively, click the Userscripts icon while on any page and use  
    **"Open Scripts Directory"** to locate the right folder.
@@ -31,22 +31,22 @@ The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with
 **[Tampermonkey](https://www.tampermonkey.net)** (Chrome, Firefox, Edge, Safari, Opera):
 1. Install the Tampermonkey extension for your browser.
 2. Open the Tampermonkey dashboard → **Create a new script**.
-3. Replace the default content with the contents of `kick-emotes.user.js` and save.
+3. Replace the default content with the contents of `kick-third-party-emotes.user.js` and save.
 
 **[Violentmonkey](https://violentmonkey.github.io)** (Chrome, Firefox, Edge):
 1. Install the Violentmonkey extension.
 2. Click the Violentmonkey icon → **+** → **New script**.
-3. Paste the contents of `kick-emotes.user.js` and save.
+3. Paste the contents of `kick-third-party-emotes.user.js` and save.
 
 **[Greasemonkey](https://www.greasespot.net)**:
 1. Install the Greasemonkey add-on from [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/greasemonkey/).
 2. Click the Greasemonkey icon → **New user script…**.
-3. Fill in any name, click **OK**, then paste the contents of `kick-emotes.user.js` over the template and save.
+3. Fill in any name, click **OK**, then paste the contents of `kick-third-party-emotes.user.js` over the template and save.
 
 **[ScriptCat](https://scriptcat.org)** (Chrome, Firefox, Edge):
 1. Install the ScriptCat extension.
 2. Open the ScriptCat manager → **+** → **New script**.
-3. Paste the contents of `kick-emotes.user.js` and save.
+3. Paste the contents of `kick-third-party-emotes.user.js` and save.
 
 **Other managers** (e.g. AdGuard, Stay for Safari, Userscript Loader): the install flow is the same — create a new script in the manager's UI and paste the file contents. Auto-update via `@updateURL` works in any manager that honours that directive.
 
@@ -66,7 +66,7 @@ The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with
 
 ## Updating
 
-The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the `main` branch on GitHub. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a new `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). **Safari's Userscripts extension is the exception** — it runs from a local folder and does not fetch `@updateURL`, so you must re-copy the latest `kick-emotes.user.js` into your scripts folder to update. To update manually in any manager, replace `kick-emotes.user.js` with the new version.
+The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the `main` branch on GitHub. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a new `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). **Safari's Userscripts extension is the exception** — it runs from a local folder and does not fetch `@updateURL`, so you must re-copy the latest `kick-third-party-emotes.user.js` into your scripts folder to update. To update manually in any manager, replace `kick-third-party-emotes.user.js` with the new version.
 
 ## Troubleshooting
 

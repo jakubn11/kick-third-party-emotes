@@ -55,13 +55,13 @@ See [INSTALL.md](INSTALL.md) for step-by-step instructions.
 **Safari (recommended):**
 1. Install the **[Userscripts](https://apps.apple.com/app/userscripts/id1463298887)** extension from the Mac App Store
 2. Configure a scripts folder in the extension settings
-3. Copy `kick-emotes.user.js` into that folder
+3. Copy `kick-third-party-emotes.user.js` into that folder
 
 **Other browsers (untested):**
 1. Install [Tampermonkey](https://www.tampermonkey.net), [Violentmonkey](https://violentmonkey.github.io), [Greasemonkey](https://www.greasespot.net), [ScriptCat](https://scriptcat.org) or other
-2. Open `kick-emotes.user.js` and paste it into a new script, or drag the file into the extension dashboard
+2. Open `kick-third-party-emotes.user.js` and paste it into a new script, or drag the file into the extension dashboard
 
-**Updates:** The script carries `@updateURL` / `@downloadURL` pointing at this repo, so managers that support remote updates (Tampermonkey, Violentmonkey, ScriptCat, …) pick up new versions automatically — no reinstall needed. Safari's Userscripts extension runs from a local folder and does **not** auto-update; re-copy the latest `kick-emotes.user.js` to update there.
+**Updates:** The script carries `@updateURL` / `@downloadURL` pointing at this repo, so managers that support remote updates (Tampermonkey, Violentmonkey, ScriptCat, …) pick up new versions automatically — no reinstall needed. Safari's Userscripts extension runs from a local folder and does **not** auto-update; re-copy the latest `kick-third-party-emotes.user.js` to update there.
 
 See [INSTALL.md](INSTALL.md) for full per-manager steps.
 

@@ -5,10 +5,10 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 ## Project Overview
 
 **Type:** Single-file JavaScript userscript  
-**Primary file:** `kick-emotes.user.js`  
+**Primary file:** `kick-third-party-emotes.user.js`  
 **Install docs:** `INSTALL.md`  
 **Target:** Any userscript manager (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) on any browser; developed and tested on Safari + Userscripts  
-**Git:** `git@github.com:jakubn11/kick-emotes.git` (default branch: `main`).
+**Git:** `git@github.com:jakubn11/kick-third-party-emotes.git` (default branch: `main`).
 
 ## Commands
 
@@ -17,8 +17,8 @@ There is no package manager, build step, linter, or automated test suite configu
 Useful local checks:
 
 ```bash
-sed -n '1,80p' kick-emotes.user.js
-wc -l kick-emotes.user.js INSTALL.md
+sed -n '1,80p' kick-third-party-emotes.user.js
+wc -l kick-third-party-emotes.user.js INSTALL.md
 ```
 
 Manual testing is required in a browser with a userscript manager installed:
@@ -46,7 +46,7 @@ Do not add `Co-Authored-By:` trailers to git commits.
 
 ## Implementation Map
 
-`kick-emotes.user.js` is organized into these areas:
+`kick-third-party-emotes.user.js` is organized into these areas:
 
 - Userscript metadata and constants
 - Cache helper using `localStorage` keys prefixed with `kte_v2_` (old-prefix and long-expired keys are swept once per page load)
@@ -192,7 +192,7 @@ Keep docs browser-agnostic. When mentioning installation steps, cover the genera
 
 Before committing any change, always:
 
-1. **Bump `@version`** in the `kick-emotes.user.js` metadata header using these rules:
+1. **Bump `@version`** in the `kick-third-party-emotes.user.js` metadata header using these rules:
 
    | Change | Bump | Example |
    |---|---|---|

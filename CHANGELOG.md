@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3] - 2026-07-11
+
+### Changed
+- Renamed the userscript file to `kick-third-party-emotes.user.js` and the GitHub repository to `kick-third-party-emotes`, matching the script's `@name` and the rest of the `kick-*` family. Updated the `@icon`, `@updateURL`, and `@downloadURL` metadata (and the doc references) to the new repo path. No functional changes.
+
 ## [2.8.2] - 2026-07-07
 
 ### Changed

@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.8.2
+// @version      2.8.3
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, right-click emote menu, native picker tab with recents
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
-// @icon         https://raw.githubusercontent.com/jakubn11/kick-emotes/main/icon.svg
+// @icon         https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/icon.svg
 // @match        https://kick.com/*
-// @updateURL    https://raw.githubusercontent.com/jakubn11/kick-emotes/main/kick-emotes.user.js
-// @downloadURL  https://raw.githubusercontent.com/jakubn11/kick-emotes/main/kick-emotes.user.js
+// @updateURL    https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/kick-third-party-emotes.user.js
+// @downloadURL  https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/kick-third-party-emotes.user.js
 // @grant        GM_xmlhttpRequest
 // @connect      api.betterttv.net
 // @connect      cdn.betterttv.net
