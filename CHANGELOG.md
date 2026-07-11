@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.4] - 2026-07-11
+
+### Changed
+- Redesigned the project `icon.svg` from the four-dot rounded grid to a winking emote face, keeping the same `#22c55e` green on the `#101013` rounded-square background. The `@icon` URL is unchanged. No functional changes.
+
 ## [2.8.3] - 2026-07-11
 
 ### Changed
