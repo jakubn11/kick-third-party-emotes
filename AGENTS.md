@@ -148,7 +148,7 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 
 ## UI Design System
 
-All script-injected UI must follow this design language consistently. Do not deviate from it when adding new popups, overlays, or controls.
+Part of the **kick-\* family** design language (shared with the sibling `kick-fullscreen-chat`, `kick-quality-saver`, and `kick-chat-utils` userscripts). All script-injected UI must follow this design language consistently. Do not deviate from it when adding new popups, overlays, or controls.
 
 ### Palette
 
