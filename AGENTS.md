@@ -176,9 +176,9 @@ glance is the feature: 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, anything el
 - **Borders:** `rgba(255,255,255,.1)` on most sides; the single green accent replaces one border (left stripe or top bar).
 - **Box shadow:** `0 8–12px 24–32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`.
 - **Border radius:** `8px` for popups (`#kte-tip`, `#kte-menu`), `10px` for the larger autocomplete (`#kte-ac`), `4px`/`6px` for small picker controls, `999px` for the picker's pill.
-- **Typography:** `font-family: sans-serif`. Bold (`font-weight: 700`) for primary labels. `font-weight: 600` for secondary text. *(The siblings use fuller stacks — `system-ui, -apple-system, "Segoe UI", sans-serif`. The bare `sans-serif` here is the family's one real font inconsistency; harmless, but if you touch the type, prefer the fuller stack.)*
+- **Typography:** `font-family: system-ui, -apple-system, "Segoe UI", sans-serif` — the family stack, shared with the sibling scripts. Bold (`font-weight: 700`) for primary labels, `font-weight: 600` for secondary text. *(Until 2.8.5 this was a bare `sans-serif`, which fell through to the browser default on Windows instead of Segoe UI.)*
 - **Source badges**: per-provider colors at `opacity: .85`, `font-size: 10px`, `font-weight: 700` — 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, other `#22c55e`.
-- **Hover states:** `rgba(34,197,94,.1)` background, no border change.
+- **Hover states:** rows and menu items take a `rgba(34,197,94,.1)` background with no border change. The picker's **Load more** — the one accent-filled button — uses the family's selected-chip treatment instead: `rgba(34,197,94,.14)` fill / `rgba(34,197,94,.5)` border / `#4ade80` text at rest, hovering to `.18` / `.6`. Keep it in step with kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected` and kick-quality-saver's `.kqs-chip[data-active]`.
 - **Transitions:** `transition: background .08s` on interactive rows/buttons (the picker uses `.12s ease`).
 - **No drop shadows in green.** Shadows are always `rgba(0,0,0,…)`.
 - **Tooltips** (`#kte-tip`): use the shared `showTooltip(el)` / `hideTooltip()` helpers. Wire via `data-kte-tip` attribute and `mouseenter`/`mouseleave` events. Do not use native `title` attributes on any script-injected element.
