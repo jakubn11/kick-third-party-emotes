@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.8.4
+// @version      2.8.5
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, right-click emote menu, native picker tab with recents
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -278,7 +278,7 @@
       color: #fff;
       font-size: 12px;
       font-weight: 700;
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       line-height: 1;
       padding: 7px 11px 7px 13px;
       border-radius: 8px;
@@ -308,7 +308,7 @@
       z-index: 99999;
       min-width: min(230px, calc(100vw - 16px));
       max-width: min(320px, calc(100vw - 16px));
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     }
     #kte-ac-header {
       font-size: 10px;
@@ -387,7 +387,7 @@
       box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
       backdrop-filter: blur(8px);
       overflow: hidden;
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       padding: 4px 0;
     }
     .kte-menu-header {
@@ -408,7 +408,7 @@
       background: transparent;
       border: 0;
       color: #fff;
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       font-size: 12px;
       font-weight: 600;
       padding: 7px 12px;
@@ -427,7 +427,7 @@
       padding: 8px 10px 8px 20px;
       margin-right: 10px;
       color: #efeff1;
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       box-sizing: border-box;
       min-height: 0;
       overflow-y: auto;
@@ -502,10 +502,10 @@
     }
     .kte-picker-more {
       width: fit-content;
-      border: 1px solid rgba(34,197,94,.55);
+      border: 1px solid rgba(34,197,94,.5);
       border-radius: 6px;
-      background: rgba(34,197,94,.12);
-      color: #dcfce7;
+      background: rgba(34,197,94,.14);
+      color: #4ade80;
       cursor: pointer;
       font-size: 12px;
       font-weight: 600;
@@ -532,9 +532,9 @@
     }
     .kte-picker-more:hover,
     .kte-picker-more:focus-visible {
-      background: rgba(34,197,94,.2);
-      border-color: rgba(34,197,94,.85);
-      color: #f0fdf4;
+      background: rgba(34,197,94,.18);
+      border-color: rgba(34,197,94,.6);
+      color: #4ade80;
       outline: none;
     }
     .kte-picker-more:disabled {

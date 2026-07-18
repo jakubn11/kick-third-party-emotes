@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.5] - 2026-07-19
+
+### Changed
+- **The picker's "Load more" button now uses the kick-\* family accent values.** It was the one control in the family painting its own greens — a `.55` border over a `.12` fill with `#dcfce7` text, brightening to `.85`/`.2`/`#f0fdf4` on hover. It now matches the selected-chip treatment used by kick-fullscreen-chat and kick-quality-saver: `rgba(34,197,94,.14)` fill, `rgba(34,197,94,.5)` border and `#4ade80` text, hovering to `.18`/`.6`. Slightly softer, and consistent with every other accented control in the family.
+- **Popups now use the full family font stack** (`system-ui, -apple-system, "Segoe UI", sans-serif`) instead of a bare `sans-serif`. On Windows this picks Segoe UI like the sibling scripts, rather than falling through to the browser's generic sans-serif.
+
 ## [2.8.4] - 2026-07-11
 
 ### Changed
