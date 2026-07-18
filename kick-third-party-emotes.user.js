@@ -461,7 +461,7 @@
     }
     .kte-picker-btn:hover,
     .kte-picker-btn:focus-visible {
-      background: rgba(255, 255, 255, .1);
+      background: rgba(255,255,255,.1);
       outline: none;
     }
     .kte-picker-btn img {
@@ -502,9 +502,9 @@
     }
     .kte-picker-more {
       width: fit-content;
-      border: 1px solid rgba(34, 197, 94, .55);
+      border: 1px solid rgba(34,197,94,.55);
       border-radius: 6px;
-      background: rgba(34, 197, 94, .12);
+      background: rgba(34,197,94,.12);
       color: #dcfce7;
       cursor: pointer;
       font-size: 12px;
@@ -532,8 +532,8 @@
     }
     .kte-picker-more:hover,
     .kte-picker-more:focus-visible {
-      background: rgba(34, 197, 94, .2);
-      border-color: rgba(34, 197, 94, .85);
+      background: rgba(34,197,94,.2);
+      border-color: rgba(34,197,94,.85);
       color: #f0fdf4;
       outline: none;
     }
