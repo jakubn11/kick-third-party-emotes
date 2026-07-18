@@ -148,18 +148,26 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 
 ## UI Design System
 
-Part of the **kick-\* family** design language (shared with the sibling `kick-fullscreen-chat`, `kick-quality-saver`, and `kick-chat-utils` userscripts). All script-injected UI must follow this design language consistently. Do not deviate from it when adding new popups, overlays, or controls.
+Part of the **kick-\* family** design language (shared with the sibling `kick-fullscreen-chat`, `kick-quality-saver`, `kick-chat-utils`, and `kick-vod-resume` userscripts). All script-injected UI must follow this design language consistently. Do not deviate from it when adding new popups, overlays, or controls.
+
+> **These are literal values, not CSS variables.** This table used to list `--kte-bg`, `--kte-green`, `--kte-border`, `--kte-text`, `--kte-muted` and `--kte-hover` as though the script defined custom properties. **It never has** — every value below is hardcoded in `_style.textContent`. If you came here looking for those variables, they don't exist; don't add them, and don't write `var(--kte-…)` in new rules. The family has no build step and no auto-update, so each script stays self-contained.
 
 ### Palette
 
-| Token | Value | Usage |
-|---|---|---|
-| `--kte-bg` | `#101013` | All popup/overlay backgrounds |
-| `--kte-green` | `#22c55e` | Signature accent — used exactly once per component |
-| `--kte-border` | `rgba(255,255,255,.1)` | Neutral borders on all sides |
-| `--kte-text` | `#ffffff` | Primary text (emote names, labels) |
-| `--kte-muted` | `rgba(255,255,255,.25)` | Secondary / hint text |
-| `--kte-hover` | `rgba(34,197,94,.1)` | Row / button hover/focus background |
+Values as actually used in the script (verified against `_style.textContent`):
+
+| Value | Usage |
+|---|---|
+| `#101013` | All popup/overlay backgrounds (`#kte-tip`, `#kte-ac`, `#kte-menu`) |
+| `#22c55e` | Signature accent — used exactly once per component |
+| `rgba(255,255,255,.1)` | Neutral borders on all sides |
+| `#fff` | Primary text (emote names, labels) |
+| `rgba(255,255,255,.25)` | Secondary / hint text |
+| `rgba(34,197,94,.1)` | Row / button hover/focus background |
+| `#71717a` | Dimmed/disabled hint text |
+
+Provider brand colours are **deliberately not** family colours — telling sources apart at a
+glance is the feature: 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, anything else `#22c55e`.
 
 ### Rules
 
@@ -167,11 +175,11 @@ Part of the **kick-\* family** design language (shared with the sibling `kick-fu
 - **Backgrounds:** `#101013` with `backdrop-filter: blur(8–12px)`.
 - **Borders:** `rgba(255,255,255,.1)` on most sides; the single green accent replaces one border (left stripe or top bar).
 - **Box shadow:** `0 8–12px 24–32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`.
-- **Border radius:** `8px` for small popups (tooltip), `10px` for larger ones (autocomplete, picker panels).
-- **Typography:** `font-family: sans-serif`. Bold (`font-weight: 700`) for primary labels. `font-weight: 600` for secondary text.
+- **Border radius:** `8px` for popups (`#kte-tip`, `#kte-menu`), `10px` for the larger autocomplete (`#kte-ac`), `4px`/`6px` for small picker controls, `999px` for the picker's pill.
+- **Typography:** `font-family: sans-serif`. Bold (`font-weight: 700`) for primary labels. `font-weight: 600` for secondary text. *(The siblings use fuller stacks — `system-ui, -apple-system, "Segoe UI", sans-serif`. The bare `sans-serif` here is the family's one real font inconsistency; harmless, but if you touch the type, prefer the fuller stack.)*
 - **Source badges**: per-provider colors at `opacity: .85`, `font-size: 10px`, `font-weight: 700` — 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, other `#22c55e`.
 - **Hover states:** `rgba(34,197,94,.1)` background, no border change.
-- **Transitions:** `transition: background .08s` on interactive rows/buttons.
+- **Transitions:** `transition: background .08s` on interactive rows/buttons (the picker uses `.12s ease`).
 - **No drop shadows in green.** Shadows are always `rgba(0,0,0,…)`.
 - **Tooltips** (`#kte-tip`): use the shared `showTooltip(el)` / `hideTooltip()` helpers. Wire via `data-kte-tip` attribute and `mouseenter`/`mouseleave` events. Do not use native `title` attributes on any script-injected element.
 
