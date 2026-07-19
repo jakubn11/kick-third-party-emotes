@@ -99,6 +99,7 @@ When fixing Kick DOM breakage, prefer adding fallback selectors rather than repl
 
 - Emote images use `.kte-img` with a 28px height.
 - Zero-width 7TV emotes overlay the previous emote via `.kte-zw`.
+- `makeEmoteWrap` returns a plain text node when `safeUrl()` rejects the emote's URL. Only elements may anchor a zero-width overlay — a text node has no `dataset` and throws on `appendChild`, which would abort rendering for the whole message. Keep the element check on the zero-width anchor.
 - Text nodes are split on whitespace; exact token matches are replaced.
 - Processed message elements receive `data-kte-version="<emoteVersion>"` to avoid duplicate rendering; bumping `emoteVersion` (provider refresh, channel change) makes them eligible for reprocessing.
 

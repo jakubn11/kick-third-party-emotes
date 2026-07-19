@@ -99,7 +99,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | No emotes appear | Open your browser's DevTools → Console and look for `[KickEmotes]` log lines. If absent, check that your userscript extension is enabled for kick.com. |
 | Only global emotes load | The streamer may not have BTTV/7TV/FFZ configured for their channel. |
 | Emotes stop working after a Kick update | Kick may have changed their chat DOM selectors. Open an issue with the relevant class names from the browser inspector. |
-| Stale emotes after a script update | Clear the cache: `Object.keys(localStorage).filter(k => k.startsWith('kte_')).forEach(k => localStorage.removeItem(k))` |
+| Stale emotes after a script update | Clear the cache: `Object.keys(localStorage).filter(k => k.startsWith('kte_') && k !== 'kte_v2_usage').forEach(k => localStorage.removeItem(k))` — the `kte_v2_usage` key is excluded so your recently-used emotes and autocomplete ranking survive. |
 
 ## License
 

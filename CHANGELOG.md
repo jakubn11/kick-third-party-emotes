@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.6] - 2026-07-19
+
+### Fixed
+- **A zero-width emote following an emote with a rejected image URL no longer blanks the whole message.** When `safeUrl()` refuses an emote's URL — the CDN allowlist doing its job, e.g. after a provider moves to a new host — that emote falls back to plain text. The fallback text node was still being used as the anchor a following zero-width emote overlays onto, which threw and aborted rendering before the message was swapped in, so *none* of the message's emotes appeared. Only elements anchor zero-width overlays now.
+- Text inside chat links is left alone even when the link wraps it in a nested element. The skip check only looked at a text node's immediate parent, so `<a><span>…</span></a>` would have had emote replacement run inside the link.
+
 ## [2.8.5] - 2026-07-19
 
 ### Changed

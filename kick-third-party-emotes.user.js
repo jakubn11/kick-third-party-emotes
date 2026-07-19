@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.8.5
+// @version      2.8.6
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, right-click emote menu, native picker tab with recents
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -1102,7 +1102,9 @@
         } else {
           const wrap = makeEmoteWrap(token, emote);
           frag.appendChild(wrap);
-          lastWrap = wrap;
+          // makeEmoteWrap falls back to a bare text node when safeUrl rejects the
+          // emote's URL. Only an element can anchor a zero-width overlay.
+          lastWrap = wrap.nodeType === Node.ELEMENT_NODE ? wrap : null;
         }
       } else {
         frag.appendChild(document.createTextNode(token));
@@ -1123,7 +1125,8 @@
       acceptNode(node) {
         const p = node.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.classList.contains('kte-wrap') || p.tagName === 'A') return NodeFilter.FILTER_REJECT;
+        // closest, not tagName — Kick may nest link text inside a span.
+        if (p.classList.contains('kte-wrap') || p.closest('a')) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       },
     });
