@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.8.6
+// @version      2.8.7
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, right-click emote menu, native picker tab with recents
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -22,7 +22,7 @@
 (function () {
   'use strict';
 
-  const TAG = '[KickEmotes]';
+  const log = (...a) => console.log('[KickEmotes]', ...a);
 
   const NON_CHANNEL_SLUGS = new Set([
     '', 'home', 'browse', 'following', 'categories', 'search',
@@ -1449,7 +1449,7 @@
       if (e.key === 'Backspace' || e.key === 'Delete') acOnInput(e);
     });
     el.addEventListener('blur', () => setTimeout(acHide, 150));
-    console.log(`${TAG} Autocomplete attached`);
+    log('Autocomplete attached');
   }
 
   function attemptAcAttach() {
@@ -2399,7 +2399,7 @@
     resetPicker();
     startChatObserver();
     waitForInput();
-    console.log(`${TAG} Loading emotes for /${channelSlug}…`);
+    log(`Loading emotes for /${channelSlug}…`);
 
     const allLoaders = [
       { key: 'bttv_g', fn: options => loadBTTVGlobal(options), isChannel: false },
@@ -2447,13 +2447,13 @@
     await Promise.allSettled(promises);
     if (seq !== initSeq || currentChannelSlug() !== slug) return;
 
-    console.log(`${TAG} Ready – ${emoteMap.size} emotes for /${channelSlug}`);
+    log(`Ready – ${emoteMap.size} emotes for /${channelSlug}`);
 
     queueVisibleEmoteRefresh(routeChatRefreshDelay());
     queueProviderPickerRefresh();
 
     if (failedLoaders.length) {
-      console.log(`${TAG} ${failedLoaders.length} provider(s) failed, retrying in 5s…`);
+      log(`${failedLoaders.length} provider(s) failed, retrying in 5s…`);
       setTimeout(async () => {
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
         const retryResults = await Promise.allSettled(
@@ -2467,7 +2467,7 @@
           if (applyProviderEntries(failedLoaders[i], r.value)) added += r.value.length;
         }
         if (added) {
-          console.log(`${TAG} Retry loaded ${added} emotes`);
+          log(`Retry loaded ${added} emotes`);
         }
       }, 5000);
     }

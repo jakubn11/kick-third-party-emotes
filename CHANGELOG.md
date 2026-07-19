@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.7] - 2026-07-19
+
+### Changed
+- Internal: console logging now goes through a `log()` helper with a literal `[KickEmotes]` prefix instead of interpolating a `TAG` constant into each template string, matching the other kick-* scripts. No change to what is logged or when.
+
 ## [2.8.6] - 2026-07-19
 
 ### Fixed
