@@ -42,6 +42,8 @@ Do not add `Co-Authored-By:` trailers to git commits.
 `kick-third-party-emotes.user.js` is organized into these areas:
 
 - Userscript metadata and constants
+- `VERSION` — bumped with `@version` on every release; logged once at boot (`[KickEmotes] v… active`) and named in the duplicate warning
+- Single-instance guard (2.11.2) — right after `VERSION`, before any state or listener exists. Marks `<html>` with `data-kte-running="<version>"`; a later copy sees the marker, `console.warn`s naming both versions, and `return`s. On `<html>`, not `window`, because the script runs sandboxed and managers disagree on whether sandboxes share a JS context — they always share the DOM
 - Cache helper using `localStorage` keys prefixed with `kte_v4_` (old-prefix and long-expired keys are swept once per page load)
 - Local emote-usage tracker (`kte_v2_usage`) powering autocomplete ranking and the picker's "Recently used" section
 - Local favourites store (`kte_v2_favs`) powering the picker's "Favourites" section, the top of the autocomplete ranking, and the ★ markers
@@ -269,6 +271,7 @@ Manual testing is required in a browser with a userscript manager installed:
 15. Post `cvMask` after another emote in a channel with BTTV loaded and verify it overlays rather than sitting beside it.
 16. Compare the 7TV+ tab button against Kick's native tabs: same size and spacing, the active underline appears under it when the tab is selected, and no horizontal scrollbar shows under the tab strip.
 17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
+18. Enable a **second** copy of the script (a duplicate entry in the same manager, or a second manager) and reload. The console must show one `[KickEmotes] v… active` line and one `… is standing down` warning naming both versions; chat, the picker and autocomplete behave exactly as with one copy.
 
 ## Documentation
 
@@ -288,6 +291,12 @@ Before committing any change, always:
    | New user-facing feature — new provider, new UI component, new keyboard shortcut | **minor** `x.+1.0` | `2.6.x → 2.7.0` |
    | Bug fix, style tweak, refactor, internal change | **patch** `x.x.+1` | `2.6.x → 2.6.x+1` |
    | Breaking change or full rewrite | **major** `+1.0.0` | `2.x.x → 3.0.0` |
+
+   Bump the `VERSION` constant inside the IIFE to the same value — it is what the boot line and the duplicate warning report. Verify both with:
+
+   ```bash
+   grep -n "@version\|const VERSION" kick-third-party-emotes.user.js
+   ```
 
 3. **Update `CHANGELOG.md`** — add an entry under the new version with a short summary of what changed.
 4. **Update `README.md`** if the change is user-facing: new or removed features, changed behaviour, new keyboard shortcuts, provider changes, or updated troubleshooting steps. Internal refactors and bug fixes that don't change user-facing behaviour do not require a README update.

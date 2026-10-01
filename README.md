@@ -110,6 +110,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Emotes from one provider are missing | Check the provider chips at the top of the 7TV+ picker tab — a greyed-out chip means that provider is switched off. |
 | No emotes appear | Open your browser's DevTools → Console and look for `[KickEmotes]` log lines. If absent, check that your userscript extension is enabled for kick.com. |
 | Only global emotes load | The streamer may not have BTTV/7TV/FFZ configured for their channel. BTTV and FFZ emotes only show up if the streamer's Twitch account is linked on their 7TV profile or has the same name as their Kick account. |
+| Console says `[KickEmotes] … is standing down` | Two copies of the script are installed — typically a manual copy next to the Greasy Fork or auto-updating one, or two managers both enabled for kick.com. The second copy stopped itself and the first is running normally; remove the duplicate. |
 | Emotes stop working after a Kick update | Kick may have changed their chat DOM selectors. Open an issue with the relevant class names from the browser inspector. |
 | Stale emotes after a script update | Clear the cache: `Object.keys(localStorage).filter(k => k.startsWith('kte_') && !['kte_v2_usage', 'kte_v2_favs', 'kte_v2_settings'].includes(k)).forEach(k => localStorage.removeItem(k))` — the `kte_v2_usage`, `kte_v2_favs` and `kte_v2_settings` keys are excluded so your favourites, recently-used emotes, autocomplete ranking, and settings survive. |
 

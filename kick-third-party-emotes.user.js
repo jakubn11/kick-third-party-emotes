@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.1
+// @version      2.11.2
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -22,7 +22,34 @@
 (function () {
   'use strict';
 
+  // Bumped on every release with the `@version` in the metadata header above.
+  // It names the running build in the boot line and in the duplicate warning
+  // below — the only way to tell which copy is running once auto-update, a
+  // Greasy Fork install and a manual copy can all be in play.
+  const VERSION = '2.11.2';
+
+  // ─── Single instance ────────────────────────────────────────────────────
+  // Two copies on one page — a manual install left beside the Greasy Fork or
+  // auto-updating one, or two managers both enabled — would both scan chat
+  // and both drive the picker and autocomplete. The second copy stands down.
+  //
+  // The marker lives on `<html>` rather than on `window`: this script runs
+  // sandboxed (`@grant GM_xmlhttpRequest`), and managers disagree on whether
+  // sandboxed userscripts share a JS context — but they always share the DOM.
+  // Same pattern as kick-fullscreen-chat and kick-quality-saver.
+  const INSTANCE_ATTR = 'data-kte-running';
+  const alreadyRunning = document.documentElement.getAttribute(INSTANCE_ATTR);
+  if (alreadyRunning) {
+    console.warn(
+      `[KickEmotes] v${VERSION} is standing down: v${alreadyRunning} is already running ` +
+        'on this page. Disable or uninstall the duplicate copy.'
+    );
+    return;
+  }
+  document.documentElement.setAttribute(INSTANCE_ATTR, VERSION);
+
   const log = (...a) => console.log('[KickEmotes]', ...a);
+  log(`v${VERSION} active`);
 
   const NON_CHANNEL_SLUGS = new Set([
     '', 'home', 'browse', 'following', 'categories', 'search',

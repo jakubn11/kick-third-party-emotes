@@ -77,8 +77,9 @@ The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the
 
 | Symptom | Fix |
 |---------|-----|
-| No emotes appear | Open your browser's DevTools → Console on kick.com and look for `[KickEmotes]` log lines. If missing, check the extension is enabled for kick.com. |
+| No emotes appear | Open your browser's DevTools → Console on kick.com and look for `[KickEmotes]` log lines — the first is `[KickEmotes] v<version> active`. If missing, check the extension is enabled for kick.com. |
 | Emotes from one provider are missing | That provider may be switched off — check its chip at the top of the **7TV+** picker tab. |
 | Emotes appear for global but not channel | The streamer may not have BTTV/7TV/FFZ set up for their channel. BTTV and FFZ only find a channel through a Twitch account linked on the streamer's 7TV profile, or a Twitch channel with the same name. A `[KickEmotes] … failed:` line in the console means a provider was unreachable; it is retried once, and again on the next page load. |
 | 7TV+ tab missing | Close and reopen Kick's native emote picker after the `[KickEmotes] Ready` log appears. |
+| Console says `[KickEmotes] … is standing down` | Two copies of the script are installed — typically a manual copy next to the Greasy Fork or auto-updating one, or two managers both enabled for kick.com. The second copy stopped itself and the first is running normally; remove the duplicate. |
 | Images broken after Kick update | Kick may have changed their chat DOM class names. Open an issue with the new class names found in the browser inspector. |

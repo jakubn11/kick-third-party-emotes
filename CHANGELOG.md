@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.2] - 2026-10-01
+
+### Added
+- The running version is logged at boot (`[KickEmotes] v2.11.2 active`), so the copy actually running can be told apart from the one the manager shows.
+
+### Fixed
+- **A second copy of the script no longer runs beside the first.** A manual install left next to the Greasy Fork or auto-updating one — or two managers both enabled — had both copies scanning chat and driving the picker and autocomplete. The second one now stands down with a console warning naming both versions, as kick-fullscreen-chat and kick-quality-saver already do.
+
 ## [2.11.1] - 2026-10-01
 
 ### Fixed
