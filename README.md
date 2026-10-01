@@ -72,9 +72,11 @@ See [INSTALL.md](INSTALL.md) for full per-manager steps.
 
 | Provider | Global emotes | Channel emotes |
 |----------|--------------|----------------|
-| BetterTTV | ~65 | Kick + Twitch fallback |
-| 7TV | ~45 | Kick + Twitch fallback |
-| FrankerFaceZ | ~10 | Kick channel |
+| BetterTTV | ~65 | The streamer's Twitch account |
+| 7TV | ~45 | The streamer's Kick account, Twitch as fallback |
+| FrankerFaceZ | ~10 | The streamer's Twitch room |
+
+BetterTTV and FrankerFaceZ don't support Kick, so their channel emotes come from the streamer's Twitch account: the one linked on their 7TV profile, or failing that the Twitch channel with the same name as the Kick account.
 
 Global sets are small by design — they're each provider's curated default set. The bulk of what you see comes from the channel sets, which is where streamers put hundreds of emotes. FFZ's global "emote effects" (`ffzSpin`, `ffzRainbow`, …) are skipped: they're modifiers meant to animate the preceding emote, not emotes in their own right.
 
@@ -107,7 +109,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 |---------|-----|
 | Emotes from one provider are missing | Check the provider chips at the top of the 7TV+ picker tab — a greyed-out chip means that provider is switched off. |
 | No emotes appear | Open your browser's DevTools → Console and look for `[KickEmotes]` log lines. If absent, check that your userscript extension is enabled for kick.com. |
-| Only global emotes load | The streamer may not have BTTV/7TV/FFZ configured for their channel. |
+| Only global emotes load | The streamer may not have BTTV/7TV/FFZ configured for their channel. BTTV and FFZ emotes only show up if the streamer's Twitch account is linked on their 7TV profile or has the same name as their Kick account. |
 | Emotes stop working after a Kick update | Kick may have changed their chat DOM selectors. Open an issue with the relevant class names from the browser inspector. |
 | Stale emotes after a script update | Clear the cache: `Object.keys(localStorage).filter(k => k.startsWith('kte_') && !['kte_v2_usage', 'kte_v2_favs', 'kte_v2_settings'].includes(k)).forEach(k => localStorage.removeItem(k))` — the `kte_v2_usage`, `kte_v2_favs` and `kte_v2_settings` keys are excluded so your favourites, recently-used emotes, autocomplete ranking, and settings survive. |
 

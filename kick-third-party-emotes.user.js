@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.0
+// @version      2.11.1
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -33,8 +33,9 @@
   const BTTV_CDN = 'https://cdn.betterttv.net/emote';
   const BTTV_API = 'https://api.betterttv.net/3';
   const SEVENTV_API = 'https://7tv.io/v3';
-  const SEVENTV_GQL = 'https://7tv.io/v4/gql';
   const FFZ_API = 'https://api.frankerfacez.com/v1';
+  // Same-origin, so it goes through the page's fetch — no GM request, no @connect.
+  const KICK_CHANNEL_API = '/api/v2/channels';
 
   // BTTV's API exposes no overlay flag, so its own clients carry this fixed
   // list of zero-width emotes. Without it `cvMask`/`cvHazmat` — both in BTTV
@@ -121,10 +122,12 @@
   }
 
   // Prefix bumped from `kte_` to `kte_v2_` when adding `staticUrl` to the emote
-  // schema, and to `kte_v3_` when BTTV emotes gained real zeroWidth flags —
-  // cached v2 entries all claim `zeroWidth: false`. Orphaned keys from older
-  // prefixes are removed by sweepCache below.
-  const CACHE_PREFIX = 'kte_v3_';
+  // schema, to `kte_v3_` when BTTV emotes gained real zeroWidth flags — cached
+  // v2 entries all claim `zeroWidth: false` — and to `kte_v4_` when 7TV's
+  // zeroWidth started reading the right flag bit and failed channel lookups
+  // stopped being cached as empty sets. Orphaned keys from older prefixes are
+  // removed by sweepCache below.
+  const CACHE_PREFIX = 'kte_v4_';
 
   // User state, not cached provider data: it has no schema tied to the emote
   // shape, so it deliberately keeps its own stable prefix and survives every
@@ -134,7 +137,7 @@
   const SETTINGS_KEY = 'kte_v2_settings';
   const PRESERVED_KEYS = new Set([USAGE_KEY, FAVS_KEY, SETTINGS_KEY]);
 
-  // Every visited channel leaves kte_v3_*_c_<slug> keys behind and localStorage
+  // Every visited channel leaves kte_v4_*_c_<slug> keys behind and localStorage
   // never evicts them, so a long tail of channels would eventually hit quota
   // and silently disable caching. Drop old-prefix keys and anything long expired.
   const CACHE_SWEEP_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
@@ -892,25 +895,31 @@
 
   // ─── HTTP ─────────────────────────────────────────────────────────────────
 
-  function fetchJSON(url, body) {
+  const FETCH_TIMEOUT = 15000;
+
+  // Errors carry the HTTP status so a 404 can be told apart from a failure.
+  function httpError(status) {
+    const err = new Error(`HTTP ${status}`);
+    err.status = status;
+    return err;
+  }
+
+  function fetchJSON(url) {
     return new Promise((resolve, reject) => {
       GM_xmlhttpRequest({
-        method: body ? 'POST' : 'GET',
+        method: 'GET',
         url,
-        headers: body
-          ? { 'Content-Type': 'application/json', Accept: 'application/json' }
-          : { Accept: 'application/json' },
-        data: body ? JSON.stringify(body) : undefined,
+        headers: { Accept: 'application/json' },
         // Without this a hung provider request never settles, which blocks the
         // failed-provider retry pass in init() forever.
-        timeout: 15000,
+        timeout: FETCH_TIMEOUT,
         ontimeout: () => reject(new Error('timeout')),
         onload(res) {
           if (res.status >= 200 && res.status < 300) {
             try { resolve(JSON.parse(res.responseText)); }
             catch (e) { reject(e); }
           } else {
-            reject(new Error(`HTTP ${res.status}`));
+            reject(httpError(res.status));
           }
         },
         onerror: reject,
@@ -918,26 +927,36 @@
     });
   }
 
-  function pick7TVImage(images, animated) {
-    if (animated) {
-      // For animated emotes prefer GIF (universally supported) over animated WebP.
-      // 7TV v4 uses _static suffix for frozen first-frame variants — avoid those.
-      return images.find(i => i.mime === 'image/gif' && i.scale === 2)
-        ?? images.find(i => i.mime === 'image/gif')
-        ?? images.find(i => i.mime === 'image/webp' && i.scale === 2 && !i.url.includes('_static'))
-        ?? images.find(i => i.mime === 'image/webp' && !i.url.includes('_static'))
-        ?? images[0];
+  // A 404 is the provider answering "no such user/room": the channel really has
+  // no emotes there, and an empty set is safe to cache. Anything else — timeout,
+  // 5xx, rate limit — still throws. Swallowing those used to cache an outage as
+  // an empty set for 15 minutes, and a failed background refresh would replace
+  // a good cached set with nothing mid-session.
+  async function fetchJSONOrNull(url) {
+    try { return await fetchJSON(url); }
+    catch (e) {
+      if (e?.status === 404) return null;
+      throw e;
     }
-    return images.find(i => i.mime === 'image/webp' && i.scale === 2)
-      ?? images.find(i => i.scale === 2)
-      ?? images.find(i => i.mime === 'image/webp')
-      ?? images[0];
   }
 
-  function pick7TVStaticImage(images) {
-    return images.find(i => i.mime === 'image/webp' && i.scale === 2 && i.url.includes('_static'))
-      ?? images.find(i => i.mime === 'image/webp' && i.url.includes('_static'))
-      ?? null;
+  // Kick's own API, fetched same-origin the way Kick's frontend does. Same 404
+  // contract as fetchJSONOrNull.
+  async function fetchKickJSONOrNull(path) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+    try {
+      const res = await fetch(`${location.origin}${path}`, {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+        signal: ctrl.signal,
+      });
+      if (res.status === 404) return null;
+      if (!res.ok) throw httpError(res.status);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   // ─── Cache-aware load helper ──────────────────────────────────────────────
@@ -1051,162 +1070,228 @@
     return added;
   }
 
+  // ─── Channel lookup ───────────────────────────────────────────────────────
+  // The URL slug is not a usable identity on its own. BTTV's user endpoint takes
+  // a numeric platform ID, never a name, so a slug always 404s there. And a Kick
+  // slug isn't always the username: newer accounts with an underscore get a
+  // dash in the URL (`xqc_lobotomy` lives at /xqc-lobotomy), which no provider
+  // knows them by. So the channel is resolved once through Kick's API and every
+  // channel loader keys off that:
+  //
+  //   Kick user ID ───► 7TV user (via its Kick connection) ───► linked Twitch ID
+  //   Kick username ──► FFZ room (as a Twitch login) ─────────► Twitch ID fallback
+  //
+  // The Twitch ID is what BTTV needs, and 7TV's fallback when Kick isn't linked.
+
+  // Shares lookups between the three channel loaders, which all start at once.
+  // Short-lived so a background revalidation hours later fetches afresh, and a
+  // rejected lookup is dropped immediately so the retry pass refetches it.
+  const CHANNEL_LOOKUP_TTL = 60 * 1000;
+  const channelLookups = new Map(); // `${kind}:${slug}` → { ts, promise }
+
+  function channelLookup(kind, slug, fn) {
+    const now = Date.now();
+    for (const [key, hit] of channelLookups) {
+      if (now - hit.ts > CHANNEL_LOOKUP_TTL) channelLookups.delete(key);
+    }
+    const key = `${kind}:${slug}`;
+    let hit = channelLookups.get(key);
+    if (!hit) {
+      hit = { ts: now, promise: fn() };
+      channelLookups.set(key, hit);
+      hit.promise.catch(() => {
+        if (channelLookups.get(key) === hit) channelLookups.delete(key);
+      });
+    }
+    return hit.promise;
+  }
+
+  function isNumericId(value) {
+    return typeof value === 'string' && /^\d{1,20}$/.test(value);
+  }
+
+  // → { userId, username }, or null when Kick has no such channel. The one hard
+  // dependency of every channel loader: without it there is nothing to look up.
+  function kickChannel(slug) {
+    return channelLookup('kick', slug, async () => {
+      const data = await fetchKickJSONOrNull(`${KICK_CHANNEL_API}/${encodeURIComponent(slug)}`);
+      if (!data) return null;
+      const userId = String(data.user_id ?? '');
+      const username = data.user?.username;
+      if (!isNumericId(userId) || !isSafeTextToken(username, 64)) {
+        throw new Error('unexpected Kick channel response');
+      }
+      return { userId, username };
+    });
+  }
+
+  // The streamer's 7TV account, found through its Kick connection →
+  // { emotes, twitchId }, or null when they haven't linked Kick on 7TV.
+  function sevenTvKickUser(slug) {
+    return channelLookup('7tv', slug, async () => {
+      const kick = await kickChannel(slug);
+      if (!kick) return null;
+      const data = await fetchJSONOrNull(`${SEVENTV_API}/users/kick/${kick.userId}`);
+      if (!data) return null;
+      const twitch = Array.isArray(data.user?.connections)
+        ? data.user.connections.find(c => c?.platform === 'TWITCH')
+        : null;
+      return {
+        emotes: parse7TVEmotes(data.emote_set?.emotes),
+        twitchId: isNumericId(twitch?.id) ? twitch.id : null,
+      };
+    });
+  }
+
+  // The Twitch account linked on 7TV, or null. A 7TV outage also reads as null
+  // here, so it degrades BTTV and FFZ to the by-name lookup instead of failing
+  // them too — one provider being down must not take the others with it.
+  async function linkedTwitchId(slug) {
+    try { return (await sevenTvKickUser(slug))?.twitchId ?? null; }
+    catch { return null; }
+  }
+
+  // The channel's FFZ room. FFZ has no Kick support, so this is a Twitch room:
+  // the one the streamer linked on 7TV when there is one, otherwise the Kick
+  // username taken as a Twitch login.
+  function ffzRoom(slug) {
+    return channelLookup('ffz', slug, async () => {
+      const kick = await kickChannel(slug);
+      if (!kick) return null;
+      const linked = await linkedTwitchId(slug);
+      return fetchJSONOrNull(linked
+        ? `${FFZ_API}/room/id/${linked}`
+        : `${FFZ_API}/room/${encodeURIComponent(kick.username.toLowerCase())}`);
+    });
+  }
+
+  // → the Twitch account's numeric ID as a string, or null.
+  async function channelTwitchId(slug) {
+    const linked = await linkedTwitchId(slug);
+    if (linked) return linked;
+    const id = String((await ffzRoom(slug))?.room?.twitch_id ?? '');
+    return isNumericId(id) ? id : null;
+  }
+
   // ─── Emote Loaders ────────────────────────────────────────────────────────
+
+  function bttvEntries(emotes, source) {
+    return (Array.isArray(emotes) ? emotes : []).map(e => [e?.code, {
+      url: `${BTTV_CDN}/${e?.id}/2x${e?.animated ? '.gif' : ''}`,
+      source,
+      animated: Boolean(e?.animated),
+      zeroWidth: BTTV_ZERO_WIDTH.has(e?.code),
+    }]);
+  }
 
   async function loadBTTVGlobal(options) {
     return cachedLoad('bttv_g', async () => {
-      const emotes = await fetchJSON(`${BTTV_API}/cached/emotes/global`);
-      return emotes.map(e => [e.code, {
-        url: `${BTTV_CDN}/${e.id}/2x${e.animated ? '.gif' : ''}`,
-        source: 'BTTV',
-        animated: e.animated,
-        zeroWidth: BTTV_ZERO_WIDTH.has(e.code),
-      }]);
+      return bttvEntries(await fetchJSON(`${BTTV_API}/cached/emotes/global`), 'BTTV');
     }, options);
   }
 
+  // Twitch only: BTTV has no Kick provider. `/cached/users/kick/<id>` answers
+  // exactly like a made-up provider name does — 404 for every ID — so asking it
+  // first would just add a request that always fails.
   async function loadBTTVChannel(slug, options) {
     return cachedLoad(`bttv_c_${slug}`, async () => {
-      const results = await Promise.allSettled(['kick', 'twitch'].map(async platform => {
-        const data = await fetchJSON(`${BTTV_API}/cached/users/${platform}/${encodeURIComponent(slug)}`);
-        const all = [...(data.channelEmotes ?? []), ...(data.sharedEmotes ?? [])];
-        return { platform, all };
-      }));
-      for (const r of results) {
-        if (r.status !== 'fulfilled' || !r.value.all.length) continue;
-        const { platform, all } = r.value;
-        return all.map(e => [e.code, {
-          url: `${BTTV_CDN}/${e.id}/2x${e.animated ? '.gif' : ''}`,
-          source: `BTTV (${platform})`,
-          animated: e.animated,
-          zeroWidth: BTTV_ZERO_WIDTH.has(e.code),
-        }]);
-      }
-      return [];
+      const twitchId = await channelTwitchId(slug);
+      if (!twitchId) return [];
+      const data = await fetchJSONOrNull(`${BTTV_API}/cached/users/twitch/${twitchId}`);
+      const all = [...(data?.channelEmotes ?? []), ...(data?.sharedEmotes ?? [])];
+      return bttvEntries(all, 'BTTV (twitch)');
     }, options);
+  }
+
+  // 7TV's v3 emote list, the same shape for the global set and a user's set:
+  // each entry is an active emote whose `name` is the set's alias, wrapping the
+  // emote itself in `data`.
+  //
+  // Zero-width is the active emote's flag, ActiveEmoteFlag.ZeroWidth = 1 << 0.
+  // `data.flags & 256` is EmoteFlags.ZeroWidth — the emote's own default, which
+  // a set can override — and is never set on the active emote, so testing
+  // `flags & 256` there (as this used to) flagged nothing at all.
+  function parse7TVEmotes(emotes) {
+    const entries = [];
+    for (const e of Array.isArray(emotes) ? emotes : []) {
+      const host = e?.data?.host;
+      const files = Array.isArray(host?.files) ? host.files : [];
+      if (typeof host?.url !== 'string' || !files.length) continue;
+      const animated = Boolean(e.data.animated);
+      const named = name => files.find(f => f?.name === name);
+      // Animated: prefer GIF (universally supported) over animated WebP.
+      const file = animated
+        ? (named('2x.gif') ?? files.find(f => f?.format === 'GIF') ?? named('2x.webp') ?? files[0])
+        : (named('2x.webp') ?? named('2x.avif') ?? files[0]);
+      if (typeof file?.name !== 'string') continue;
+      const entry = {
+        url: `https:${host.url}/${file.name}`,
+        source: '7TV',
+        animated,
+        zeroWidth: ((e.flags ?? 0) & 1) !== 0,
+      };
+      // The frozen first frame isn't a file of its own in the list: each file
+      // names its variant in `static_name`. The picker shows it until hover.
+      const staticName = animated ? named('2x.webp')?.static_name : null;
+      if (typeof staticName === 'string' && staticName !== file.name) {
+        entry.staticUrl = `https:${host.url}/${staticName}`;
+      }
+      entries.push([e.name, entry]);
+    }
+    return entries;
   }
 
   async function load7TVGlobal(options) {
     return cachedLoad('7tv_g', async () => {
       const data = await fetchJSON(`${SEVENTV_API}/emote-sets/global`);
-      const entries = [];
-      for (const e of (data.emotes ?? [])) {
-        const host = e.data?.host;
-        if (!host) continue;
-        const animated = e.data?.animated ?? false;
-        const file = animated
-          ? (host.files?.find(f => f.name === '2x.gif') ?? host.files?.find(f => f.format === 'GIF')
-            ?? host.files?.find(f => f.name === '2x.webp') ?? host.files?.[0])
-          : (host.files?.find(f => f.name === '2x.webp') ?? host.files?.find(f => f.name === '2x.avif')
-            ?? host.files?.[0]);
-        if (!file) continue;
-        const staticFile = animated
-          ? (host.files?.find(f => f.name === '2x_static.webp') ?? host.files?.find(f => f.name.endsWith('_static.webp')))
-          : null;
-        // ActiveEmoteFlag.ZeroWidth = 1 << 8 = 256 on the emote-set entry flags
-        const entry = {
-          url: `https:${host.url}/${file.name}`,
-          source: '7TV',
-          animated,
-          zeroWidth: (e.flags & 256) !== 0,
-        };
-        if (staticFile && staticFile.name !== file.name) {
-          entry.staticUrl = `https:${host.url}/${staticFile.name}`;
-        }
-        entries.push([e.name, entry]);
-      }
-      return entries;
+      return parse7TVEmotes(data?.emotes);
     }, options);
   }
 
   async function load7TVChannel(slug, options) {
     return cachedLoad(`7tv_c_${slug}`, async () => {
-      // v4 GQL: search by username, find the user with a matching KICK (or TWITCH) connection
-      const query = `{ users { search(query: ${JSON.stringify(slug)}, page: 1, perPage: 10) {
-        items {
-          connections { platform platformUsername }
-          style { activeEmoteSet { emotes { items {
-            alias flags { zeroWidth }
-            emote { defaultName flags { animated } images { url mime scale } }
-          } } } }
-        }
-      } } }`;
-      try {
-        const res = await fetchJSON(SEVENTV_GQL, { query });
-        const items = res?.data?.users?.search?.items ?? [];
-        const slugLower = slug.toLowerCase();
-        const user =
-          items.find(u => u.connections?.some(c => c.platform === 'KICK' && c.platformUsername.toLowerCase() === slugLower)) ??
-          items.find(u => u.connections?.some(c => c.platform === 'TWITCH' && c.platformUsername.toLowerCase() === slugLower));
-        if (!user) return [];
-        const emotes = user.style?.activeEmoteSet?.emotes?.items ?? [];
-        const entries = [];
-        for (const e of emotes) {
-          const animated = e.emote?.flags?.animated ?? false;
-          const images = e.emote?.images ?? [];
-          const img = pick7TVImage(images, animated);
-          if (!img) continue;
-          const staticImg = animated ? pick7TVStaticImage(images) : null;
-          const entry = {
-            url: img.url,
-            source: '7TV',
-            animated,
-            zeroWidth: e.flags?.zeroWidth ?? false,
-          };
-          if (staticImg && staticImg.url !== img.url) {
-            entry.staticUrl = staticImg.url;
-          }
-          entries.push([e.alias, entry]);
-        }
-        return entries;
-      } catch { return []; }
+      const user = await sevenTvKickUser(slug);
+      if (user) return user.emotes;
+      // Kick isn't linked on 7TV — fall back to the channel's Twitch account.
+      const twitchId = await channelTwitchId(slug);
+      if (!twitchId) return [];
+      const data = await fetchJSONOrNull(`${SEVENTV_API}/users/twitch/${twitchId}`);
+      return parse7TVEmotes(data?.emote_set?.emotes);
     }, options);
+  }
+
+  // FFZ "modifier" entries (ffzSpin, ffzRainbow, ffzX, …) are effects applied
+  // to the preceding emote, not emotes. They're over half of the global set
+  // and render as meaningless 32px icons on their own.
+  function ffzEntries(sets, source) {
+    const entries = [];
+    for (const set of Object.values(sets ?? {})) {
+      for (const e of (set?.emoticons ?? [])) {
+        if (e?.modifier) continue;
+        const raw = e?.urls?.['2'] ?? e?.urls?.['1'];
+        if (typeof raw !== 'string') continue;
+        entries.push([e.name, {
+          url: raw.startsWith('//') ? `https:${raw}` : raw,
+          source,
+          animated: false,
+          zeroWidth: false,
+        }]);
+      }
+    }
+    return entries;
   }
 
   async function loadFFZGlobal(options) {
     return cachedLoad('ffz_g', async () => {
       const data = await fetchJSON(`${FFZ_API}/set/global`);
-      const entries = [];
-      for (const set of Object.values(data.sets ?? {})) {
-        for (const e of (set.emoticons ?? [])) {
-          // FFZ "modifier" entries (ffzSpin, ffzRainbow, ffzX, …) are effects
-          // applied to the preceding emote, not emotes. They're over half of
-          // the global set and render as meaningless 32px icons on their own.
-          if (e.modifier) continue;
-          const raw = e.urls?.['2'] ?? e.urls?.['1'];
-          if (!raw) continue;
-          entries.push([e.name, {
-            url: raw.startsWith('//') ? `https:${raw}` : raw,
-            source: 'FFZ',
-            animated: false,
-            zeroWidth: false,
-          }]);
-        }
-      }
-      return entries;
+      return ffzEntries(data?.sets, 'FFZ');
     }, options);
   }
 
   async function loadFFZChannel(slug, options) {
     return cachedLoad(`ffz_c_${slug}`, async () => {
-      try {
-        const data = await fetchJSON(`${FFZ_API}/room/${encodeURIComponent(slug)}`);
-        const entries = [];
-        for (const set of Object.values(data.sets ?? {})) {
-          for (const e of (set.emoticons ?? [])) {
-            if (e.modifier) continue; // effect modifier, not an emote — see loadFFZGlobal
-            const raw = e.urls?.['2'] ?? e.urls?.['1'];
-            if (!raw) continue;
-            entries.push([e.name, {
-              url: raw.startsWith('//') ? `https:${raw}` : raw,
-              source: 'FFZ (channel)',
-              animated: false,
-              zeroWidth: false,
-            }]);
-          }
-        }
-        return entries;
-      } catch { return []; }
+      const room = await ffzRoom(slug);
+      return ffzEntries(room?.sets, 'FFZ (channel)');
     }, options);
   }
 
@@ -3038,7 +3123,10 @@
     // Update chat, autocomplete, and picker incrementally as each provider resolves.
     const promises = allLoaders.map(loader => loader.fn({
       onRefresh: entries => applyProviderEntries(loader, entries),
-    }).then(entries => applyProviderEntries(loader, entries)).catch(() => { failedLoaders.push(loader); }));
+    }).then(entries => applyProviderEntries(loader, entries)).catch(err => {
+      log(`${loader.key} failed:`, err?.message ?? err);
+      failedLoaders.push(loader);
+    }));
 
     await Promise.allSettled(promises);
     if (seq !== initSeq || currentChannelSlug() !== slug) return;

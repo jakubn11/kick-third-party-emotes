@@ -39,6 +39,7 @@ Manual testing is required in a browser with a userscript manager installed:
 14. Open `/popout/<channel>/chat` and confirm channel emotes load, not just globals.
 15. Post `cvMask` after another emote in a channel with BTTV loaded and verify it overlays rather than sitting beside it.
 16. Compare the 7TV+ tab button against Kick's native tabs: same size and spacing, the active underline appears under it when the tab is selected, and no horizontal scrollbar shows under the tab strip.
+17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
 
 ## Userscript Metadata
 
@@ -57,12 +58,13 @@ Do not add `Co-Authored-By:` trailers to git commits.
 `kick-third-party-emotes.user.js` is organized into these areas:
 
 - Userscript metadata and constants
-- Cache helper using `localStorage` keys prefixed with `kte_v3_` (old-prefix and long-expired keys are swept once per page load)
+- Cache helper using `localStorage` keys prefixed with `kte_v4_` (old-prefix and long-expired keys are swept once per page load)
 - Local emote-usage tracker (`kte_v2_usage`) powering autocomplete ranking and the picker's "Recently used" section
 - Local favourites store (`kte_v2_favs`) powering the picker's "Favourites" section, the top of the autocomplete ranking, and the ★ markers
 - Local settings store (`kte_v2_settings`) — per-provider visibility — surfaced as the chip row at the top of the picker tab
 - Module-level provider layers (`loadedProviders` / `activeLoaders`) and `rebuildEmoteMap()`, so a settings change can refilter `emoteMap` without re-running `init()`
 - Emote context menu (`#kte-menu`) on right-clicked chat **and picker** emotes
+- Channel lookup (`kickChannel` → `sevenTvKickUser` / `ffzRoom` → `channelTwitchId`), shared by the three channel loaders through the short-lived `channelLookups` memo
 - Provider loaders for BTTV, 7TV, and FFZ
 - DOM message processing and emote replacement
 - Autocomplete popup and chat input handling
@@ -83,7 +85,7 @@ Each provider loader should add `[code, emote]` entries through `cachedLoad()`.
 
 Two separate namespaces, deliberately:
 
-- **`CACHE_PREFIX` (`kte_v3_`)** — provider data. Bump the prefix whenever the emote schema *or the meaning of a field* changes, so stale entries are refetched instead of served for up to their TTL. (`v2` added `staticUrl`; `v3` gave BTTV entries real `zeroWidth` flags.) `sweepCache` deletes keys from older prefixes.
+- **`CACHE_PREFIX` (`kte_v4_`)** — provider data. Bump the prefix whenever the emote schema *or the meaning of a field* changes, so stale entries are refetched instead of served for up to their TTL. (`v2` added `staticUrl`; `v3` gave BTTV entries real `zeroWidth` flags; `v4` fixed 7TV's `zeroWidth` bit and dropped channel sets that had been cached as empty after a failed or misaddressed lookup.) `sweepCache` deletes keys from older prefixes.
 - **`USAGE_KEY` / `FAVS_KEY` / `SETTINGS_KEY` (`kte_v2_*`)** — user state. All three are listed in `PRESERVED_KEYS` and are skipped by the sweep, so a cache-prefix bump never wipes someone's favourites, ranking, or settings. Do not derive them from `CACHE_PREFIX`.
 
 ### Settings
@@ -105,19 +107,39 @@ The chip row is `position: sticky`, so it would sit on top of the grid once scro
 
 Current provider endpoints:
 
-- BetterTTV: `https://api.betterttv.net/3`
-- 7TV: `https://7tv.io/v3` (global emote set) and `https://7tv.io/v4/gql` (channel emotes via GraphQL user search)
-- FrankerFaceZ: `https://api.frankerfacez.com/v1`
+- Kick: `/api/v2/channels/<slug>` → `user_id` and `user.username`. Fetched **same-origin with the page's `fetch`**, the way Kick's frontend does, so it is not a GM request and needs no `@connect` entry.
+- BetterTTV: `https://api.betterttv.net/3` (`/cached/emotes/global`, `/cached/users/twitch/<twitch id>`)
+- 7TV: `https://7tv.io/v3` (`/emote-sets/global`, `/users/kick/<kick user id>`, `/users/twitch/<twitch id>`)
+- FrankerFaceZ: `https://api.frankerfacez.com/v1` (`/set/global`, `/room/id/<twitch id>`, `/room/<twitch login>`)
 
-Provider quirks worth knowing before "fixing" a loader:
+### Channel lookup
 
+The URL slug is not an identity any provider accepts, so channel emotes go through one resolution step (`kickChannel` and friends, memoised per slug for 60 s in `channelLookups` so the three loaders share it):
+
+1. **Kick** turns the slug into the Kick user ID and username. A slug is not always the username: newer accounts with an underscore get a dash in the URL (`xqc_lobotomy` lives at `/xqc-lobotomy`).
+2. **7TV** is looked up by Kick user ID. Its user record lists linked accounts, which gives the streamer's **Twitch ID**.
+3. Without a 7TV Twitch link, the Twitch ID comes from the **FFZ room** for the Kick username taken as a Twitch login (`room.twitch_id`).
+4. **BTTV** uses that Twitch ID. **FFZ** uses the room from step 3, or `room/id/<twitch id>` when 7TV supplied it. **7TV** falls back to `users/twitch/<id>` when Kick isn't linked there.
+
+Order and fallbacks to preserve: 7TV is Kick first, Twitch second; BTTV and FFZ are Twitch only, because neither supports Kick. BTTV's `/cached/users/kick/<id>` 404s for every ID, exactly like a made-up provider name does. Re-check that before adding a Kick attempt back. The Kick lookup is the one hard dependency of every channel loader; a 7TV outage is deliberately swallowed in `linkedTwitchId` so BTTV and FFZ degrade to the by-name lookup instead of failing too.
+
+### Provider quirks
+
+Worth knowing before "fixing" a loader:
+
+- **BTTV's user endpoint takes a numeric platform ID, never a name.** `/cached/users/twitch/forsen` is a 404; `/cached/users/twitch/22484632` is forsen's 269 emotes. Until 2.11.1 the slug was sent, so BTTV channel emotes never loaded.
 - **BTTV exposes no zero-width flag.** `BTTV_ZERO_WIDTH` is the same hardcoded overlay list BTTV's own clients ship. If BTTV adds seasonal overlay emotes, extend the set.
+- **7TV's zero-width flag is bit `1` on the set entry** (`ActiveEmoteFlag.ZeroWidth`). `data.flags & 256` is the emote's own default, which a set can override; reading `256` off the set entry, as the global loader once did, flags nothing.
+- **7TV v3 has no separate `_static` files.** Each entry in `host.files` names its frozen first frame in `static_name` (`2x.webp` → `2x_static.webp`), which is where `staticUrl` comes from.
 - **FFZ `modifier: true` entries are not emotes.** They're effect modifiers (`ffzSpin`, `ffzRainbow`, `ffzX`, …) that FFZ clients apply as CSS to the preceding emote. Both FFZ loaders skip them; rendering them standalone produces meaningless 32px icons.
 - **Global sets are small** (BTTV ~65, 7TV ~45, FFZ ~10 after modifiers are dropped). A low emote count is not by itself evidence of a broken loader — check the channel sets.
+- **7TV's API returns sporadic 502s.** Expect them in testing; they are what the failure handling below is for.
+
+### Failures versus empty sets
 
 Prefer preserving the current graceful-failure behavior. Provider failures should not stop other providers from loading.
 
-For channel emotes, the script currently tries Kick first and Twitch fallback where supported. Preserve that order unless there is a specific reason to change it.
+A loader may return `[]` only when the provider *answered* that the channel has no emotes there, which means a 404 (`fetchJSONOrNull` / `fetchKickJSONOrNull` turn exactly that into `null`). Every other error has to propagate. A rejected loader is retried once by `init()`, leaves a stale cached set in place, and caches nothing. An empty result is cached for 15 minutes and, on a background refresh, *replaces* the cached set, which is how a single timeout used to blank a channel's emotes mid-session.
 
 ## DOM And Routing Notes
 
@@ -189,7 +211,7 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 - `ALLOWED_CDN_HOSTS` — explicit set of trusted image hostnames
 - `try/catch` on all `localStorage` reads — handles quota errors and malformed JSON silently
 - All DOM text written via `textContent` — no HTML injection possible
-- Channel slug percent-encoded (`encodeURIComponent`) when interpolated into BTTV/FFZ API request paths — a crafted kick.com URL can't steer the request to a different path (7TV passes the slug through `JSON.stringify` into its GraphQL query)
+- Channel slug percent-encoded (`encodeURIComponent`) when interpolated into the Kick API path, and the Kick username likewise in the FFZ by-name path — a crafted kick.com URL can't steer a request to a different path. Kick user IDs and Twitch IDs are checked against `isNumericId` before they go into any provider URL.
 
 ## UI Design System
 

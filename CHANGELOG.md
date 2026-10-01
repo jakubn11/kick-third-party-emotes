@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.1] - 2026-10-01
+
+### Fixed
+- **BetterTTV channel emotes now load.** They never had: BTTV's user endpoint takes a numeric platform ID, and the script was sending the channel slug, which 404s every time (`/cached/users/twitch/forsen` → 404, `/twitch/22484632` → 269 emotes). The 404 was cached as "this channel has no BTTV emotes", so nothing ever showed in the console. BTTV channel emotes now come from the streamer's Twitch account, found through the Twitch link on their 7TV profile, or failing that the Twitch channel with the same name.
+- **7TV's zero-width emotes in the global set now overlay.** The global loader tested bit `256` of the set entry's flags, but on a set entry zero-width is bit `1` (`256` is the same flag on the emote's own record), so `RainTime`, `PETPET` and `SteerR` all rendered beside the emote they should sit on.
+- **Channels whose URL isn't their username get their 7TV and FFZ emotes.** Kick turns underscores into dashes in newer accounts' URLs (`xqc_lobotomy` lives at `/xqc-lobotomy`), and both lookups matched on the URL. On that example, 7TV channel emotes go from 0 to 296. The channel is now looked up through Kick's own API first and everything keys off the real account.
+- **A failed provider request no longer wipes a channel's emotes.** The channel loaders turned every error into "no emotes", so a timeout or 5xx was cached as an empty set for 15 minutes and never retried, and if it happened during a background refresh it replaced the good cached set, so the channel's emotes vanished mid-session. Only a 404 counts as empty now; anything else is retried and leaves the cached set alone.
+- **Animated 7TV global emotes start frozen in the picker.** The global loader looked for a separate `_static` file, but 7TV's v3 API names the frozen frame in each file's `static_name`, so no global emote ever got one and they all animated at once.
+
+### Changed
+- 7TV channel emotes come from 7TV's lookup by Kick user ID (`/v3/users/kick/<id>`, with `/v3/users/twitch/<id>` as the fallback) instead of a GraphQL username search. It is an exact match, and returns the same shape as the global set, so both share one parser.
+- BTTV is no longer asked for a Kick account first. It has no Kick provider: `/cached/users/kick/<id>` answers exactly like a made-up provider name does, with a 404 for every ID.
+- Emote cache prefix bumped from `kte_v3_` to `kte_v4_`, so 7TV entries with the wrong zero-width flag and BTTV channels cached as empty are refetched. Favourites, usage and settings are untouched.
+- A provider that fails to load now logs `[KickEmotes] <provider key> failed: <reason>` before the retry.
+
 ## [2.11.0] - 2026-08-23
 
 ### Changed
