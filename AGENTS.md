@@ -14,32 +14,16 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 
 There is no package manager, build step, linter, or automated test suite configured.
 
+- Syntax check: `node --check kick-third-party-emotes.user.js`. Without Node installed, macOS ships a JavaScript engine that can parse-check without executing (the file is an IIFE, so it must not be *run* to be checked):
+  `/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc -e 'try { new Function(readFile("kick-third-party-emotes.user.js")); print("syntax OK"); } catch (e) { print("SYNTAX ERROR: " + e); }'`
+- No build step — the `.user.js` is shipped as-is.
+
 Useful local checks:
 
 ```bash
 sed -n '1,80p' kick-third-party-emotes.user.js
 wc -l kick-third-party-emotes.user.js INSTALL.md
 ```
-
-Manual testing is required in a browser with a userscript manager installed:
-
-1. Install the userscript via your manager (e.g. drag the `.user.js` file into Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other, or copy it into the folder configured in the Userscripts extension on Safari).
-2. Open a Kick channel page.
-3. Check the browser developer console for `[KickEmotes]` log lines.
-4. Verify global and channel emotes render in chat.
-5. Verify autocomplete attaches to the chat input and supports arrow navigation, Tab selection, Enter selection (and plain Enter sending with nothing highlighted), and Esc close.
-6. Navigate between Kick channels and confirm channel-specific emotes reload.
-7. Right-click a rendered emote and verify the context menu (favourite, copy name, copy image URL, open provider page).
-8. Insert a few emotes, reopen the picker's 7TV+ tab, and verify the "Recently used" section and usage-ranked autocomplete.
-9. Favourite an emote from chat and from the picker; verify the ★ appears in the tooltip, the autocomplete row, and the picker badge, that the "Favourites" section updates while the picker is open, and that unstarring reverses all of it.
-10. Hover an emote in chat and in the picker and verify the tooltip shows the large preview without jumping once the image loads.
-11. Hover an emote in a busy chat without moving the cursor: the tooltip should track the emote as messages scroll it up, and disappear once the emote scrolls out or its row is recycled.
-12. Toggle a provider chip off and on in the picker: its section and emotes should vanish from the picker, autocomplete, and *already-rendered* chat messages, and come back intact. Toggle repeatedly and confirm no spaces accumulate around zero-width emotes.
-13. Scroll the picker grid and confirm the settings chip row hides, then scroll back to the top and confirm it returns. Check both scroll cases: the tab's own scrollbar, and a short tab where Kick's panel is the scroller.
-14. Open `/popout/<channel>/chat` and confirm channel emotes load, not just globals.
-15. Post `cvMask` after another emote in a channel with BTTV loaded and verify it overlays rather than sitting beside it.
-16. Compare the 7TV+ tab button against Kick's native tabs: same size and spacing, the active underline appears under it when the tab is selected, and no horizontal scrollbar shows under the tab strip.
-17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
 
 ## Userscript Metadata
 
@@ -264,6 +248,28 @@ family palette — do not add more without the same kind of justification.
 - `.kte-picker-more` — picker action button (green background tint, green border)
 - `.kte-picker-settings` / `.kte-chip` — the picker's settings row, a rounded card (14px radius, hairline border) that auto-hides while the grid is scrolled. It counts as its own component for the one-accent rule: its accent is the selected-chip treatment (matching kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected`), which is why green appears here as well as on `.kte-picker-more`. Provider chips override it with their own brand colour when enabled — same justification as the source badges.
 
+## Manual Testing
+
+Manual testing is required in a browser with a userscript manager installed:
+
+1. Install the userscript via your manager (e.g. drag the `.user.js` file into Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other, or copy it into the folder configured in the Userscripts extension on Safari).
+2. Open a Kick channel page.
+3. Check the browser developer console for `[KickEmotes]` log lines.
+4. Verify global and channel emotes render in chat.
+5. Verify autocomplete attaches to the chat input and supports arrow navigation, Tab selection, Enter selection (and plain Enter sending with nothing highlighted), and Esc close.
+6. Navigate between Kick channels and confirm channel-specific emotes reload.
+7. Right-click a rendered emote and verify the context menu (favourite, copy name, copy image URL, open provider page).
+8. Insert a few emotes, reopen the picker's 7TV+ tab, and verify the "Recently used" section and usage-ranked autocomplete.
+9. Favourite an emote from chat and from the picker; verify the ★ appears in the tooltip, the autocomplete row, and the picker badge, that the "Favourites" section updates while the picker is open, and that unstarring reverses all of it.
+10. Hover an emote in chat and in the picker and verify the tooltip shows the large preview without jumping once the image loads.
+11. Hover an emote in a busy chat without moving the cursor: the tooltip should track the emote as messages scroll it up, and disappear once the emote scrolls out or its row is recycled.
+12. Toggle a provider chip off and on in the picker: its section and emotes should vanish from the picker, autocomplete, and *already-rendered* chat messages, and come back intact. Toggle repeatedly and confirm no spaces accumulate around zero-width emotes.
+13. Scroll the picker grid and confirm the settings chip row hides, then scroll back to the top and confirm it returns. Check both scroll cases: the tab's own scrollbar, and a short tab where Kick's panel is the scroller.
+14. Open `/popout/<channel>/chat` and confirm channel emotes load, not just globals.
+15. Post `cvMask` after another emote in a channel with BTTV loaded and verify it overlays rather than sitting beside it.
+16. Compare the 7TV+ tab button against Kick's native tabs: same size and spacing, the active underline appears under it when the tab is selected, and no horizontal scrollbar shows under the tab strip.
+17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
+
 ## Documentation
 
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
@@ -274,7 +280,8 @@ Keep docs browser-agnostic. When mentioning installation steps, cover the genera
 
 Before committing any change, always:
 
-1. **Bump `@version`** in the `kick-third-party-emotes.user.js` metadata header using these rules:
+1. **Run the syntax check** (see **Commands**) — it must print `syntax OK`.
+2. **Bump `@version`** in the `kick-third-party-emotes.user.js` metadata header using these rules:
 
    | Change | Bump | Example |
    |---|---|---|
@@ -282,9 +289,9 @@ Before committing any change, always:
    | Bug fix, style tweak, refactor, internal change | **patch** `x.x.+1` | `2.6.x → 2.6.x+1` |
    | Breaking change or full rewrite | **major** `+1.0.0` | `2.x.x → 3.0.0` |
 
-2. **Update `CHANGELOG.md`** — add an entry under the new version with a short summary of what changed.
-3. **Update `README.md`** if the change is user-facing: new or removed features, changed behaviour, new keyboard shortcuts, provider changes, or updated troubleshooting steps. Internal refactors and bug fixes that don't change user-facing behaviour do not require a README update.
-4. **Suggest a GitHub Release** after every commit if any of the following apply — say "this looks like a good point to publish a GitHub Release":
+3. **Update `CHANGELOG.md`** — add an entry under the new version with a short summary of what changed.
+4. **Update `README.md`** if the change is user-facing: new or removed features, changed behaviour, new keyboard shortcuts, provider changes, or updated troubleshooting steps. Internal refactors and bug fixes that don't change user-facing behaviour do not require a README update.
+5. **Suggest a GitHub Release** after every commit if any of the following apply — say "this looks like a good point to publish a GitHub Release":
    - A security fix was made
    - A user-facing feature was added (new provider, new UI component, new keyboard shortcut)
    - A bug affecting core functionality was fixed (emotes not loading, autocomplete broken, picker missing)

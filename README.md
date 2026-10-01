@@ -113,6 +113,10 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Emotes stop working after a Kick update | Kick may have changed their chat DOM selectors. Open an issue with the relevant class names from the browser inspector. |
 | Stale emotes after a script update | Clear the cache: `Object.keys(localStorage).filter(k => k.startsWith('kte_') && !['kte_v2_usage', 'kte_v2_favs', 'kte_v2_settings'].includes(k)).forEach(k => localStorage.removeItem(k))` — the `kte_v2_usage`, `kte_v2_favs` and `kte_v2_settings` keys are excluded so your favourites, recently-used emotes, autocomplete ranking, and settings survive. |
 
+## How it works
+
+On each channel page the script resolves the channel once through Kick's own API — its Kick user ID and username — then loads channel and global emotes from all three providers: **7TV** by the Kick user ID, **BTTV** and **FFZ** through the streamer's Twitch account (taken from 7TV's linked accounts, or FFZ's same-named room). The Kick lookup is a same-origin request to `kick.com`, the way Kick's own frontend makes it; provider requests go only to the providers' hosts, through `GM_xmlhttpRequest` and the `@connect` list in the metadata. Each provider's set is cached locally, so a repeat visit shows emotes straight away while a fresh copy loads; a provider that fails keeps its last good set and never takes the other two down. Chat messages are scanned as they arrive and matching words are replaced with the emote image, with zero-width emotes stacked on the one before them. Autocomplete, the context menu and the **7TV+** picker tab all work from the same loaded sets. Favourites, usage counts and provider settings live in their own `localStorage` keys and survive a cache clear.
+
 ## License
 
 Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
