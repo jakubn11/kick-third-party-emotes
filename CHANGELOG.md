@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.4] - 2026-10-12
+
+### Fixed
+- **A provider that fails to load is retried three times instead of once.** 7TV answers with sporadic 502s, and a single retry 5 s later often hit the same bad patch, leaving the channel without those emotes until you navigated away. Failed providers are now retried after 5, 15 and 45 seconds, each pass covering only the ones still failing; if all three fail, the console says `Giving up on … until the next page load`.
+- **Network errors are logged with a reason.** Userscript managers report a failed request with a response object rather than an `Error`, so the console line read `[KickEmotes] 7tv_c failed: undefined`. It now reads `network error` (with the manager's detail when it gives one).
+- **An aborted provider request no longer hangs.** A request that ended in an abort settled nothing, so its loader — and the retry pass waiting on all of them — stayed pending forever.
+
 ## [2.11.3] - 2026-10-12
 
 ### Fixed

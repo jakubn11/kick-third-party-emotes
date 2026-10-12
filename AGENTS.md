@@ -121,13 +121,14 @@ Worth knowing before "fixing" a loader:
 - **7TV v3 has no separate `_static` files.** Each entry in `host.files` names its frozen first frame in `static_name` (`2x.webp` → `2x_static.webp`), which is where `staticUrl` comes from.
 - **FFZ `modifier: true` entries are not emotes.** They're effect modifiers (`ffzSpin`, `ffzRainbow`, `ffzX`, …) that FFZ clients apply as CSS to the preceding emote. Both FFZ loaders skip them; rendering them standalone produces meaningless 32px icons.
 - **Global sets are small** (BTTV ~65, 7TV ~45, FFZ ~10 after modifiers are dropped). A low emote count is not by itself evidence of a broken loader — check the channel sets.
-- **7TV's API returns sporadic 502s.** Expect them in testing; they are what the failure handling below is for.
+- **7TV's API returns sporadic 502s.** Expect them in testing; they are what the failure handling below is for, and why it backs off over three retries rather than trying once.
+- **`GM_xmlhttpRequest` calls `onerror` with the response object, not an `Error`.** `fetchJSON` wraps it (and `onabort`) in a real `Error`, so the `failed:` log line has a reason and an aborted request can't leave a loader pending forever.
 
 ### Failures versus empty sets
 
 Prefer preserving the current graceful-failure behavior. Provider failures should not stop other providers from loading.
 
-A loader may return `[]` only when the provider *answered* that the channel has no emotes there, which means a 404 (`fetchJSONOrNull` / `fetchKickJSONOrNull` turn exactly that into `null`). Every other error has to propagate. A rejected loader is retried once by `init()`, leaves a stale cached set in place, and caches nothing. An empty result is cached for 15 minutes and, on a background refresh, *replaces* the cached set, which is how a single timeout used to blank a channel's emotes mid-session.
+A loader may return `[]` only when the provider *answered* that the channel has no emotes there, which means a 404 (`fetchJSONOrNull` / `fetchKickJSONOrNull` turn exactly that into `null`). Every other error has to propagate. A rejected loader is retried by `init()` after each of `PROVIDER_RETRY_DELAYS` (5 s, 15 s, 45 s — only the still-failing loaders each time), leaves a stale cached set in place, and caches nothing. An empty result is cached for 15 minutes and, on a background refresh, *replaces* the cached set, which is how a single timeout used to blank a channel's emotes mid-session.
 
 ## DOM And Routing Notes
 

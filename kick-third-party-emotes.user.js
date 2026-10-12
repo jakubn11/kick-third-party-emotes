@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.3
+// @version      2.11.4
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.11.3';
+  const VERSION = '2.11.4';
 
   // ─── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -923,6 +923,8 @@
   // ─── HTTP ─────────────────────────────────────────────────────────────────
 
   const FETCH_TIMEOUT = 15000;
+  // Delays before each retry of a provider that failed to load (see init).
+  const PROVIDER_RETRY_DELAYS = [5000, 15000, 45000];
 
   // Errors carry the HTTP status so a 404 can be told apart from a failure.
   function httpError(status) {
@@ -949,7 +951,14 @@
             reject(httpError(res.status));
           }
         },
-        onerror: reject,
+        // Managers call onerror with the response object, not an Error, so a
+        // bare `reject` logged `failed: undefined`. An abort is handled too: a
+        // request that ends without onload/onerror/ontimeout would otherwise
+        // leave this promise, and the retry pass waiting on it, pending forever.
+        onerror: res => reject(new Error(typeof res?.error === 'string' && res.error
+          ? `network error: ${res.error}`
+          : 'network error')),
+        onabort: () => reject(new Error('aborted')),
       });
     });
   }
@@ -3166,25 +3175,41 @@
     queueVisibleEmoteRefresh(routeChatRefreshDelay());
     queueProviderPickerRefresh();
 
-    if (failedLoaders.length) {
-      log(`${failedLoaders.length} provider(s) failed, retrying in 5s…`);
+    // 7TV in particular answers with sporadic 502s, and a single retry 5 s
+    // later often lands in the same bad patch, leaving the channel without
+    // those emotes until the next navigation. Back off instead; each pass
+    // retries only the loaders that are still failing.
+    function retryFailedLoaders(loaders, attempt) {
+      const delay = PROVIDER_RETRY_DELAYS[attempt];
+      log(`${loaders.length} provider(s) failed, retrying in ${delay / 1000}s…`);
       setTimeout(async () => {
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
-        const retryResults = await Promise.allSettled(
-          failedLoaders.map(loader => loader.fn()),
-        );
+        const results = await Promise.allSettled(loaders.map(loader => loader.fn()));
         if (seq !== initSeq || currentChannelSlug() !== slug) return;
+        const stillFailing = [];
         let added = 0;
-        for (let i = 0; i < retryResults.length; i++) {
-          const r = retryResults[i];
-          if (r.status !== 'fulfilled' || !Array.isArray(r.value)) continue;
-          if (applyProviderEntries(failedLoaders[i], r.value)) added += r.value.length;
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i];
+          if (r.status !== 'fulfilled') {
+            log(`${loaders[i].key} failed again:`, r.reason?.message ?? r.reason);
+            stillFailing.push(loaders[i]);
+            continue;
+          }
+          if (Array.isArray(r.value) && applyProviderEntries(loaders[i], r.value)) {
+            added += r.value.length;
+          }
         }
-        if (added) {
-          log(`Retry loaded ${added} emotes`);
+        if (added) log(`Retry loaded ${added} emotes`);
+        if (!stillFailing.length) return;
+        if (attempt + 1 < PROVIDER_RETRY_DELAYS.length) {
+          retryFailedLoaders(stillFailing, attempt + 1);
+        } else {
+          log(`Giving up on ${stillFailing.map(loader => loader.key).join(', ')} until the next page load`);
         }
-      }, 5000);
+      }, delay);
     }
+
+    if (failedLoaders.length) retryFailedLoaders(failedLoaders, 0);
   }
 
   // ─── SPA Routing ──────────────────────────────────────────────────────────
