@@ -61,12 +61,12 @@ The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with
 Global sets are each provider's small curated default; channel sets are where the hundreds of emotes come from. BetterTTV and FrankerFaceZ have no Kick support, so their channel emotes come from the Twitch account linked on the streamer's 7TV profile, or the Twitch channel with the same name.
 
 - On every Kick channel page the script looks the channel up through Kick's own API, then fetches emotes from all three services.
-- Chat messages are scanned as they arrive; any matching word is replaced with the emote image.
+- Chat messages are scanned as they arrive; any matching word is replaced with the emote image. When two sets use the same name, channel emotes win over global ones, and 7TV over BTTV over FFZ.
 - Start typing an emote name in the chat input to get an autocomplete popup — ↑/↓ to navigate, Tab or Enter to insert, Esc to close. Favourites rank first, then your most-used emotes.
 - Hover over an emote to see a large preview with its name and source; right-click it to favourite it, copy the name/image URL, or open its provider page.
 - Favourited emotes get a ★, a **Favourites** section at the top of the picker, and first place in autocomplete.
 - Open Kick's emote picker and choose the **7TV+** tab to browse/search loaded third-party emotes; clicking one inserts its text code into chat, and right-clicking one opens the same menu as in chat. The picker starts with 40 matches per provider for performance, offers **Load more** per provider, and search narrows across all loaded emotes.
-- With your system's **Reduce motion** setting on (macOS: Accessibility → Display; Windows: Accessibility → Visual effects → Animation effects off), animated 7TV and FFZ emotes show a still frame in chat, autocomplete, previews and the picker, and switch live when you change it. BTTV has no still frames, so its animated emotes keep moving.
+- With your system's **Reduce motion** setting on (macOS: System Settings → Accessibility → Display; Windows: Settings → Accessibility → Visual effects → Animation effects off), animated 7TV and FFZ emotes show a still frame in chat, autocomplete, previews and the picker, and switch live when you change it. BTTV has no still frames, so its animated emotes keep moving.
 - The chips at the top of the **7TV+** tab are the settings: turn 7TV, BTTV or FFZ off individually. Changes apply immediately, including to messages already on screen, and are remembered locally. The row tucks away while you scroll the grid and returns when you scroll back to the top.
 - Navigating between channels reloads the channel-specific emote sets automatically. Kick's popout chat (`/popout/<channel>/chat`) is supported too.
 

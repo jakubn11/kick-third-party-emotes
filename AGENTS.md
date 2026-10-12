@@ -73,7 +73,7 @@ The central data structure is:
 Map<string, { url: string, source: string, animated: boolean, zeroWidth: boolean, staticUrl?: string }>
 ```
 
-`staticUrl` is optional: a frozen first-frame variant (populated for animated 7TV emotes) used by the picker's animate-on-hover behaviour.
+`staticUrl` is optional: a frozen first-frame variant (populated for animated 7TV and FFZ emotes; BTTV has none) used by the picker's animate-on-hover behaviour and, under reduced motion, everywhere an emote is shown (`emoteDisplayUrl`).
 
 Each provider loader should add `[code, emote]` entries through `cachedLoad()`.
 
