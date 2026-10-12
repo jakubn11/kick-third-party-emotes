@@ -1,0 +1,48 @@
+{
+  "room": {
+    "id": "lirik",
+    "twitch_id": 23161357
+  },
+  "sets": {
+    "135169": {
+      "id": 135169,
+      "emoticons": [
+        {
+          "id": 739826,
+          "name": "fallDamage",
+          "urls": {
+            "1": "https://cdn.frankerfacez.com/emote/739826/1",
+            "2": "https://cdn.frankerfacez.com/emote/739826/2",
+            "4": "https://cdn.frankerfacez.com/emote/739826/4"
+          },
+          "animated": {
+            "1": "https://cdn.frankerfacez.com/emote/739826/animated/1",
+            "2": "https://cdn.frankerfacez.com/emote/739826/animated/2",
+            "4": "https://cdn.frankerfacez.com/emote/739826/animated/4"
+          },
+          "modifier": false
+        },
+        {
+          "id": 329385,
+          "name": "WideConcern",
+          "urls": {
+            "1": "https://cdn.frankerfacez.com/emote/329385/1",
+            "2": "https://cdn.frankerfacez.com/emote/329385/2",
+            "4": "https://cdn.frankerfacez.com/emote/329385/4"
+          },
+          "modifier": false
+        },
+        {
+          "id": 681861,
+          "name": "happyFR",
+          "urls": {
+            "1": "https://cdn.frankerfacez.com/emote/681861/1",
+            "2": "https://cdn.frankerfacez.com/emote/681861/2",
+            "4": "https://cdn.frankerfacez.com/emote/681861/4"
+          },
+          "modifier": false
+        }
+      ]
+    }
+  }
+}
