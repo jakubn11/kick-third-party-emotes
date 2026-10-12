@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.3] - 2026-10-12
+
+### Fixed
+- **A streamer's 7TV emote now wins over a same-named BTTV or FFZ one.** Which emote won a name clash fell out of the order the loaders were listed in: globals were first-wins (BTTV, then 7TV, then FFZ) but channel sets were last-wins, so FFZ channel beat 7TV channel beat BTTV channel. An old Twitch FFZ emote could therefore shadow the emote the streamer actually set up for Kick. Precedence is now explicit and the same in both tiers: every channel set outranks every global set, and within a tier 7TV beats BTTV beats FFZ — 7TV first because it is the only provider that knows Kick accounts.
+
 ## [2.11.2] - 2026-10-01
 
 ### Added

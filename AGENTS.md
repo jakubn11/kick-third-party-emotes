@@ -67,6 +67,8 @@ Map<string, { url: string, source: string, animated: boolean, zeroWidth: boolean
 
 Each provider loader should add `[code, emote]` entries through `cachedLoad()`.
 
+When two sets share a code, `rebuildEmoteMap()` keeps the one from the higher-ranked layer (`loaderRank`): every channel set outranks every global set, and within a tier the `PROVIDERS` order applies — 7TV, then BTTV, then FFZ. 7TV leads because it is the only provider that knows Kick accounts. Precedence is explicit on purpose: it used to fall out of `allLoaders` order, which made channel sets last-wins and let an old Twitch FFZ emote shadow the streamer's 7TV one. Reordering `allLoaders` changes nothing now.
+
 ### Storage keys
 
 Two separate namespaces, deliberately:

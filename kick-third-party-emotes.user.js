@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.2
+// @version      2.11.3
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.11.2';
+  const VERSION = '2.11.3';
 
   // ─── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -1073,28 +1073,32 @@
   let loadedProviders = new Map(); // loader key → validated entries
   let activeLoaders = [];          // loader descriptors for the current channel
 
-  // Channel emotes override globals; globals never overwrite an existing entry.
+  // When two layers share a code, the higher-ranked one wins: every channel set
+  // outranks every global set, and within a tier 7TV beats BTTV beats FFZ (the
+  // PROVIDERS order). 7TV leads because it is the only provider that knows
+  // Kick accounts — BTTV and FFZ channel sets are the streamer's Twitch ones.
+  // This used to fall out of loader order instead, which had channel sets
+  // last-wins and globals first-wins, so an old Twitch FFZ emote shadowed the
+  // streamer's 7TV emote of the same name.
+  function loaderRank(loader) {
+    const i = PROVIDERS.indexOf(loader.provider);
+    const providerRank = i < 0 ? PROVIDERS.length : i;
+    return (loader.isChannel ? 0 : PROVIDERS.length + 1) + providerRank;
+  }
+
   // Resolution order is non-deterministic, so rebuild from the known layers
   // whenever a provider updates or is toggled in settings.
   function rebuildEmoteMap() {
     emoteMap.clear();
-    for (const loader of activeLoaders) {
+    const ranked = [...activeLoaders].sort((a, b) => loaderRank(a) - loaderRank(b));
+    for (const loader of ranked) {
       if (!providerEnabled(loader.provider)) continue;
       const entries = loadedProviders.get(loader.key);
-      if (entries) mergeEmoteEntries(entries, loader.isChannel);
-    }
-  }
-
-  function mergeEmoteEntries(entries, isChannel) {
-    if (!Array.isArray(entries) || !entries.length) return 0;
-    let added = 0;
-    for (const [code, e] of entries) {
-      if (isChannel || !emoteMap.has(code)) {
-        emoteMap.set(code, e);
-        added++;
+      if (!Array.isArray(entries)) continue;
+      for (const [code, e] of entries) {
+        if (!emoteMap.has(code)) emoteMap.set(code, e);
       }
     }
-    return added;
   }
 
   // ─── Channel lookup ───────────────────────────────────────────────────────
@@ -2621,10 +2625,9 @@
       groups.get(source).push({ code, emote });
     }
 
-    const providerOrder = ['7TV', 'BTTV', 'FFZ'];
     const orderedGroups = [...groups.entries()].sort(([a], [b]) => {
-      const ai = providerOrder.includes(a) ? providerOrder.indexOf(a) : providerOrder.length;
-      const bi = providerOrder.includes(b) ? providerOrder.indexOf(b) : providerOrder.length;
+      const ai = PROVIDERS.includes(a) ? PROVIDERS.indexOf(a) : PROVIDERS.length;
+      const bi = PROVIDERS.includes(b) ? PROVIDERS.indexOf(b) : PROVIDERS.length;
       return ai - bi || (a < b ? -1 : a > b ? 1 : 0);
     });
 
