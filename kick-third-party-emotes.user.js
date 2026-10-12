@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.5
+// @version      2.11.6
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.11.5';
+  const VERSION = '2.11.6';
 
   // ─── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -152,9 +152,10 @@
   // schema, to `kte_v3_` when BTTV emotes gained real zeroWidth flags — cached
   // v2 entries all claim `zeroWidth: false` — and to `kte_v4_` when 7TV's
   // zeroWidth started reading the right flag bit and failed channel lookups
-  // stopped being cached as empty sets. Orphaned keys from older prefixes are
-  // removed by sweepCache below.
-  const CACHE_PREFIX = 'kte_v4_';
+  // stopped being cached as empty sets, and to `kte_v5_` when animated FFZ
+  // emotes stopped being cached as their still frame. Orphaned keys from older
+  // prefixes are removed by sweepCache below.
+  const CACHE_PREFIX = 'kte_v5_';
 
   // User state, not cached provider data: it has no schema tied to the emote
   // shape, so it deliberately keeps its own stable prefix and survives every
@@ -164,7 +165,7 @@
   const SETTINGS_KEY = 'kte_v2_settings';
   const PRESERVED_KEYS = new Set([USAGE_KEY, FAVS_KEY, SETTINGS_KEY]);
 
-  // Every visited channel leaves kte_v4_*_c_<slug> keys behind and localStorage
+  // Every visited channel leaves kte_v5_*_c_<slug> keys behind and localStorage
   // never evicts them. Drop old-prefix keys and anything long expired; the
   // CACHE_BUDGET cap in Cache.set bounds what is left inside the week.
   const CACHE_SWEEP_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
@@ -1354,19 +1355,29 @@
   // FFZ "modifier" entries (ffzSpin, ffzRainbow, ffzX, …) are effects applied
   // to the preceding emote, not emotes. They're over half of the global set
   // and render as meaningless 32px icons on their own.
+  //
+  // An animated emote carries a second URL map, `animated`, beside `urls`
+  // (`…/emote/<id>/animated/2`, an animated WebP); `urls` is then its still
+  // first frame (PNG), which the picker shows until hover, as with 7TV.
   function ffzEntries(sets, source) {
+    const https = raw => (raw.startsWith('//') ? `https:${raw}` : raw);
     const entries = [];
     for (const set of Object.values(sets ?? {})) {
       for (const e of (set?.emoticons ?? [])) {
         if (e?.modifier) continue;
-        const raw = e?.urls?.['2'] ?? e?.urls?.['1'];
+        const stillRaw = e?.urls?.['2'] ?? e?.urls?.['1'];
+        const animRaw = e?.animated?.['2'] ?? e?.animated?.['1'];
+        const animated = typeof animRaw === 'string';
+        const raw = animated ? animRaw : stillRaw;
         if (typeof raw !== 'string') continue;
-        entries.push([e.name, {
-          url: raw.startsWith('//') ? `https:${raw}` : raw,
+        const entry = {
+          url: https(raw),
           source,
-          animated: false,
+          animated,
           zeroWidth: false,
-        }]);
+        };
+        if (animated && typeof stillRaw === 'string') entry.staticUrl = https(stillRaw);
+        entries.push([e.name, entry]);
       }
     }
     return entries;

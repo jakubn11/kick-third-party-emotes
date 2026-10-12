@@ -44,7 +44,7 @@ Do not add `Co-Authored-By:` trailers to git commits.
 - Userscript metadata and constants
 - `VERSION` — bumped with `@version` on every release; logged once at boot (`[KickEmotes] v… active`) and named in the duplicate warning
 - Single-instance guard (2.11.2) — right after `VERSION`, before any state or listener exists. Marks `<html>` with `data-kte-running="<version>"`; a later copy sees the marker, `console.warn`s naming both versions, and `return`s. On `<html>`, not `window`, because the script runs sandboxed and managers disagree on whether sandboxes share a JS context — they always share the DOM
-- Cache helper using `localStorage` keys prefixed with `kte_v4_` (old-prefix and long-expired keys are swept once per page load)
+- Cache helper using `localStorage` keys prefixed with `kte_v5_` (old-prefix and long-expired keys are swept once per page load)
 - Local emote-usage tracker (`kte_v2_usage`) powering autocomplete ranking and the picker's "Recently used" section
 - Local favourites store (`kte_v2_favs`) powering the picker's "Favourites" section, the top of the autocomplete ranking, and the ★ markers
 - Local settings store (`kte_v2_settings`) — per-provider visibility — surfaced as the chip row at the top of the picker tab
@@ -73,7 +73,7 @@ When two sets share a code, `rebuildEmoteMap()` keeps the one from the higher-ra
 
 Two separate namespaces, deliberately:
 
-- **`CACHE_PREFIX` (`kte_v4_`)** — provider data. Bump the prefix whenever the emote schema *or the meaning of a field* changes, so stale entries are refetched instead of served for up to their TTL. (`v2` added `staticUrl`; `v3` gave BTTV entries real `zeroWidth` flags; `v4` fixed 7TV's `zeroWidth` bit and dropped channel sets that had been cached as empty after a failed or misaddressed lookup.) `sweepCache` deletes keys from older prefixes.
+- **`CACHE_PREFIX` (`kte_v5_`)** — provider data. Bump the prefix whenever the emote schema *or the meaning of a field* changes, so stale entries are refetched instead of served for up to their TTL. (`v2` added `staticUrl`; `v3` gave BTTV entries real `zeroWidth` flags; `v4` fixed 7TV's `zeroWidth` bit and dropped channel sets that had been cached as empty after a failed or misaddressed lookup; `v5` replaced FFZ's cached still frames with animated URLs.) `sweepCache` deletes keys from older prefixes.
   Provider data is capped at `CACHE_BUDGET` (1.5M UTF-16 code units, the unit browsers count against the ~5M quota): `Cache.set` evicts our oldest entries until the write fits, and if the browser still throws on quota it keeps evicting ours before giving up the write. The quota belongs to kick.com and is shared with Kick's own data, and one big channel's sets run to ~200K, so uncapped the cache could fill it within the 7-day sweep window and break Kick's writes as well as ours. Ages come from `cacheValueTs`, which reads the `ts` off the front of the string without parsing the set — `Cache.set` must keep writing `ts` as the first property.
 - **`USAGE_KEY` / `FAVS_KEY` / `SETTINGS_KEY` (`kte_v2_*`)** — user state. All three are listed in `PRESERVED_KEYS` and are skipped by the sweep, so a cache-prefix bump never wipes someone's favourites, ranking, or settings. Do not derive them from `CACHE_PREFIX`.
 
@@ -120,6 +120,7 @@ Worth knowing before "fixing" a loader:
 - **BTTV exposes no zero-width flag.** `BTTV_ZERO_WIDTH` is the same hardcoded overlay list BTTV's own clients ship. If BTTV adds seasonal overlay emotes, extend the set.
 - **7TV's zero-width flag is bit `1` on the set entry** (`ActiveEmoteFlag.ZeroWidth`). `data.flags & 256` is the emote's own default, which a set can override; reading `256` off the set entry, as the global loader once did, flags nothing.
 - **7TV v3 has no separate `_static` files.** Each entry in `host.files` names its frozen first frame in `static_name` (`2x.webp` → `2x_static.webp`), which is where `staticUrl` comes from.
+- **FFZ animated emotes come in a second URL map.** An animated entry has `animated: { '1', '2', '4' }` (`…/emote/<id>/animated/2`, animated WebP) beside `urls`, which is then its still PNG frame — `ffzEntries` uses the first as `url` and the second as `staticUrl`. They are rare (lirik's `fallDamage` is one); most rooms have none.
 - **FFZ `modifier: true` entries are not emotes.** They're effect modifiers (`ffzSpin`, `ffzRainbow`, `ffzX`, …) that FFZ clients apply as CSS to the preceding emote. Both FFZ loaders skip them; rendering them standalone produces meaningless 32px icons.
 - **Global sets are small** (BTTV ~65, 7TV ~45, FFZ ~10 after modifiers are dropped). A low emote count is not by itself evidence of a broken loader — check the channel sets.
 - **7TV's API returns sporadic 502s.** Expect them in testing; they are what the failure handling below is for, and why it backs off over three retries rather than trying once.

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.6] - 2026-10-12
+
+### Fixed
+- **Animated FFZ emotes now animate.** FFZ lists an animated emote's moving version in a separate `animated` URL map (an animated WebP), and the loader only ever read `urls` — the still PNG frame — so emotes like lirik's `fallDamage` rendered frozen in chat. They now animate in chat, autocomplete and the hover preview, and in the picker they start on their still frame and play on hover, as 7TV emotes do.
+
+### Changed
+- Emote cache prefix bumped from `kte_v4_` to `kte_v5_`, so FFZ sets cached with still frames are refetched. Favourites, usage and settings are untouched.
+
 ## [2.11.5] - 2026-10-12
 
 ### Fixed

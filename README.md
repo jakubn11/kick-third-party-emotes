@@ -29,7 +29,7 @@
 
 - Emotes from three providers rendered inline in chat messages
 - Per-channel emote sets loaded automatically on navigation
-- Animated emote support (GIF)
+- Animated emote support (GIF and animated WebP, including FFZ's animated emotes)
 - Zero-width emote overlays (7TV overlay emotes and BTTV's `cvMask`, `SoSnowy`, `SantaHat` & co.)
 - Hover tooltips showing a large emote preview with its name and provider
 - Favourite emotes — star them from the right-click menu for a pinned picker section and top billing in autocomplete
@@ -101,7 +101,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 
 **Settings:** the 7TV+ picker tab opens with a row of chips that turn 7TV, BTTV and FFZ on or off. Changes apply straight away — already-rendered messages update in place. The row hides itself as soon as you scroll the grid and slides back when you scroll to the top, so it never covers emotes. Hidden providers are still fetched in the background so switching one back on is instant. Your choices are stored locally in `kte_v2_settings`.
 
-**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. **Favourites** and **Recently used** sections appear above the provider groups. The picker starts with 40 matches per provider for performance, then offers **Load more** per provider. Search narrows across all loaded emotes. Clicking an emote inserts its code into the chat input. Animated 7TV emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets.
+**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. **Favourites** and **Recently used** sections appear above the provider groups. The picker starts with 40 matches per provider for performance, then offers **Load more** per provider. Search narrows across all loaded emotes. Clicking an emote inserts its code into the chat input. Animated 7TV and FFZ emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets.
 
 ## Troubleshooting
 
