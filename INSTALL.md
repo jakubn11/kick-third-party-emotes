@@ -66,6 +66,7 @@ Global sets are each provider's small curated default; channel sets are where th
 - Hover over an emote to see a large preview with its name and source; right-click it to favourite it, copy the name/image URL, or open its provider page.
 - Favourited emotes get a ★, a **Favourites** section at the top of the picker, and first place in autocomplete.
 - Open Kick's emote picker and choose the **7TV+** tab to browse/search loaded third-party emotes; clicking one inserts its text code into chat, and right-clicking one opens the same menu as in chat. The picker starts with 40 matches per provider for performance, offers **Load more** per provider, and search narrows across all loaded emotes.
+- With your system's **Reduce motion** setting on (macOS: Accessibility → Display; Windows: Accessibility → Visual effects → Animation effects off), animated 7TV and FFZ emotes show a still frame in chat, autocomplete, previews and the picker, and switch live when you change it. BTTV has no still frames, so its animated emotes keep moving.
 - The chips at the top of the **7TV+** tab are the settings: turn 7TV, BTTV or FFZ off individually. Changes apply immediately, including to messages already on screen, and are remembered locally. The row tucks away while you scroll the grid and returns when you scroll back to the top.
 - Navigating between channels reloads the channel-specific emote sets automatically. Kick's popout chat (`/popout/<channel>/chat`) is supported too.
 

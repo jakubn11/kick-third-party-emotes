@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-10-13
+
+### Added
+- **Respects the system's Reduce motion setting.** With `prefers-reduced-motion: reduce` on, animated 7TV and FFZ emotes show their still frame in chat, autocomplete, the hover preview and the picker, and the picker stops animating on hover. Changing the setting applies live, re-rendering messages already on screen. BTTV serves no still frames, so its animated emotes keep moving. *Copy image URL* still copies the animated emote.
+
 ## [2.11.6] - 2026-10-12
 
 ### Fixed

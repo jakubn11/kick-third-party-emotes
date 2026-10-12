@@ -24,7 +24,7 @@ There is no package manager, build step, or linter. Tests run on macOS's built-i
 
 The userscript is one IIFE that touches the DOM as it loads, so the tests don't run it. `tests/harness.js` pulls individual functions (`load([...])`) or top-level `const`s (`loadConst([...])`) out of the source by name and evaluates them globally; each test stubs whatever those reference (`localStorage`, `GM_xmlhttpRequest`, `setTimeout`, `matchMedia`, sibling functions) and calls `check(label, condition)`. jsc has no `URL`, so the harness supplies a minimal one. Each test file runs in its own `jsc` process.
 
-What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`tests/fixtures/`). DOM processing, the picker and autocomplete are not — they still need the manual steps below.
+What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`tests/fixtures/`), and `emoteDisplayUrl` under reduced motion. DOM processing, the picker and autocomplete are not — they still need the manual steps below.
 
 Renaming a function or `const` that a test loads breaks that test loudly (`no function …`), which is the point: update the test with it. When fixing a bug in pure logic, add a check that fails without the fix.
 
@@ -164,6 +164,7 @@ When fixing Kick DOM breakage, prefer adding fallback selectors rather than repl
 
 - Emote images use `.kte-img`, at 28px, with zero-width overlays matching at `.kte-zw`. Change both together.
 - Zero-width emotes overlay the previous emote via `.kte-zw` — 7TV emotes flagged by the provider, plus the BTTV codes in `BTTV_ZERO_WIDTH`. The whitespace token preceding an absorbed overlay is dropped: the overlay is absolutely positioned, so that space renders as a stray gap (chat is `pre-wrap`) and orphans on un-render, growing by one space per toggle cycle.
+- **Reduced motion.** Every place that shows an emote image takes it from `emoteDisplayUrl(emote)`, not `emote.url`: under `prefers-reduced-motion: reduce` that is the `staticUrl` still frame (7TV and FFZ animated emotes have one; BTTV has none, so its animated emotes keep moving). The picker also drops its animate-on-hover then. The `reducedMotionQuery` `change` listener calls `rerenderEmotes()` and `pickerRefreshIfBuilt()`, so the switch is live. `emote.url` is still what *Copy image URL* and the provider-page link use — they describe the emote, not what is on screen.
 - Every emote `img` keeps its code in `alt`, on `.kte-zw` overlays as much as on `.kte-img`. That is not just for copy/paste — `unrenderEmoteWraps()` reconstructs the original message tokens from the alts when a provider is switched off.
 - `makeEmoteWrap` returns a plain text node when `safeUrl()` rejects the emote's URL. Only elements may anchor a zero-width overlay — a text node has no `dataset` and throws on `appendChild`, which would abort rendering for the whole message. Keep the element check on the zero-width anchor.
 - Text nodes are split on whitespace; exact token matches are replaced. Text under a `SKIP_TEXT_SELECTORS` ancestor (links, the username button) is left alone — see DOM And Routing Notes.
@@ -287,6 +288,7 @@ Manual testing is required in a browser with a userscript manager installed:
 16. Compare the 7TV+ tab button against Kick's native tabs: same size and spacing, the active underline appears under it when the tab is selected, and no horizontal scrollbar shows under the tab strip.
 17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
 18. Enable a **second** copy of the script (a duplicate entry in the same manager, or a second manager) and reload. The console must show one `[KickEmotes] v… active` line and one `… is standing down` warning naming both versions; chat, the picker and autocomplete behave exactly as with one copy.
+19. Turn on the system's **Reduce motion** setting with a channel open (macOS: System Settings → Accessibility → Display). Without a reload, animated 7TV and FFZ emotes in chat, autocomplete, the hover preview and the picker should freeze on their still frame, the picker should stop animating on hover, and turning the setting off should bring the animation back. Animated BTTV emotes keep moving.
 
 ## Documentation
 

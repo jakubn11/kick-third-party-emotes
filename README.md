@@ -30,6 +30,7 @@
 - Emotes from three providers rendered inline in chat messages
 - Per-channel emote sets loaded automatically on navigation
 - Animated emote support (GIF and animated WebP, including FFZ's animated emotes)
+- Respects your system's **Reduce motion** setting — 7TV and FFZ animated emotes show their still frame everywhere instead
 - Zero-width emote overlays (7TV overlay emotes and BTTV's `cvMask`, `SoSnowy`, `SantaHat` & co.)
 - Hover tooltips showing a large emote preview with its name and provider
 - Favourite emotes — star them from the right-click menu for a pinned picker section and top billing in autocomplete

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.6
+// @version      2.12.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.11.6';
+  const VERSION = '2.12.0';
 
   // ─── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -922,6 +922,25 @@
     } catch { return ''; }
   }
 
+  // With the OS "reduce motion" setting on, emotes show their still frame
+  // everywhere — chat, autocomplete, the hover preview and the picker, hover
+  // included. That needs a still frame to exist: 7TV and FFZ animated emotes
+  // have one (`staticUrl`); BTTV serves none, so its animated emotes still move.
+  const reducedMotionQuery = typeof matchMedia === 'function'
+    ? matchMedia('(prefers-reduced-motion: reduce)')
+    : null;
+
+  function prefersReducedMotion() {
+    return Boolean(reducedMotionQuery?.matches);
+  }
+
+  // The image to show for an emote, already through safeUrl: its still frame
+  // under reduced motion when it has one, otherwise the emote itself.
+  function emoteDisplayUrl(emote) {
+    const still = prefersReducedMotion() && emote.staticUrl ? safeUrl(emote.staticUrl) : '';
+    return still || safeUrl(emote.url);
+  }
+
   function RIC(cb) {
     return typeof requestIdleCallback === 'function'
       ? requestIdleCallback(cb, { timeout: 300 })
@@ -1562,13 +1581,17 @@
   // and nothing else would rebuild it before the user switches back.
   function favToggleAndRefresh(code) {
     const added = favToggle(code);
+    pickerRefreshIfBuilt();
+    acRefreshOpen();
+    return added;
+  }
+
+  function pickerRefreshIfBuilt() {
     const panel = document.getElementById('chat-emotes-picker-panel');
     if (panel?.querySelector('#kte-picker-content')) {
       pickerRefreshContent(panel);
       pickerApplyActiveState(panel);
     }
-    acRefreshOpen();
-    return added;
   }
 
   function showEmoteMenu(x, y, code, emote) {
@@ -1614,9 +1637,10 @@
   }
 
   function makeEmoteWrap(code, emote) {
+    const url = emoteDisplayUrl(emote);
     const wrap = document.createElement('span');
     wrap.className = 'kte-wrap';
-    setEmoteTooltip(wrap, code, emote.source, emote.url);
+    setEmoteTooltip(wrap, code, emote.source, url);
     wrap.addEventListener('mouseenter', () => showTooltip(wrap));
     wrap.addEventListener('mouseleave', hideTooltip);
     wrap.addEventListener('contextmenu', e => {
@@ -1626,7 +1650,6 @@
       showEmoteMenu(e.clientX, e.clientY, code, emote);
     });
 
-    const url = safeUrl(emote.url);
     if (!url) return document.createTextNode(code);
 
     const img = document.createElement('img');
@@ -1666,7 +1689,7 @@
           // render/un-render cycle.
           const prev = frag.lastChild;
           if (prev?.nodeType === Node.TEXT_NODE && !prev.textContent.trim()) frag.removeChild(prev);
-          const zwUrl = safeUrl(emote.url);
+          const zwUrl = emoteDisplayUrl(emote);
           if (!zwUrl) {
             // Same fallback makeEmoteWrap uses for a rejected URL: show the code
             // as text rather than dropping the token out of the message.
@@ -1762,6 +1785,12 @@
 
   function applyProviderSettings() {
     rebuildEmoteMap();
+    rerenderEmotes();
+  }
+
+  // Puts every rendered chat emote back to text and renders it again from the
+  // current emoteMap and motion setting, and refreshes an open autocomplete.
+  function rerenderEmotes() {
     emoteVersion++;
     hideTooltip();
     unrenderEmoteWraps();
@@ -2004,7 +2033,7 @@
       const row = document.createElement('div');
       row.className = 'kte-ac-row';
 
-      const acUrl = safeUrl(emote.url);
+      const acUrl = emoteDisplayUrl(emote);
       const img = document.createElement('img');
       img.src = acUrl;
       img.alt = code;
@@ -2148,7 +2177,7 @@
     btn.className = 'kte-picker-btn';
     btn.setAttribute('aria-label', `Insert ${code}`);
     btn.dataset.code = code;
-    setEmoteTooltip(btn, code, emote.source, emote.url);
+    setEmoteTooltip(btn, code, emote.source, emoteDisplayUrl(emote));
     if (favHas(code)) btn.dataset.kteFav = '1';
 
     const animUrl = safeUrl(emote.url);
@@ -2165,7 +2194,8 @@
     // and animated URLs actually differ (i.e. the provider serves a separate
     // frozen frame). Without that, the emote either is naturally static or has
     // no static variant available, so we just show whatever the default is.
-    if (staticUrl && animUrl && staticUrl !== animUrl) {
+    // Under reduced motion the still frame stays put on hover too.
+    if (!prefersReducedMotion() && staticUrl && animUrl && staticUrl !== animUrl) {
       img.dataset.kteAnimSrc = animUrl;
     }
     img.addEventListener('error', () => {
@@ -3346,6 +3376,13 @@
 
   // Re-parent floating overlays into / out of the fullscreen element so they
   // remain visible when Kick's chat enters fullscreen.
+  // Follow the reduce-motion setting live: re-render chat with the other frame
+  // and rebuild the picker, which bakes the choice into its buttons.
+  reducedMotionQuery?.addEventListener?.('change', () => {
+    rerenderEmotes();
+    pickerRefreshIfBuilt();
+  });
+
   document.addEventListener('fullscreenchange', () => {
     if (tipEl) reparentOverlay(tipEl);
     if (acDropdown) reparentOverlay(acDropdown);
