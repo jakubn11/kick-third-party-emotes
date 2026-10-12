@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.5] - 2026-10-12
+
+### Fixed
+- **The emote cache can no longer fill kick.com's storage.** Provider sets are cached in kick.com's `localStorage`, whose ~5M-character quota is shared with Kick's own data, and one big channel's sets run to ~200K (xqc's 7TV set alone: 988 emotes, ~190K). Keys were only swept after 7 days, so a week of channel surfing could fill the quota — after which the script's cache writes failed silently, and so would Kick's. The cache is now capped at 1.5M characters, dropping the oldest cached sets first; if the browser still reports the quota full, the script gives up more of its own entries before giving up the write, which frees room for Kick too.
+
+### Changed
+- The weekly cache sweep reads each entry's timestamp off the front of the stored string instead of parsing the whole emote set.
+
 ## [2.11.4] - 2026-10-12
 
 ### Fixed

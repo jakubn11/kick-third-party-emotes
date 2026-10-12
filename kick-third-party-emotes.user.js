@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.11.4
+// @version      2.11.5
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.11.4';
+  const VERSION = '2.11.5';
 
   // ─── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -165,9 +165,37 @@
   const PRESERVED_KEYS = new Set([USAGE_KEY, FAVS_KEY, SETTINGS_KEY]);
 
   // Every visited channel leaves kte_v4_*_c_<slug> keys behind and localStorage
-  // never evicts them, so a long tail of channels would eventually hit quota
-  // and silently disable caching. Drop old-prefix keys and anything long expired.
+  // never evicts them. Drop old-prefix keys and anything long expired; the
+  // CACHE_BUDGET cap in Cache.set bounds what is left inside the week.
   const CACHE_SWEEP_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+  // Cache writes keep our provider data under this many UTF-16 code units —
+  // the unit browsers count against localStorage's ~5M quota. That quota is
+  // kick.com's, shared with Kick's own data, and one big channel's sets run to
+  // ~200K (xqc's 7TV set alone is 988 emotes, ~190K). Uncapped, a week of
+  // channel surfing filled it: our writes then failed silently, and so would
+  // Kick's. Oldest entries go first.
+  const CACHE_BUDGET = 1.5 * 1024 * 1024;
+
+  // A cache value's write time, read off the front of the string instead of
+  // parsing a whole emote set. Cache.set always writes `{"ts":…` first; any
+  // other shape reads as 0, i.e. oldest.
+  function cacheValueTs(raw) {
+    const m = /^\{"ts":(\d+)[,}]/.exec(raw ?? '');
+    return m ? Number(m[1]) : 0;
+  }
+
+  // Our provider-data entries other than `exceptKey`, oldest first.
+  function cacheEntriesByAge(exceptKey) {
+    const entries = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(CACHE_PREFIX) || key === exceptKey || PRESERVED_KEYS.has(key)) continue;
+      const raw = localStorage.getItem(key) ?? '';
+      entries.push({ key, ts: cacheValueTs(raw), size: key.length + raw.length });
+    }
+    return entries.sort((a, b) => a.ts - b.ts);
+  }
 
   function sweepCache() {
     const doomed = [];
@@ -177,10 +205,8 @@
         if (!key?.startsWith('kte_')) continue;
         if (PRESERVED_KEYS.has(key)) continue; // usage + favourites persist indefinitely
         if (!key.startsWith(CACHE_PREFIX)) { doomed.push(key); continue; }
-        try {
-          const { ts } = JSON.parse(localStorage.getItem(key));
-          if (typeof ts !== 'number' || Date.now() - ts > CACHE_SWEEP_MAX_AGE) doomed.push(key);
-        } catch { doomed.push(key); }
+        const ts = cacheValueTs(localStorage.getItem(key));
+        if (!ts || Date.now() - ts > CACHE_SWEEP_MAX_AGE) doomed.push(key);
       }
       doomed.forEach(key => localStorage.removeItem(key));
     } catch { /* storage access denied – skip */ }
@@ -204,8 +230,33 @@
       }
     },
     set(key, data) {
-      try { localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify({ ts: Date.now(), data })); }
-      catch { /* quota exceeded – skip silently */ }
+      const fullKey = `${CACHE_PREFIX}${key}`;
+      try {
+        const raw = JSON.stringify({ ts: Date.now(), data });
+        const size = fullKey.length + raw.length;
+        if (size > CACHE_BUDGET) return;
+        // fullKey's current value is left out: this write replaces it.
+        const others = cacheEntriesByAge(fullKey);
+        let total = others.reduce((sum, entry) => sum + entry.size, 0);
+        while (total + size > CACHE_BUDGET && others.length) {
+          const oldest = others.shift();
+          localStorage.removeItem(oldest.key);
+          total -= oldest.size;
+        }
+        for (;;) {
+          try {
+            localStorage.setItem(fullKey, raw);
+            return;
+          } catch {
+            // Over the browser's quota while still inside our budget — Kick's
+            // own data holds the rest. Give up our oldest entries before
+            // giving up the write; that frees room for Kick's writes too.
+            const oldest = others.shift();
+            if (!oldest) return;
+            localStorage.removeItem(oldest.key);
+          }
+        }
+      } catch { /* storage access denied – skip */ }
     },
   };
 

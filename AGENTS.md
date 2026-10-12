@@ -74,6 +74,7 @@ When two sets share a code, `rebuildEmoteMap()` keeps the one from the higher-ra
 Two separate namespaces, deliberately:
 
 - **`CACHE_PREFIX` (`kte_v4_`)** — provider data. Bump the prefix whenever the emote schema *or the meaning of a field* changes, so stale entries are refetched instead of served for up to their TTL. (`v2` added `staticUrl`; `v3` gave BTTV entries real `zeroWidth` flags; `v4` fixed 7TV's `zeroWidth` bit and dropped channel sets that had been cached as empty after a failed or misaddressed lookup.) `sweepCache` deletes keys from older prefixes.
+  Provider data is capped at `CACHE_BUDGET` (1.5M UTF-16 code units, the unit browsers count against the ~5M quota): `Cache.set` evicts our oldest entries until the write fits, and if the browser still throws on quota it keeps evicting ours before giving up the write. The quota belongs to kick.com and is shared with Kick's own data, and one big channel's sets run to ~200K, so uncapped the cache could fill it within the 7-day sweep window and break Kick's writes as well as ours. Ages come from `cacheValueTs`, which reads the `ts` off the front of the string without parsing the set — `Cache.set` must keep writing `ts` as the first property.
 - **`USAGE_KEY` / `FAVS_KEY` / `SETTINGS_KEY` (`kte_v2_*`)** — user state. All three are listed in `PRESERVED_KEYS` and are skipped by the sweep, so a cache-prefix bump never wipes someone's favourites, ranking, or settings. Do not derive them from `CACHE_PREFIX`.
 
 ### Settings
