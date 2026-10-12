@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.12.0
+// @version      2.12.1
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.12.0';
+  const VERSION = '2.12.1';
 
   // ─── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -51,10 +51,16 @@
   const log = (...a) => console.log('[KickEmotes]', ...a);
   log(`v${VERSION} active`);
 
+  // Site pages, not channels. Several of these are also real Kick usernames
+  // (`home`, `login`, `clips` all resolve on the channel API), so the API
+  // can't tell them apart — the route wins on kick.com, and it must here too.
+  // The policy pages and `category` were checked against the live site.
   const NON_CHANNEL_SLUGS = new Set([
-    '', 'home', 'browse', 'following', 'categories', 'search',
+    '', 'home', 'browse', 'following', 'categories', 'category', 'search',
     'login', 'register', 'dashboard', 'settings', 'clips', 'videos',
     'subscriptions', 'notifications', 'messages', 'wallet',
+    'terms-of-service', 'privacy-policy', 'cookie-policy',
+    'community-guidelines', 'dmca-policy',
   ]);
 
   const BTTV_CDN = 'https://cdn.betterttv.net/emote';
@@ -445,12 +451,12 @@
 
   let channelSlug = null;
   let chatObserver = null;
-  let inputObserver = null;
   let initSeq = 0;
   let emoteVersion = 0;
   let visibleRefreshTimer = null;
   let pickerInjectTimer = null;
   let pickerDeferredRefreshTimer = null;
+  let pickerSearchTimer = null;
   let messageProcessQueue = [];
   let messageProcessQueued = false;
   let lastNavigationAt = 0;
@@ -2124,28 +2130,14 @@
     attachedAcInput = found;
   }
 
+  // Forgets the previous channel's input and attaches to the current one if
+  // it is already there. If it isn't yet, there is nothing to wait on here:
+  // the chat observer, already watching the whole body, calls attemptAcAttach
+  // whenever the tracked input is missing. This used to run a second
+  // body-wide MutationObserver for the same job.
   function waitForInput() {
-    inputObserver?.disconnect();
-    inputObserver = null;
     attachedAcInput = null;
-
-    const el = acFindInput();
-    if (el) {
-      attachAutocomplete(el);
-      attachedAcInput = el;
-      return;
-    }
-
-    inputObserver = new MutationObserver(() => {
-      const found = acFindInput();
-      if (found) {
-        inputObserver?.disconnect();
-        inputObserver = null;
-        attachAutocomplete(found);
-        attachedAcInput = found;
-      }
-    });
-    inputObserver.observe(document.body, { childList: true, subtree: true });
+    attemptAcAttach();
   }
 
   // ─── Emote Picker ─────────────────────────────────────────────────────────
@@ -2153,6 +2145,7 @@
   const PICKER_PROVIDER_LIMIT = 40;
   const PICKER_RECENT_LIMIT = 16;
   const PICKER_INJECT_DELAY = 120;
+  const PICKER_SEARCH_DELAY = 150;
   const PICKER_ROUTE_INJECT_DELAY = 700;
   const PICKER_APPEND_REFRESH_DELAY = 260;
   const PICKER_ACTIVE_PROVIDER_DEFER_WINDOW = 15000;
@@ -3024,13 +3017,19 @@
     return tab;
   }
 
+  // A search rebuilds the whole tab — every section and its first 40 buttons
+  // — so wait for a pause in typing instead of rebuilding on every keystroke.
   function pickerAttachSearch(panel, searchInput) {
     if (!searchInput || searchInput._ktePickerSearch) return;
     searchInput._ktePickerSearch = true;
     searchInput.addEventListener('input', () => {
-      if (panel.querySelector('#kte-picker-tab')?.getAttribute('data-active') !== 'true') return;
-      pickerRefreshContent(panel);
-      pickerApplyActiveState(panel);
+      if (pickerSearchTimer) clearTimeout(pickerSearchTimer);
+      pickerSearchTimer = setTimeout(() => {
+        pickerSearchTimer = null;
+        if (!panel.isConnected || !pickerIsActive(panel)) return;
+        pickerRefreshContent(panel);
+        pickerApplyActiveState(panel);
+      }, PICKER_SEARCH_DELAY);
     });
   }
 
@@ -3098,6 +3097,10 @@
   }
 
   function resetPicker() {
+    if (pickerSearchTimer) {
+      clearTimeout(pickerSearchTimer);
+      pickerSearchTimer = null;
+    }
     if (pickerInjectTimer) {
       clearTimeout(pickerInjectTimer);
       pickerInjectTimer = null;
@@ -3310,7 +3313,6 @@
     initSeq++;
     lastNavigationAt = Date.now();
     chatObserver?.disconnect(); chatObserver = null;
-    inputObserver?.disconnect(); inputObserver = null;
     if (visibleRefreshTimer) {
       clearTimeout(visibleRefreshTimer);
       visibleRefreshTimer = null;

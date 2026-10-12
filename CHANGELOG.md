@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.1] - 2026-10-13
+
+### Fixed
+- **Kick's category and policy pages are no longer treated as channels.** `/category/<name>`, `/terms-of-service`, `/privacy-policy`, `/cookie-policy`, `/community-guidelines` and `/dmca-policy` each triggered a channel lookup, three provider requests and three cache entries for a "channel" called `category` and so on. Checked against the live site.
+
+### Changed
+- **Picker search waits for a pause in typing.** Every keystroke rebuilt the whole 7TV+ tab (every section and its first 40 buttons); it now rebuilds once, 150 ms after you stop typing.
+- Autocomplete no longer runs its own page-wide `MutationObserver` while waiting for the chat input. The chat observer already watches the whole page and attaches autocomplete whenever the input is missing, so the second observer was doing the same work twice.
+
 ## [2.12.0] - 2026-10-13
 
 ### Added

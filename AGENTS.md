@@ -24,7 +24,7 @@ There is no package manager, build step, or linter. Tests run on macOS's built-i
 
 The userscript is one IIFE that touches the DOM as it loads, so the tests don't run it. `tests/harness.js` pulls individual functions (`load([...])`) or top-level `const`s (`loadConst([...])`) out of the source by name and evaluates them globally; each test stubs whatever those reference (`localStorage`, `GM_xmlhttpRequest`, `setTimeout`, `matchMedia`, sibling functions) and calls `check(label, condition)`. jsc has no `URL`, so the harness supplies a minimal one. Each test file runs in its own `jsc` process.
 
-What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`tests/fixtures/`), and `emoteDisplayUrl` under reduced motion. DOM processing, the picker and autocomplete are not — they still need the manual steps below.
+What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`tests/fixtures/`), `emoteDisplayUrl` under reduced motion, `currentChannelSlug`, the picker search debounce, and autocomplete attach. DOM processing, the picker and autocomplete are not — they still need the manual steps below.
 
 Renaming a function or `const` that a test loads breaks that test loudly (`no function …`), which is the point: update the test with it. When fixing a bug in pure logic, add a check that fails without the fix.
 
@@ -64,7 +64,7 @@ Do not add `Co-Authored-By:` trailers to git commits.
 - Provider loaders for BTTV, 7TV, and FFZ
 - DOM message processing and emote replacement
 - Autocomplete popup and chat input handling
-- Chat `MutationObserver`
+- Chat `MutationObserver` — the only body-wide observer; it also (re)attaches autocomplete whenever the tracked input is missing, which is why `waitForInput()` doesn't observe anything itself
 - SPA route detection and reinitialization
 
 The central data structure is:
@@ -149,7 +149,7 @@ Kick is a single-page app and may change class names. The fragile selectors live
 - `MSG_SELECTORS`
 - `SKIP_TEXT_SELECTORS` — ancestors whose text is chrome, not message content. The username is a plain `<button>` inside the message row, so without it a chatter named after an emote gets their name replaced by an image. Keep the button rules narrow: the reply-preview button carries neither `data-prevent-expand` nor `font-bold`, which is what lets emotes still render inside reply quotes.
 - `INPUT_SELECTORS`
-- `NON_CHANNEL_SLUGS` — plus the popout special case in `currentChannelSlug()`: Kick's popout chat is `/popout/<channel>/chat`, so the channel is the *second* segment there. Verified against the live page — it carries the same chat DOM as embedded chat, so the only thing that ever broke was the slug.
+- `NON_CHANNEL_SLUGS` — site pages that would otherwise read as a channel slug. The channel API can't decide this: short words like `home`, `login` and `clips` are real usernames there, but on kick.com the route wins. Check a candidate by fetching `https://kick.com/<path>` and reading its `<title>` (a channel reads `<Name> Stream - Watch Live on Kick`). Plus the popout special case in `currentChannelSlug()`: Kick's popout chat is `/popout/<channel>/chat`, so the channel is the *second* segment there. Verified against the live page — it carries the same chat DOM as embedded chat, so the only thing that ever broke was the slug.
 
 These can be checked against the live site without a Kick account: open a **live** channel (an offline one has no chat DOM at all), then in the console count hits per selector and walk a message row's text nodes through the same `acceptNode` logic `processMessageEl` uses. Measured this way in July 2026: only `MSG_SELECTORS[0]`/`[1]` and the last `INPUT_SELECTORS` fallback matched anything, and chat produced roughly 5 added message elements and 22 mutation batches per 20 s — the body-wide `MutationObserver` costs well under a millisecond of selector work over that window, so it is not worth scoping to the chat container.
 
