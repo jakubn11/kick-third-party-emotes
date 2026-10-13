@@ -4,7 +4,7 @@ Adds **BetterTTV**, **7TV**, and **FrankerFaceZ** emotes to Kick.com chat.
 
 ## Quick install
 
-Open **[Kick Third-Party Emotes on Greasy Fork](https://greasyfork.org/cs/scripts/578174-kick-third-party-emotes)** and use the install button if your userscript manager supports web installs.
+Open **[Kick Third-Party Emotes on Greasy Fork](https://greasyfork.org/scripts/578174-kick-third-party-emotes)** and use the install button if your userscript manager supports web installs.
 
 If your manager does not catch Greasy Fork installs automatically, use the manual steps below.
 

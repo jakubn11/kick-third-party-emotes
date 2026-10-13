@@ -337,6 +337,6 @@ Before committing any change, always:
 
    Do NOT suggest a release for: docs-only changes, internal refactors, formatting, style tweaks the user won't notice.
 
-   A release is what ships to users. Create it from the `vX.Y.Z` tag, attach `kick-third-party-emotes.user.js` under exactly that name, and use notes from the `release-notes` skill. Publish it promptly after pushing a version: until then, auto-updating users stay on the previous release.
+   A release is what ships to users. Create it from the `vX.Y.Z` tag, attach `kick-third-party-emotes.user.js` under exactly that name, and use notes from the `release-notes` skill. Publish it promptly after pushing a version: until then, auto-updating users stay on the previous release. Then upload the same version to [Greasy Fork](https://greasyfork.org/scripts/578174-kick-third-party-emotes) with a short changelog — Greasy Fork doesn't sync from GitHub, and its installs update only from there.
 
 **Commit when a task is finished** and the checks above pass — one commit per finished task, in this repo's commit-message style. **Push only when the user asks.**

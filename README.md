@@ -54,7 +54,7 @@ The script works with any userscript manager (Tampermonkey, Violentmonkey, Greas
 
 See [INSTALL.md](INSTALL.md) for step-by-step instructions.
 
-**Quick install:** open the script on **[Greasy Fork](https://greasyfork.org/cs/scripts/578174-kick-third-party-emotes)** and use the install button if your userscript manager supports web installs.
+**Quick install:** open the script on **[Greasy Fork](https://greasyfork.org/scripts/578174-kick-third-party-emotes)** and use the install button if your userscript manager supports web installs.
 
 **Safari (recommended):**
 1. Install the **[Userscripts](https://apps.apple.com/app/userscripts/id1463298887)** extension from the Mac App Store
