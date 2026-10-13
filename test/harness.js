@@ -1,5 +1,5 @@
 // Test harness for the macOS JavaScriptCore shell (`jsc`). Loaded before each
-// *.test.js by tests/run.sh, from the repo root.
+// *.test.js by test/run.sh, from the repo root.
 //
 // The userscript is one IIFE that touches the DOM at load, so it can't simply
 // be run here. Instead this pulls individual functions or `const`s out of its

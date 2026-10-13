@@ -4,7 +4,7 @@
 loadConst(['ALLOWED_CDN_HOSTS']);
 load(['ffzEntries', 'safeUrl', 'isSafeTextToken', 'isSafeTextLabel', 'isValidCacheEntry', 'emotePageUrl']);
 
-var room = JSON.parse(readFile('tests/fixtures/ffz-room-lirik.json'));
+var room = JSON.parse(readFile('test/fixtures/ffz-room-lirik.json'));
 var entries = ffzEntries(room.sets, 'FFZ (channel)');
 var fd = entries.find(([code]) => code === 'fallDamage')[1];
 check('animated emote uses its animated URL', fd.url === 'https://cdn.frankerfacez.com/emote/739826/animated/2' && fd.animated === true);

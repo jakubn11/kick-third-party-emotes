@@ -14,7 +14,8 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 
 There is no package manager, build step, or linter. Tests run on macOS's built-in JavaScript engine, with no Node or dependencies:
 
-- Tests: `tests/run.sh` — runs the syntax check below, then every `tests/*.test.js`; exits non-zero on any failure.
+- Tests: `test/run.sh` — the one entry point: runs the syntax check below, then every `test/*.test.js`; exits non-zero on any failure.
+- There is no CI — don't add GitHub workflows. `test/run.sh` is the gate, run locally before every commit.
 
 - Syntax check: `node --check kick-third-party-emotes.user.js`. Without Node installed, macOS ships a JavaScript engine that can parse-check without executing (the file is an IIFE, so it must not be *run* to be checked):
   `/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc -e 'try { new Function(readFile("kick-third-party-emotes.user.js")); print("syntax OK"); } catch (e) { print("SYNTAX ERROR: " + e); }'`
@@ -22,9 +23,9 @@ There is no package manager, build step, or linter. Tests run on macOS's built-i
 
 ### Tests
 
-The userscript is one IIFE that touches the DOM as it loads, so the tests don't run it. `tests/harness.js` pulls individual functions (`load([...])`) or top-level `const`s (`loadConst([...])`) out of the source by name and evaluates them globally; each test stubs whatever those reference (`localStorage`, `GM_xmlhttpRequest`, `setTimeout`, `matchMedia`, sibling functions) and calls `check(label, condition)`. jsc has no `URL`, so the harness supplies a minimal one. Each test file runs in its own `jsc` process.
+The userscript is one IIFE that touches the DOM as it loads, so the tests don't run it. `test/harness.js` pulls individual functions (`load([...])`) or top-level `const`s (`loadConst([...])`) out of the source by name and evaluates them globally; each test stubs whatever those reference (`localStorage`, `GM_xmlhttpRequest`, `setTimeout`, `matchMedia`, sibling functions) and calls `check(label, condition)`. jsc has no `URL`, so the harness supplies a minimal one. Each test file runs in its own `jsc` process.
 
-What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`tests/fixtures/`), `emoteDisplayUrl` under reduced motion, `currentChannelSlug`, the picker search debounce, and autocomplete attach. DOM processing, the picker and autocomplete are not — they still need the manual steps below.
+What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`test/fixtures/`), `emoteDisplayUrl` under reduced motion, `currentChannelSlug`, the picker search debounce, and autocomplete attach. DOM processing, the picker and autocomplete are not — they still need the manual steps below.
 
 Renaming a function or `const` that a test loads breaks that test loudly (`no function …`), which is the point: update the test with it. When fixing a bug in pure logic, add a check that fails without the fix.
 
@@ -300,7 +301,7 @@ Keep docs browser-agnostic. When mentioning installation steps, cover the genera
 
 Before committing any change, always:
 
-1. **Run `tests/run.sh`** (see **Commands**) — it runs the syntax check and the tests, and must end with `all tests passed`. Add or update tests for any logic you change.
+1. **Run `test/run.sh`** (see **Commands**) — it runs the syntax check and the tests, and must end with `all tests passed`. Add or update tests for any logic you change.
 2. **Bump `@version`** in the `kick-third-party-emotes.user.js` metadata header using these rules:
 
    | Change | Bump | Example |

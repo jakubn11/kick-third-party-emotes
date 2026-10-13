@@ -1,6 +1,6 @@
 #!/bin/sh
-# Syntax-checks the userscript, then runs every tests/*.test.js under macOS's
-# JavaScriptCore shell, each in its own process after tests/harness.js.
+# Syntax-checks the userscript, then runs every test/*.test.js under macOS's
+# JavaScriptCore shell, each in its own process after test/harness.js.
 # Exits non-zero on a syntax error or any FAIL line.
 set -u
 cd "$(dirname "$0")/.." || exit 1
@@ -16,9 +16,9 @@ syntax=$("$JSC" -e 'try { new Function(readFile("kick-third-party-emotes.user.js
 echo "$syntax"
 [ "$syntax" = "syntax OK" ] || status=1
 
-for test in tests/*.test.js; do
+for test in test/*.test.js; do
   echo "── $test"
-  out=$("$JSC" tests/harness.js "$test" 2>&1)
+  out=$("$JSC" test/harness.js "$test" 2>&1)
   echo "$out"
   if echo "$out" | grep -q '^FAIL ' || ! echo "$out" | grep -q '^PASS '; then
     status=1
