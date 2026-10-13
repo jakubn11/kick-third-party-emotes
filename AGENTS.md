@@ -267,6 +267,18 @@ family palette — do not add more without the same kind of justification.
 - `.kte-picker-more` — picker action button (green background tint, green border)
 - `.kte-picker-settings` / `.kte-chip` — the picker's settings row, a rounded card (14px radius, hairline border) that auto-hides while the grid is scrolled. It counts as its own component for the one-accent rule: its accent is the selected-chip treatment (matching kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected`), which is why green appears here as well as on `.kte-picker-more`. Provider chips override it with their own brand colour when enabled — same justification as the source badges.
 
+## Code Style
+
+The kick-* scripts share these conventions. Follow them in new and edited code; don't reformat whole files just to comply — existing code converges as it's touched.
+
+- 2-space indent, no tabs, no trailing whitespace; semicolons; single-quoted strings, template literals when interpolating.
+- `const` by default, `let` only when the binding is reassigned, never `var`; `===` / `!==` only.
+- Named functions are `function` declarations (`function applyQuality() {…}`); arrow functions are for callbacks and short inline helpers.
+- Injected CSS is one readable template literal, one declaration per line.
+- Section dividers: `// ── Name ───…` — two box-drawing dashes, a space, the name, then a run of dashes.
+- Log through the script's `log()` / `warn()` helpers, which carry the `[Name]` prefix.
+- Comments say why, not what. History belongs in `CHANGELOG.md`, not in comments.
+
 ## Manual Testing
 
 Manual testing is required in a browser with a userscript manager installed:

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.12.1
+// @version      2.12.2
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,9 +26,9 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.12.1';
+  const VERSION = '2.12.2';
 
-  // ─── Single instance ────────────────────────────────────────────────────
+  // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
   // auto-updating one, or two managers both enabled — would both scan chat
   // and both drive the picker and autocomplete. The second copy stands down.
@@ -119,7 +119,7 @@
     'div[contenteditable="true"]',
   ];
 
-  // ─── Cache ────────────────────────────────────────────────────────────────
+  // ── Cache ────────────────────────────────────────────────────────────────
 
   const GLOBAL_CACHE_TTL = 12 * 60 * 60 * 1000;
   const CHANNEL_CACHE_TTL = 3 * 60 * 60 * 1000;
@@ -267,7 +267,7 @@
     },
   };
 
-  // ─── Emote usage tracker ──────────────────────────────────────────────────
+  // ── Emote usage tracker ──────────────────────────────────────────────────
   // Local-only counter of inserted emotes (autocomplete + picker). Powers
   // usage-first autocomplete ranking and the picker's "Recently used" section.
 
@@ -327,7 +327,7 @@
     });
   }
 
-  // ─── Favourites ───────────────────────────────────────────────────────────
+  // ── Favourites ───────────────────────────────────────────────────────────
   // Local-only starred emote codes. Favourites outrank usage in autocomplete
   // and get their own picker section above "Recently used".
 
@@ -383,7 +383,7 @@
     });
   }
 
-  // ─── Settings ─────────────────────────────────────────────────────────────
+  // ── Settings ─────────────────────────────────────────────────────────────
   // Local-only preferences, surfaced as chips at the top of the picker's 7TV+
   // tab. User state like usage and favourites, so it keeps its own stable key
   // and is exempt from the cache sweep.
@@ -429,7 +429,7 @@
     });
   }
 
-  // ─── State ────────────────────────────────────────────────────────────────
+  // ── State ────────────────────────────────────────────────────────────────
 
   const emoteMap = new Map(); // code → { url, source, animated, zeroWidth }
   const memoryCache = new Map(); // provider key → { ts, data }, avoids sync localStorage parse on SPA nav
@@ -478,7 +478,7 @@
   // while the input is still connected, and re-attach when Kick swaps it out.
   let attachedAcInput = null;
 
-  // ─── Styles ───────────────────────────────────────────────────────────────
+  // ── Styles ───────────────────────────────────────────────────────────────
 
   const _style = document.createElement('style');
   _style.textContent = `
@@ -917,7 +917,7 @@
   `;
   (document.head ?? document.documentElement).appendChild(_style);
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────
 
   // Reject URLs that aren't https: or don't come from a known emote CDN.
   // Prevents a compromised provider API from loading arbitrary tracking pixels.
@@ -997,7 +997,7 @@
     }
   }
 
-  // ─── HTTP ─────────────────────────────────────────────────────────────────
+  // ── HTTP ─────────────────────────────────────────────────────────────────
 
   const FETCH_TIMEOUT = 15000;
   // Delays before each retry of a provider that failed to load (see init).
@@ -1072,7 +1072,7 @@
     }
   }
 
-  // ─── Cache-aware load helper ──────────────────────────────────────────────
+  // ── Cache-aware load helper ──────────────────────────────────────────────
 
   function cacheTtlFor(key, data) {
     if (!data.length) return EMPTY_CACHE_TTL;
@@ -1187,7 +1187,7 @@
     }
   }
 
-  // ─── Channel lookup ───────────────────────────────────────────────────────
+  // ── Channel lookup ───────────────────────────────────────────────────────
   // The URL slug is not a usable identity on its own. BTTV's user endpoint takes
   // a numeric platform ID, never a name, so a slug always 404s there. And a Kick
   // slug isn't always the username: newer accounts with an underscore get a
@@ -1290,7 +1290,7 @@
     return isNumericId(id) ? id : null;
   }
 
-  // ─── Emote Loaders ────────────────────────────────────────────────────────
+  // ── Emote Loaders ────────────────────────────────────────────────────────
 
   function bttvEntries(emotes, source) {
     return (Array.isArray(emotes) ? emotes : []).map(e => [e?.code, {
@@ -1422,7 +1422,7 @@
     }, options);
   }
 
-  // ─── DOM Processing ───────────────────────────────────────────────────────
+  // ── DOM Processing ───────────────────────────────────────────────────────
 
   // Fullscreen API hides everything outside the fullscreen element's subtree,
   // so floating overlays must live inside it while it's active.
@@ -1538,7 +1538,7 @@
   document.addEventListener('scroll', repositionTooltip, { capture: true, passive: true });
   window.addEventListener('resize', repositionTooltip, { passive: true });
 
-  // ─── Emote context menu ───────────────────────────────────────────────────
+  // ── Emote context menu ───────────────────────────────────────────────────
 
   let menuEl = null;
 
@@ -1857,7 +1857,7 @@
       || Boolean(node.closest?.('#kte-picker-content, #kte-ac, #kte-menu, .kte-wrap'));
   }
 
-  // ─── Autocomplete ─────────────────────────────────────────────────────────
+  // ── Autocomplete ─────────────────────────────────────────────────────────
 
   function acFindInput() {
     for (const sel of INPUT_SELECTORS) {
@@ -2140,7 +2140,7 @@
     attemptAcAttach();
   }
 
-  // ─── Emote Picker ─────────────────────────────────────────────────────────
+  // ── Emote Picker ─────────────────────────────────────────────────────────
 
   const PICKER_PROVIDER_LIMIT = 40;
   const PICKER_RECENT_LIMIT = 16;
@@ -3122,7 +3122,7 @@
     content?.remove();
   }
 
-  // ─── Chat Observer ────────────────────────────────────────────────────────
+  // ── Chat Observer ────────────────────────────────────────────────────────
 
   function startChatObserver() {
     if (chatObserver) chatObserver.disconnect();
@@ -3169,7 +3169,7 @@
     chatObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-index'] });
   }
 
-  // ─── Init ─────────────────────────────────────────────────────────────────
+  // ── Init ─────────────────────────────────────────────────────────────────
 
   function currentChannelSlug() {
     const parts = location.pathname.replace(/^\//, '').split('/');
@@ -3307,7 +3307,7 @@
     if (failedLoaders.length) retryFailedLoaders(failedLoaders, 0);
   }
 
-  // ─── SPA Routing ──────────────────────────────────────────────────────────
+  // ── SPA Routing ──────────────────────────────────────────────────────────
 
   function handleNavigation() {
     initSeq++;
