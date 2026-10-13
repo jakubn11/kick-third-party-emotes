@@ -65,7 +65,7 @@ See [INSTALL.md](INSTALL.md) for step-by-step instructions.
 1. Install [Tampermonkey](https://www.tampermonkey.net), [Violentmonkey](https://violentmonkey.github.io), [Greasemonkey](https://www.greasespot.net), [ScriptCat](https://scriptcat.org) or other
 2. Open `kick-third-party-emotes.user.js` and paste it into a new script, or drag the file into the extension dashboard
 
-**Updates:** The script carries `@updateURL` / `@downloadURL` pointing at this repo, so managers that support remote updates (Tampermonkey, Violentmonkey, ScriptCat, …) pick up new versions automatically — no reinstall needed. Safari's Userscripts extension runs from a local folder and does **not** auto-update; re-copy the latest `kick-third-party-emotes.user.js` to update there.
+**Updates:** The script carries `@updateURL` / `@downloadURL` pointing at this repo's latest GitHub release, so managers that support remote updates (Tampermonkey, Violentmonkey, ScriptCat, …) pick up each new release automatically — no reinstall needed. Safari's Userscripts extension runs from a local folder and does **not** auto-update; re-copy the latest `kick-third-party-emotes.user.js` to update there.
 
 See [INSTALL.md](INSTALL.md) for full per-manager steps.
 

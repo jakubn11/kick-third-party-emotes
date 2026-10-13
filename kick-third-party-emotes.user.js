@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.12.2
+// @version      2.12.3
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
 // @icon         https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/icon.svg
 // @match        https://kick.com/*
-// @updateURL    https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/kick-third-party-emotes.user.js
-// @downloadURL  https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/kick-third-party-emotes.user.js
+// @run-at       document-idle
 // @grant        GM_xmlhttpRequest
 // @connect      api.betterttv.net
 // @connect      cdn.betterttv.net
@@ -16,7 +15,8 @@
 // @connect      cdn.7tv.app
 // @connect      api.frankerfacez.com
 // @connect      cdn.frankerfacez.com
-// @run-at       document-idle
+// @updateURL    https://github.com/jakubn11/kick-third-party-emotes/releases/latest/download/kick-third-party-emotes.user.js
+// @downloadURL  https://github.com/jakubn11/kick-third-party-emotes/releases/latest/download/kick-third-party-emotes.user.js
 // ==/UserScript==
 
 (function () {
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.12.2';
+  const VERSION = '2.12.3';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or

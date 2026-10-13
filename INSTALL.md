@@ -72,7 +72,7 @@ Global sets are each provider's small curated default; channel sets are where th
 
 ## Updating
 
-The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the `main` branch on GitHub. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a new `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). **Safari's Userscripts extension is the exception** — it runs from a local folder and does not fetch `@updateURL`, so you must re-copy the latest `kick-third-party-emotes.user.js` into your scripts folder to update. To update manually in any manager, replace `kick-third-party-emotes.user.js` with the new version.
+The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the `kick-third-party-emotes.user.js` attached to the latest GitHub release — not at the `main` branch, so only published releases reach you. Most managers (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) honour these and auto-update when a release with a newer `@version` is published. Greasemonkey uses a longer default check interval (set in its preferences). **Safari's Userscripts extension is the exception** — it runs from a local folder and does not fetch `@updateURL`, so you must re-copy the latest `kick-third-party-emotes.user.js` into your scripts folder to update. To update manually in any manager, replace `kick-third-party-emotes.user.js` with the new version.
 
 ## Troubleshooting
 
