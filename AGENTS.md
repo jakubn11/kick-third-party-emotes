@@ -310,6 +310,8 @@ Manual testing is required in a browser with a userscript manager installed:
 
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
 
+`GREASYFORK.md` is the Greasy Fork page description, written for people reading the listing: what the script does now, a **Latest changes** section for the newest version, and no installation steps. Keep its features, numbers, permissions and storage keys in step with the code, as for `README.md`.
+
 Keep docs browser-agnostic. When mentioning installation steps, cover the general flow and call out manager-specific differences (Tampermonkey, Violentmonkey, Greasemonkey, ScriptCat, or other) where they matter.
 
 ## Before Every Commit
@@ -340,6 +342,6 @@ Before committing any change, always:
 
    Do NOT suggest a release for: docs-only changes, internal refactors, formatting, style tweaks the user won't notice.
 
-   A release is what ships to users. Create it from the `vX.Y.Z` tag, attach `kick-third-party-emotes.user.js` under exactly that name, and use notes from the `release-notes` skill. Publish it promptly after pushing a version: until then, auto-updating users stay on the previous release. Then upload the same version to [Greasy Fork](https://greasyfork.org/scripts/578174-kick-third-party-emotes) with a short changelog — Greasy Fork doesn't sync from GitHub, and its installs update only from there.
+   A release is what ships to users. Create it from the `vX.Y.Z` tag, attach `kick-third-party-emotes.user.js` under exactly that name, and use notes from the `release-notes` skill. Publish it promptly after pushing a version: until then, auto-updating users stay on the previous release. Before tagging, refresh **Latest changes** in `GREASYFORK.md` (the `release-notes` skill does this). Once the [Greasy Fork](https://greasyfork.org/scripts/578174-kick-third-party-emotes) listing's sync is set up (code from the latest-release URL above, page description from `GREASYFORK.md` on `main`, plus a GitHub webhook), publishing the release updates Greasy Fork too. Until then, upload the same version there by hand — Greasy Fork installs update only from Greasy Fork.
 
 **Commit when a task is finished** and the checks above pass — one commit per finished task, in this repo's commit-message style. **Push only when the user asks.**
