@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.12.3
+// @version      2.12.4
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -26,7 +26,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.12.3';
+  const VERSION = '2.12.4';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -515,18 +515,18 @@
       background: #101013;
       color: #fff;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       line-height: 1;
-      padding: 7px 11px 7px 13px;
+      padding: 7px 12px;
       border-radius: 8px;
       white-space: nowrap;
       pointer-events: none;
       z-index: 9999;
       border: 1px solid rgba(255,255,255,.1);
-      border-left: 3px solid #22c55e;
       box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
-      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
       flex-direction: column;
       align-items: center;
       gap: 7px;
@@ -545,15 +545,19 @@
       gap: 6px;
     }
 
-    /* Autocomplete popup */
+    /* Autocomplete popup — a panel, so it takes the family panel radius and
+       shadow (kick-fullscreen-chat's and kick-quality-saver's settings cards). */
     #kte-ac {
       position: fixed;
       background: #101013;
       border: 1px solid rgba(255,255,255,.1);
-      border-top: 2px solid #22c55e;
-      border-radius: 10px;
-      box-shadow: 0 12px 32px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
-      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      box-shadow:
+        0 24px 64px -16px rgba(0,0,0,.8),
+        0 2px 10px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.06);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -564,11 +568,11 @@
     }
     #kte-ac-header {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
       color: #22c55e;
       padding: 8px 12px 4px;
       text-transform: uppercase;
-      letter-spacing: .08em;
+      letter-spacing: .09em;
     }
     .kte-ac-row {
       display: flex;
@@ -590,7 +594,7 @@
     .kte-ac-code {
       color: #fff;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -598,7 +602,7 @@
     }
     .kte-ac-src {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
       flex-shrink: 0;
       opacity: .85;
     }
@@ -626,13 +630,13 @@
     }
     .kte-tip-source {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
       opacity: .85;
     }
     #kte-ac-footer {
       font-size: 10px;
-      font-weight: 600;
-      color: rgba(255,255,255,.25);
+      font-weight: 500;
+      color: rgba(255,255,255,.4);
       padding: 4px 12px 7px;
       border-top: 1px solid rgba(255,255,255,.08);
     }
@@ -644,10 +648,10 @@
       min-width: 160px;
       background: #101013;
       border: 1px solid rgba(255,255,255,.1);
-      border-left: 3px solid #22c55e;
       border-radius: 8px;
       box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
-      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
       overflow: hidden;
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       padding: 4px 0;
@@ -660,7 +664,7 @@
       margin-bottom: 3px;
       border-bottom: 1px solid rgba(255,255,255,.08);
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       color: #fff;
     }
     .kte-menu-item {
@@ -794,10 +798,11 @@
          section header clear of it. */
       margin: 0 0 12px;
       padding: 8px 12px;
-      border: 1px solid rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.1);
       border-radius: 14px;
-      background: rgba(16,16,19,.92);
-      backdrop-filter: blur(8px);
+      background: #101013;
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
       transition: opacity .12s ease, transform .12s ease;
     }
     /* Out of the way while the grid is scrolled, so it never sits on emotes. */
@@ -806,22 +811,23 @@
       transform: translateY(-100%);
       pointer-events: none;
     }
+    /* The family chip (kick-fullscreen-chat's .kfc-settings-chip,
+       kick-quality-saver's .kqs-chip): neutral at rest, green tint when on. */
     .kte-chip {
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 999px;
-      background: transparent;
-      color: rgba(255,255,255,.25);
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      line-height: 1;
-      padding: 5px 9px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 8px;
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.85);
+      font: 600 12px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+      padding: 6px 10px;
       cursor: pointer;
       transition: background .12s ease, border-color .12s ease, color .12s ease;
     }
     .kte-chip:hover,
     .kte-chip:focus-visible {
-      background: rgba(255,255,255,.06);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.16);
+      color: #fff;
       outline: none;
     }
     .kte-chip[data-on="1"] {
@@ -876,7 +882,7 @@
     .kte-picker-more {
       width: fit-content;
       border: 1px solid rgba(34,197,94,.5);
-      border-radius: 6px;
+      border-radius: 8px;
       background: rgba(34,197,94,.14);
       color: #4ade80;
       cursor: pointer;

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.4] - 2026-10-15
+
+### Changed
+- **The tooltip, context menu, autocomplete and picker settings now match the other kick-* scripts.** The green stripe on the edge of the tooltip, context menu and autocomplete is gone, since no sibling script uses one; labels are semibold rather than bold; and the blur, shadow and corner radius use the family values (8px for small popups and buttons, 14px for the autocomplete panel).
+- **The picker's settings chips are the family chip:** rounded rectangles instead of pills, 12px text, and a light neutral fill with readable text when off, instead of faint grey text. When on they still turn green, or the provider's own colour for 7TV, BTTV and FFZ. The favourite star stays gold.
+
 ## [2.12.3] - 2026-10-13
 
 ### Changed

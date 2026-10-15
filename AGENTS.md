@@ -232,7 +232,9 @@ Values as actually used in the script (verified against `_style.textContent`):
 | `#22c55e` | Signature accent — used exactly once per component |
 | `rgba(255,255,255,.1)` | Neutral borders on all sides |
 | `#fff` | Primary text (emote names, labels) |
-| `rgba(255,255,255,.25)` | Secondary / hint text |
+| `rgba(255,255,255,.4)` | Hint text (`#kte-ac-footer`) — the family's section-label / note grey |
+| `rgba(255,255,255,.25)` | The tooltip's `·` separator |
+| `rgba(255,255,255,.05)` / `.09` / `.85` | Chip at rest: fill / border / text (the family chip) |
 | `rgba(34,197,94,.1)` | Row / button hover/focus background |
 | `#71717a` | Dimmed/disabled hint text |
 
@@ -247,13 +249,14 @@ family palette — do not add more without the same kind of justification.
 
 ### Rules
 
-- **One green accent per component.** Use `#22c55e` for one structural element only — a border stripe, a header label, or a badge. Never paint large surfaces green.
-- **Backgrounds:** `#101013` with `backdrop-filter: blur(8–12px)`.
-- **Borders:** `rgba(255,255,255,.1)` on most sides; the single green accent replaces one border (left stripe or top bar).
-- **Box shadow:** `0 8–12px 24–32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`.
-- **Border radius:** `8px` for popups (`#kte-tip`, `#kte-menu`), `10px` for the larger autocomplete (`#kte-ac`), `4px`/`6px` for small picker controls, `999px` for the picker's pill.
-- **Typography:** `font-family: system-ui, -apple-system, "Segoe UI", sans-serif` — the family stack, shared with the sibling scripts. Bold (`font-weight: 700`) for primary labels, `font-weight: 600` for secondary text. *(Until 2.8.5 this was a bare `sans-serif`, which fell through to the browser default on Windows instead of Segoe UI.)*
-- **Source badges**: per-provider colors at `opacity: .85`, `font-size: 10px`, `font-weight: 700` — 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, other `#22c55e`.
+- **One green accent per component.** Use `#22c55e` for one element only — a header label, the hover/selected tint, or a badge. Never paint large surfaces green, and **no coloured accent borders** (2.12.4 dropped the tooltip's and menu's left stripe and the autocomplete's top bar, which no sibling script has).
+- **Backgrounds:** opaque `#101013` with `backdrop-filter: blur(10px)`.
+- **Borders:** `rgba(255,255,255,.1)` on all sides.
+- **Box shadow:** small surfaces (`#kte-tip`, `#kte-menu`) take the family shadow `0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`; the autocomplete panel takes the family panel shadow `0 24px 64px -16px rgba(0,0,0,.8), 0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06)`, as kick-fullscreen-chat's and kick-quality-saver's settings cards do.
+- **Border radius:** the family's two steps — `8px` for controls and small popups (`#kte-tip`, `#kte-menu`, `.kte-chip`, `.kte-picker-more`), `14px` for panels (`#kte-ac`, `.kte-picker-settings`). The one exception is the picker's emote cells (`4px`), which mirror Kick's own grid.
+- **Typography:** `font-family: system-ui, -apple-system, "Segoe UI", sans-serif` — the family stack, shared with the sibling scripts. `font-weight: 600` for labels and names, `500` for hint text, matching the siblings' panels. *(Until 2.8.5 this was a bare `sans-serif`, which fell through to the browser default on Windows instead of Segoe UI.)*
+- **Chips** (`.kte-chip`) are the family chip — kick-fullscreen-chat's `.kfc-settings-chip`, kick-quality-saver's `.kqs-chip`: `8px` radius, `600 12px/1`, neutral `rgba(255,255,255,.05)` fill / `.09` border / `.85` text at rest, `.09` / `.16` / `#fff` on hover, and the green selected treatment (or the provider's brand colour) when on.
+- **Source badges**: per-provider colors at `opacity: .85`, `font-size: 10px`, `font-weight: 600` — 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, other `#22c55e`.
 - **Hover states:** rows and menu items take a `rgba(34,197,94,.1)` background with no border change. The picker's **Load more** — the one accent-filled button — uses the family's selected-chip treatment instead: `rgba(34,197,94,.14)` fill / `rgba(34,197,94,.5)` border / `#4ade80` text at rest, hovering to `.18` / `.6`. Keep it in step with kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected` and kick-quality-saver's `.kqs-chip[data-active]`.
 - **Transitions:** `transition: background .08s` on interactive rows/buttons (the picker uses `.12s ease`).
 - **No drop shadows in green.** Shadows are always `rgba(0,0,0,…)`.
@@ -261,11 +264,11 @@ family palette — do not add more without the same kind of justification.
 
 ### Reference implementations
 
-- `#kte-tip` — tooltip/hint popup (green left border stripe); a column of `.kte-tip-preview` (64px emote image, box reserved in CSS so positioning is stable before load) above `.kte-tip-label`
-- `#kte-ac` — autocomplete dropdown (green top border + green header label)
-- `#kte-menu` — emote context menu (green left border stripe)
+- `#kte-tip` — tooltip/hint popup (its colour is the source badge); a column of `.kte-tip-preview` (64px emote image, box reserved in CSS so positioning is stable before load) above `.kte-tip-label`
+- `#kte-ac` — autocomplete dropdown (green header label; green-tint focused row)
+- `#kte-menu` — emote context menu (green-tint hover/focus)
 - `.kte-picker-more` — picker action button (green background tint, green border)
-- `.kte-picker-settings` / `.kte-chip` — the picker's settings row, a rounded card (14px radius, hairline border) that auto-hides while the grid is scrolled. It counts as its own component for the one-accent rule: its accent is the selected-chip treatment (matching kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected`), which is why green appears here as well as on `.kte-picker-more`. Provider chips override it with their own brand colour when enabled — same justification as the source badges.
+- `.kte-picker-settings` / `.kte-chip` — the picker's settings row, a rounded card (14px radius, neutral border, opaque `#101013`) that auto-hides while the grid is scrolled. It counts as its own component for the one-accent rule: its accent is the selected-chip treatment (matching kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected`), which is why green appears here as well as on `.kte-picker-more`. Provider chips override it with their own brand colour when enabled — same justification as the source badges.
 
 ## Code Style
 
