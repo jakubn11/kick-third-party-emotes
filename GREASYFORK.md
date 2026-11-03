@@ -4,6 +4,10 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
+**2.14.0** — your recently used emotes in the settings panel
+
+- **See what you'd clear:** the panel's *Recently used* section now shows the same emotes as the picker's *Recently used* row (up to 16, newest first, ★ on favourites). Hover one for its usual preview.
+
 **2.13.1** — a layout fix for the settings panel in Safari
 
 - **Clear recently used stays inside its section:** in Safari the panel's last section could come out a line short, leaving the button hanging over its bottom edge.
