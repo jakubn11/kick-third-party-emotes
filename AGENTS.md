@@ -43,6 +43,7 @@ The userscript header controls permissions and host access. Keep it valid across
 - `@match` should remain scoped to `https://kick.com/*` unless the target changes.
 - Add any new remote domains to `@connect`.
 - Keep `@grant GM_xmlhttpRequest` if fetching third-party APIs cross-origin.
+- `@grant GM_registerMenuCommand` only adds **Emote settings** to the manager's menu. Keep the call behind its `typeof` check: Safari's Userscripts and Greasemonkey 4 don't define it, and the picker's **Settings** chip is the entry point there.
 - `@updateURL` / `@downloadURL` point at the latest GitHub release's attached script, `https://github.com/jakubn11/kick-third-party-emotes/releases/latest/download/kick-third-party-emotes.user.js`. Pushing to `main` reaches no one; publishing a release ships it. **Every release must attach the script as exactly `kick-third-party-emotes.user.js`** — a release without it breaks auto-update until the next one. If the repo moves, update both URLs.
 - Bump `@version` when changing user-facing behavior or provider logic.
 
@@ -58,7 +59,8 @@ Do not add `Co-Authored-By:` trailers to git commits.
 - Cache helper using `localStorage` keys prefixed with `kte_v5_` (old-prefix and long-expired keys are swept once per page load)
 - Local emote-usage tracker (`kte_v2_usage`) powering autocomplete ranking and the picker's "Recently used" section
 - Local favourites store (`kte_v2_favs`) powering the picker's "Favourites" section, the top of the autocomplete ranking, and the ★ markers
-- Local settings store (`kte_v2_settings`) — per-provider visibility — surfaced as the chip row at the top of the picker tab
+- Local settings store (`kte_v2_settings`) — provider visibility, global sets, autocomplete and motion — the providers surfaced as the chip row at the top of the picker tab, everything in the settings panel
+- Settings panel (`#kte-panel` in `.kte-panel-backdrop`) — a modal card opened by the picker row's **Settings** chip and the manager menu command
 - Module-level provider layers (`loadedProviders` / `activeLoaders`) and `rebuildEmoteMap()`, so a settings change can refilter `emoteMap` without re-running `init()`
 - Emote context menu (`#kte-menu`) on right-clicked chat **and picker** emotes
 - Channel lookup (`kickChannel` → `sevenTvKickUser` / `ffzRoom` → `channelTwitchId`), shared by the three channel loaders through the short-lived `channelLookups` memo
@@ -90,7 +92,12 @@ Two separate namespaces, deliberately:
 
 ### Settings
 
-`kte_v2_settings` holds `{ providers: { '7TV': bool, BTTV: bool, FFZ: bool } }`. Two things are load-bearing:
+`kte_v2_settings` holds `{ providers: { '7TV': bool, BTTV: bool, FFZ: bool }, globals: { same keys }, autocomplete: bool, motion: 'always' | 'hover' | 'never' }`. `settingsFromRecord()` reads it field by field against `settingsDefaults()`, so a 2.12 record (`providers` only) keeps its choices and takes the defaults for the rest. Add new fields the same way rather than versioning the key.
+
+- **`globals` filters in `rebuildEmoteMap()`**, next to `providerEnabled()`: a loader with `isChannel: false` is skipped when its provider's globals are off. Same reasoning as below — the set stays loaded.
+- **`autocomplete: false` leaves the listeners attached.** `acOnInput()` returns early, and `acOnKeydown()` already does nothing without an open popup, so Tab and Enter reach Kick untouched. Switching it back on needs no re-attach.
+
+Two things are load-bearing for the provider toggles:
 
 - **Hidden providers are still fetched.** `allLoaders` runs every provider regardless; `rebuildEmoteMap()` is what filters by `providerEnabled()`. The fetches are cache-backed and cheap, and keeping the layers in `loadedProviders` is what makes re-enabling instant. Do not "optimize" this into skipping the fetch — re-enabling would then need a refetch, and the obvious way to trigger one (`init()`) tears down the picker the user is clicking in.
 - **Turning a provider off has to un-render.** Message processing only ever goes text → image, so `unrenderEmoteWraps()` walks `.kte-wrap` elements back to text before the reprocess. It rebuilds tokens from each `img`'s `alt`, which is why the alt must stay set to the emote code on both `.kte-img` and `.kte-zw`. `processTextNode` drops the whitespace preceding an absorbed overlay for the same reason: left in, it orphans on un-render and grows the gap by one space on every toggle cycle. Round-trip stability was verified against a live page across three render/un-render cycles.
@@ -165,7 +172,7 @@ When fixing Kick DOM breakage, prefer adding fallback selectors rather than repl
 
 - Emote images use `.kte-img`, at 28px, with zero-width overlays matching at `.kte-zw`. Change both together.
 - Zero-width emotes overlay the previous emote via `.kte-zw` — 7TV emotes flagged by the provider, plus the BTTV codes in `BTTV_ZERO_WIDTH`. The whitespace token preceding an absorbed overlay is dropped: the overlay is absolutely positioned, so that space renders as a stray gap (chat is `pre-wrap`) and orphans on un-render, growing by one space per toggle cycle.
-- **Reduced motion.** Every place that shows an emote image takes it from `emoteDisplayUrl(emote)`, not `emote.url`: under `prefers-reduced-motion: reduce` that is the `staticUrl` still frame (7TV and FFZ animated emotes have one; BTTV has none, so its animated emotes keep moving). The picker also drops its animate-on-hover then. The `reducedMotionQuery` `change` listener calls `rerenderEmotes()` and `pickerRefreshIfBuilt()`, so the switch is live. `emote.url` is still what *Copy image URL* and the provider-page link use — they describe the emote, not what is on screen.
+- **Motion.** Every place that shows an emote image takes it from `emoteDisplayUrl(emote)`, not `emote.url`, and the hover preview from `emoteHoverUrl(emote)`. Both follow `motionMode()`: the `motion` setting, forced to `'never'` under `prefers-reduced-motion: reduce`. Anything but `'always'` shows the `staticUrl` still frame at rest (7TV and FFZ animated emotes have one; BTTV has none, so its animated emotes keep moving); `'hover'` records the animated URL on chat images (`setEmoteHoverSrc()`, the same `data-kte-src` / `data-kte-anim-src` pair the picker uses) and `emoteWrapAnimate()` swaps it in on `mouseenter`, overlays included. `'never'` also drops the picker's animate-on-hover. The `reducedMotionQuery` `change` listener calls `rerenderEmotes()` and `pickerRefreshIfBuilt()`, so the switch is live. `emote.url` is still what *Copy image URL* and the provider-page link use — they describe the emote, not what is on screen.
 - Every emote `img` keeps its code in `alt`, on `.kte-zw` overlays as much as on `.kte-img`. That is not just for copy/paste — `unrenderEmoteWraps()` reconstructs the original message tokens from the alts when a provider is switched off.
 - `makeEmoteWrap` returns a plain text node when `safeUrl()` rejects the emote's URL. Only elements may anchor a zero-width overlay — a text node has no `dataset` and throws on `appendChild`, which would abort rendering for the whole message. Keep the element check on the zero-width anchor.
 - Text nodes are split on whitespace; exact token matches are replaced. Text under a `SKIP_TEXT_SELECTORS` ancestor (links, the username button) is left alone — see DOM And Routing Notes.
@@ -267,6 +274,7 @@ family palette — do not add more without the same kind of justification.
 - `#kte-tip` — tooltip/hint popup (its colour is the source badge); a column of `.kte-tip-preview` (64px emote image, box reserved in CSS so positioning is stable before load) above `.kte-tip-label`
 - `#kte-ac` — autocomplete dropdown (green header label; green-tint focused row)
 - `#kte-menu` — emote context menu (green-tint hover/focus)
+- `#kte-panel` — settings panel, the family settings card (kick-quality-saver's `.kqs-card`: 14px card, 11px groups with uppercase labels, family chips and switches). Its accent is the selected chip and the on switch; provider chips wear their brand colour as in the picker.
 - `.kte-picker-more` — picker action button (green background tint, green border)
 - `.kte-picker-settings` / `.kte-chip` — the picker's settings row, a rounded card (14px radius, neutral border, opaque `#101013`) that auto-hides while the grid is scrolled. It counts as its own component for the one-accent rule: its accent is the selected-chip treatment (matching kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected`), which is why green appears here as well as on `.kte-picker-more`. Provider chips override it with their own brand colour when enabled — same justification as the source badges.
 
@@ -305,6 +313,7 @@ Manual testing is required in a browser with a userscript manager installed:
 17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
 18. Enable a **second** copy of the script (a duplicate entry in the same manager, or a second manager) and reload. The console must show one `[KickEmotes] v… active` line and one `… is standing down` warning naming both versions; chat, the picker and autocomplete behave exactly as with one copy.
 19. Turn on the system's **Reduce motion** setting with a channel open (macOS: System Settings → Accessibility → Display). Without a reload, animated 7TV and FFZ emotes in chat, autocomplete, the hover preview and the picker should freeze on their still frame, the picker should stop animating on hover, and turning the setting off should bring the animation back. Animated BTTV emotes keep moving.
+20. Open the settings panel from the picker's **Settings** chip and from the manager menu (where it has one). Turn one provider's **Global emotes** off: its global-only emotes leave chat, autocomplete and the picker while its channel emotes stay. Set **Animated emotes** to *On hover* and check a 7TV emote (and an overlay on it) is still until hovered, then *Never* and check the hover preview stays still too. Switch **Suggest emotes while typing** off and confirm Tab and Enter behave as without the script. Reload: every choice is kept. Esc and a click outside close the panel.
 
 ## Documentation
 

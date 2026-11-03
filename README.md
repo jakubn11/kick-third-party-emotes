@@ -30,11 +30,11 @@
 - Emotes from three providers rendered inline in chat messages
 - Per-channel emote sets loaded automatically on navigation
 - Animated emote support (GIF and animated WebP, including FFZ's animated emotes)
-- Respects your system's **Reduce motion** setting — 7TV and FFZ animated emotes show their still frame everywhere instead
+- Animated emotes can play always, only on hover, or never — and your system's **Reduce motion** setting keeps 7TV and FFZ emotes on their still frame everywhere
 - Zero-width emote overlays (7TV overlay emotes and BTTV's `cvMask`, `SoSnowy`, `SantaHat` & co.)
 - Hover tooltips showing a large emote preview with its name and provider
 - Favourite emotes — star them from the right-click menu for a pinned picker section and top billing in autocomplete
-- Settings in the picker — turn individual providers off, applied instantly
+- Settings, applied instantly — providers on or off from chips in the picker, plus a settings panel for global emote sets, animation and autocomplete
 - Autocomplete popup when typing (prefix match with substring fallback, favourites then your most-used emotes first, keyboard navigation)
 - Right-click context menu on chat and picker emotes — favourite it, copy the name or image URL, or open the emote's 7TV/BTTV/FFZ page
 - Third-party emote tab inside Kick's native emote picker with **Favourites** and **Recently used** sections, search, animated emotes, and per-provider **Load more**
@@ -100,7 +100,14 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 
 **Favourites:** starred emotes get a ★ marker wherever they appear, a **Favourites** section at the top of the picker (most recently starred first), and first place in the autocomplete ranking, ahead of your most-used emotes. Up to 100 are kept locally; starring a 101st drops the oldest.
 
-**Settings:** the 7TV+ picker tab opens with a row of chips that turn 7TV, BTTV and FFZ on or off. Changes apply straight away — already-rendered messages update in place. The row hides itself as soon as you scroll the grid and slides back when you scroll to the top, so it never covers emotes. Hidden providers are still fetched in the background so switching one back on is instant. Your choices are stored locally in `kte_v2_settings`.
+**Settings:** the 7TV+ picker tab opens with a row of chips that turn 7TV, BTTV and FFZ on or off. Changes apply straight away — already-rendered messages update in place. The row hides itself as soon as you scroll the grid and slides back when you scroll to the top, so it never covers emotes. Hidden providers are still fetched in the background so switching one back on is instant. The **Settings** chip at the end of the row (also **Emote settings** in your userscript manager's menu, where it has one) opens the settings panel:
+
+- **Providers** — the same switches as the chips.
+- **Global emotes** — each provider's global set on or off. Turn them off to keep only the streamer's own emotes.
+- **Animated emotes** — *Always*, *On hover* (7TV and FFZ emotes stay on their still frame until you point at them) or *Never*. BTTV has no still frames, so its animated emotes always move.
+- **Suggest emotes while typing** — autocomplete on or off.
+
+Your choices are stored locally in `kte_v2_settings`.
 
 **Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. **Favourites** and **Recently used** sections appear above the provider groups. The picker starts with 40 matches per provider for performance, then offers **Load more** per provider. Search narrows across all loaded emotes. Clicking an emote inserts its code into the chat input. Animated 7TV and FFZ emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets. With your system's **Reduce motion** setting on, they stay on the still frame.
 
@@ -109,6 +116,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Symptom | Fix |
 |---------|-----|
 | Emotes from one provider are missing | Check the provider chips at the top of the 7TV+ picker tab — a greyed-out chip means that provider is switched off. |
+| A provider's global emotes are missing | Its global set may be off — check **Global emotes** in the settings panel. |
 | No emotes appear | Open your browser's DevTools → Console and look for `[KickEmotes]` log lines. If absent, check that your userscript extension is enabled for kick.com. |
 | Only global emotes load | The streamer may not have BTTV/7TV/FFZ configured for their channel. BTTV and FFZ emotes only show up if the streamer's Twitch account is linked on their 7TV profile or has the same name as their Kick account. |
 | Console says `[KickEmotes] … is standing down` | Two copies of the script are installed — typically a manual copy next to the Greasy Fork or auto-updating one, or two managers both enabled for kick.com. The second copy stopped itself and the first is running normally; remove the duplicate. |
@@ -117,7 +125,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 
 ## How it works
 
-On each channel page the script resolves the channel once through Kick's own API — its Kick user ID and username — then loads channel and global emotes from all three providers: **7TV** by the Kick user ID, **BTTV** and **FFZ** through the streamer's Twitch account (taken from 7TV's linked accounts, or FFZ's same-named room). The Kick lookup is a same-origin request to `kick.com`, the way Kick's own frontend makes it; provider requests go only to the providers' hosts, through `GM_xmlhttpRequest` and the `@connect` list in the metadata. Each provider's set is cached locally, so a repeat visit shows emotes straight away while a fresh copy loads. The cache is capped at about 1.5 MB, dropping the oldest cached sets first, so it never crowds out Kick's own site storage; a provider that fails keeps its last good set and never takes the other two down. Chat messages are scanned as they arrive and matching words are replaced with the emote image, with zero-width emotes stacked on the one before them. When two sets use the same name, channel emotes win over global ones, and 7TV over BTTV over FFZ. Autocomplete, the context menu and the **7TV+** picker tab all work from the same loaded sets. Favourites, usage counts and provider settings live in their own `localStorage` keys and survive a cache clear.
+On each channel page the script resolves the channel once through Kick's own API — its Kick user ID and username — then loads channel and global emotes from all three providers: **7TV** by the Kick user ID, **BTTV** and **FFZ** through the streamer's Twitch account (taken from 7TV's linked accounts, or FFZ's same-named room). The Kick lookup is a same-origin request to `kick.com`, the way Kick's own frontend makes it; provider requests go only to the providers' hosts, through `GM_xmlhttpRequest` and the `@connect` list in the metadata. Each provider's set is cached locally, so a repeat visit shows emotes straight away while a fresh copy loads. The cache is capped at about 1.5 MB, dropping the oldest cached sets first, so it never crowds out Kick's own site storage; a provider that fails keeps its last good set and never takes the other two down. Chat messages are scanned as they arrive and matching words are replaced with the emote image, with zero-width emotes stacked on the one before them. When two sets use the same name, channel emotes win over global ones, and 7TV over BTTV over FFZ. Autocomplete, the context menu and the **7TV+** picker tab all work from the same loaded sets. Favourites, usage counts and settings live in their own `localStorage` keys and survive a cache clear.
 
 ## License
 

@@ -15,14 +15,14 @@ Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes
 ## Features
 
 - **Emotes from 7TV, BTTV and FFZ** rendered inline in chat, with each channel's own sets loaded automatically as you switch channels
-- **Animated emotes** (GIF and animated WebP); with your system's *Reduce motion* setting on, 7TV and FFZ animated emotes show a still frame
+- **Animated emotes** (GIF and animated WebP) — play always, only on hover, or never; with your system's *Reduce motion* setting on, 7TV and FFZ animated emotes show a still frame
 - **Zero-width emotes** layered over the previous emote (7TV overlays and BTTV's `cvMask`, `SoSnowy`, `SantaHat` and similar)
 - **Hover previews** — a large preview with the emote's name and provider
 - **Autocomplete** while typing — favourites first, then your most-used emotes, with keyboard navigation
 - **Favourites** — star emotes from the right-click menu; up to 100 are kept
 - **Right-click menu** — favourite an emote, copy its name or image URL, or open its 7TV/BTTV/FFZ page
 - **7TV+ picker tab** inside Kick's emote picker, with Favourites and Recently used sections, search, and **Load more** per provider (40 at a time)
-- **Provider toggles** — turn 7TV, BTTV or FFZ off from chips in the picker; changes apply instantly
+- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker, and open the settings panel to switch off global emote sets, choose how animated emotes play, or turn autocomplete off; changes apply instantly
 - **Fast repeat visits** — emote sets are cached locally and refreshed in the background
 - A dark popup style with a green accent that matches the other kick-* userscripts
 
@@ -37,11 +37,12 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Enter | Insert the highlighted emote, or send the message if nothing is highlighted |
 | Esc | Close autocomplete |
 
-Open Kick's emote picker and choose the **7TV+** tab to browse, search and toggle providers. Right-click any third-party emote for the context menu.
+Open Kick's emote picker and choose the **7TV+** tab to browse, search and toggle providers; its **Settings** chip opens the settings panel, also listed as **Emote settings** in your userscript manager's menu. Right-click any third-party emote for the context menu.
 
 ## Privacy & permissions
 
 - `@grant GM_xmlhttpRequest`, used only to fetch emote lists and images from `api.betterttv.net`, `cdn.betterttv.net`, `7tv.io`, `cdn.7tv.app`, `api.frankerfacez.com` and `cdn.frankerfacez.com`.
+- `@grant GM_registerMenuCommand`, used only to add **Emote settings** to your userscript manager's menu.
 - Settings (`kte_v2_settings`), favourites (`kte_v2_favs`), emote usage counts (`kte_v2_usage`) and the emote-set cache (`kte_v5_*` keys) are kept in `localStorage` and never leave your machine. No analytics, no tracking.
 
 ## Compatibility

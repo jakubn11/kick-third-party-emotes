@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.12.4
-// @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents & per-provider toggles
+// @version      2.13.0
+// @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
 // @icon         https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/icon.svg
 // @match        https://kick.com/*
 // @run-at       document-idle
 // @grant        GM_xmlhttpRequest
+// @grant        GM_registerMenuCommand
 // @connect      api.betterttv.net
 // @connect      cdn.betterttv.net
 // @connect      7tv.io
@@ -26,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.12.4';
+  const VERSION = '2.13.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -384,30 +385,51 @@
   }
 
   // ── Settings ─────────────────────────────────────────────────────────────
-  // Local-only preferences, surfaced as chips at the top of the picker's 7TV+
-  // tab. User state like usage and favourites, so it keeps its own stable key
-  // and is exempt from the cache sweep.
+  // Local-only preferences: provider visibility as chips at the top of the
+  // picker's 7TV+ tab, everything else in the settings panel. User state like
+  // usage and favourites, so it keeps its own stable key and is exempt from the
+  // cache sweep.
 
   const PROVIDERS = ['7TV', 'BTTV', 'FFZ'];
+  // 'always' animates everywhere, 'hover' shows still frames until the pointer
+  // is on the emote, 'never' keeps them still. Only 7TV and FFZ serve a still
+  // frame, so BTTV's animated emotes move in every mode.
+  const MOTION_MODES = ['always', 'hover', 'never'];
 
   let settings = null;
   let settingsSaveQueued = false;
 
+  function settingsDefaults() {
+    const defaults = { providers: {}, globals: {}, autocomplete: true, motion: 'always' };
+    for (const provider of PROVIDERS) {
+      defaults.providers[provider] = true;
+      defaults.globals[provider] = true;
+    }
+    return defaults;
+  }
+
+  // Field by field, so a record from before a field existed (2.12 stored only
+  // `providers`) keeps what it has and takes the default for the rest.
+  function settingsFromRecord(saved) {
+    const next = settingsDefaults();
+    for (const group of ['providers', 'globals']) {
+      for (const provider of PROVIDERS) {
+        if (typeof saved?.[group]?.[provider] === 'boolean') next[group][provider] = saved[group][provider];
+      }
+    }
+    if (typeof saved?.autocomplete === 'boolean') next.autocomplete = saved.autocomplete;
+    if (MOTION_MODES.includes(saved?.motion)) next.motion = saved.motion;
+    return next;
+  }
+
   function settingsLoad() {
     if (settings) return settings;
-    settings = { providers: {} };
-    for (const provider of PROVIDERS) settings.providers[provider] = true;
+    let saved = null;
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        for (const provider of PROVIDERS) {
-          if (typeof saved?.providers?.[provider] === 'boolean') {
-            settings.providers[provider] = saved.providers[provider];
-          }
-        }
-      }
+      if (raw) saved = JSON.parse(raw);
     } catch { /* corrupted record – fall back to defaults */ }
+    settings = settingsFromRecord(saved);
     return settings;
   }
 
@@ -417,14 +439,18 @@
     return settingsLoad().providers[provider] ?? true;
   }
 
+  function globalsEnabled(provider) {
+    return settingsLoad().globals[provider] ?? true;
+  }
+
   function settingsSave() {
     if (settingsSaveQueued) return;
     settingsSaveQueued = true;
     RIC(() => {
       settingsSaveQueued = false;
       try {
-        const { providers } = settingsLoad();
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ts: Date.now(), providers }));
+        const { providers, globals, autocomplete, motion } = settingsLoad();
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ts: Date.now(), providers, globals, autocomplete, motion }));
       } catch { /* quota exceeded – skip silently */ }
     });
   }
@@ -920,6 +946,153 @@
       cursor: progress;
       opacity: .68;
     }
+    /* Opens the settings panel; pushed to the far end of the chip row. */
+    .kte-picker-settings .kte-chip-panel {
+      margin-left: auto;
+    }
+
+    /* Settings panel — the family settings card (kick-quality-saver's .kqs-card) */
+    .kte-panel-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483646;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6,6,8,.6);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+    }
+    #kte-panel {
+      box-sizing: border-box;
+      width: min(380px, calc(100vw - 32px));
+      max-height: 76vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      background: #101013;
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 24px 64px -16px rgba(0,0,0,.8), 0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+      color: #fff;
+      font: 500 12px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    #kte-panel :focus-visible {
+      outline: 2px solid rgba(34,197,94,.65);
+      outline-offset: 2px;
+    }
+    .kte-panel-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .kte-panel-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+    .kte-panel-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,.42);
+    }
+    .kte-panel-close {
+      margin-left: auto;
+      flex: none;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 8px;
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.85);
+      font: 600 13px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+      cursor: pointer;
+      transition: background .12s ease, border-color .12s ease, color .12s ease;
+    }
+    .kte-panel-close:hover {
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.16);
+      color: #fff;
+    }
+    .kte-panel-group {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      padding: .7rem;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 11px;
+      background: rgba(255,255,255,.026);
+    }
+    .kte-panel-label {
+      font: 600 10px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+    }
+    .kte-panel-chips {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .kte-panel-chips .kte-chip {
+      min-height: 32px;
+    }
+    .kte-panel-note {
+      font-size: 11px;
+      line-height: 1.45;
+      color: rgba(255,255,255,.4);
+    }
+    .kte-switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,.88);
+    }
+    .kte-switch {
+      position: relative;
+      flex: none;
+      width: 34px;
+      height: 19px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      cursor: pointer;
+      transition: background .18s ease, border-color .18s ease;
+    }
+    .kte-switch[aria-checked="true"] {
+      background: #22c55e;
+      border-color: rgba(34,197,94,.75);
+    }
+    .kte-switch::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 2px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.5);
+      transform: translateY(-50%);
+      transition: transform .18s cubic-bezier(.2,.8,.2,1);
+    }
+    .kte-switch[aria-checked="true"]::after {
+      transform: translate(15px, -50%);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .kte-switch,
+      .kte-switch::after {
+        transition: none;
+      }
+    }
   `;
   (document.head ?? document.documentElement).appendChild(_style);
 
@@ -946,11 +1119,22 @@
     return Boolean(reducedMotionQuery?.matches);
   }
 
+  // The system's reduce-motion setting wins over the user's choice here.
+  function motionMode() {
+    return prefersReducedMotion() ? 'never' : settingsLoad().motion;
+  }
+
   // The image to show for an emote, already through safeUrl: its still frame
-  // under reduced motion when it has one, otherwise the emote itself.
+  // unless motion is 'always' and it has one, otherwise the emote itself.
   function emoteDisplayUrl(emote) {
-    const still = prefersReducedMotion() && emote.staticUrl ? safeUrl(emote.staticUrl) : '';
+    const still = motionMode() !== 'always' && emote.staticUrl ? safeUrl(emote.staticUrl) : '';
     return still || safeUrl(emote.url);
+  }
+
+  // The image to show while the pointer is on an emote, and in the hover
+  // preview: animated unless motion is off entirely.
+  function emoteHoverUrl(emote) {
+    return motionMode() === 'never' ? emoteDisplayUrl(emote) : safeUrl(emote.url);
   }
 
   function RIC(cb) {
@@ -1185,6 +1369,7 @@
     const ranked = [...activeLoaders].sort((a, b) => loaderRank(a) - loaderRank(b));
     for (const loader of ranked) {
       if (!providerEnabled(loader.provider)) continue;
+      if (!loader.isChannel && !globalsEnabled(loader.provider)) continue;
       const entries = loadedProviders.get(loader.key);
       if (!Array.isArray(entries)) continue;
       for (const [code, e] of entries) {
@@ -1648,13 +1833,36 @@
     document.addEventListener('keydown', emoteMenuKeydown, true);
   }
 
+  // Records an image's hover frame when it differs from what it shows at rest,
+  // so emoteWrapAnimate can swap between them under motion 'hover'.
+  function setEmoteHoverSrc(img, emote, url) {
+    const hoverUrl = emoteHoverUrl(emote);
+    if (!hoverUrl || hoverUrl === url) return;
+    img.dataset.kteSrc = url;
+    img.dataset.kteAnimSrc = hoverUrl;
+  }
+
+  // Covers zero-width overlays too: they are images inside the same wrap.
+  function emoteWrapAnimate(wrap, hover) {
+    for (const img of wrap.querySelectorAll('img[data-kte-anim-src]')) {
+      const url = safeUrl((hover ? img.dataset.kteAnimSrc : img.dataset.kteSrc) ?? '');
+      if (url) img.src = url;
+    }
+  }
+
   function makeEmoteWrap(code, emote) {
     const url = emoteDisplayUrl(emote);
     const wrap = document.createElement('span');
     wrap.className = 'kte-wrap';
-    setEmoteTooltip(wrap, code, emote.source, url);
-    wrap.addEventListener('mouseenter', () => showTooltip(wrap));
-    wrap.addEventListener('mouseleave', hideTooltip);
+    setEmoteTooltip(wrap, code, emote.source, emoteHoverUrl(emote));
+    wrap.addEventListener('mouseenter', () => {
+      showTooltip(wrap);
+      emoteWrapAnimate(wrap, true);
+    });
+    wrap.addEventListener('mouseleave', () => {
+      hideTooltip();
+      emoteWrapAnimate(wrap, false);
+    });
     wrap.addEventListener('contextmenu', e => {
       e.preventDefault();
       e.stopPropagation();
@@ -1668,6 +1876,7 @@
     img.src = url;
     img.alt = code;
     img.className = 'kte-img';
+    setEmoteHoverSrc(img, emote, url);
     img.addEventListener('error', () => {
       if (img._kteRetry) return;
       img._kteRetry = true;
@@ -1713,6 +1922,7 @@
           zw.src = zwUrl;
           zw.alt = token;
           zw.className = 'kte-zw';
+          setEmoteHoverSrc(zw, emote, zwUrl);
           zw.addEventListener('error', () => {
             if (zw._kteRetry) return;
             zw._kteRetry = true;
@@ -2087,7 +2297,11 @@
     acWatchReposition();
   }
 
+  // Switching autocomplete off leaves the listeners attached and lets them
+  // idle here: acOnKeydown does nothing without an open popup, so Tab and
+  // Enter go straight to Kick.
   function acOnInput(e) {
+    if (!settingsLoad().autocomplete) return;
     const word = acWordBeforeCursor(e.currentTarget);
     const matches = acSearch(word);
     matches.length ? acRender(matches, e.currentTarget) : acHide();
@@ -2146,6 +2360,151 @@
     attemptAcAttach();
   }
 
+  // ── Settings panel ───────────────────────────────────────────────────────
+  // Everything in kte_v2_settings in one modal card. Opened from the picker's
+  // settings row and the userscript manager's menu; every change applies at
+  // once, and the card re-renders from the store after each one.
+
+  let panelBackdrop = null;
+
+  const MOTION_LABELS = { always: 'Always', hover: 'On hover', never: 'Never' };
+
+  function panelEl(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text) el.textContent = text;
+    return el;
+  }
+
+  function panelChip(label, on, onClick) {
+    const chip = panelEl('button', 'kte-chip', label);
+    chip.type = 'button';
+    pickerChipState(chip, on);
+    chip.addEventListener('click', onClick);
+    return chip;
+  }
+
+  function panelGroup(label, ...children) {
+    const group = panelEl('div', 'kte-panel-group');
+    group.append(panelEl('div', 'kte-panel-label', label), ...children);
+    return group;
+  }
+
+  function panelProviderChips(isOn, flip) {
+    const row = panelEl('div', 'kte-panel-chips');
+    for (const provider of PROVIDERS) {
+      const chip = panelChip(provider, isOn(provider), () => {
+        flip(provider);
+        settingsSave();
+        applyProviderSettings(); // hides the tooltip and re-renders chat
+        pickerRefreshIfBuilt();
+        settingsPanelRender();
+      });
+      chip.dataset.provider = provider;
+      row.appendChild(chip);
+    }
+    return row;
+  }
+
+  function settingsPanelRender() {
+    const card = panelBackdrop?.querySelector('#kte-panel');
+    if (!card) return;
+    const store = settingsLoad();
+    card.textContent = '';
+
+    const head = panelEl('div', 'kte-panel-head');
+    const titles = panelEl('div');
+    titles.append(
+      panelEl('div', 'kte-panel-title', 'Third-party emotes'),
+      panelEl('div', 'kte-panel-sub', `v${VERSION} · saved on this device`),
+    );
+    const close = panelEl('button', 'kte-panel-close', '✕');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close emote settings');
+    close.addEventListener('click', settingsPanelClose);
+    head.append(titles, close);
+    card.appendChild(head);
+
+    card.appendChild(panelGroup('Providers',
+      panelProviderChips(providerEnabled, provider => {
+        store.providers[provider] = !providerEnabled(provider);
+      }),
+      panelEl('div', 'kte-panel-note', 'Hiding a provider removes all of its emotes, from chat too.'),
+    ));
+
+    card.appendChild(panelGroup('Global emotes',
+      panelProviderChips(globalsEnabled, provider => {
+        store.globals[provider] = !globalsEnabled(provider);
+      }),
+      panelEl('div', 'kte-panel-note', 'Each provider\'s emotes for every channel. Turn them off to keep only the streamer\'s own set.'),
+    ));
+
+    const motionRow = panelEl('div', 'kte-panel-chips');
+    for (const mode of MOTION_MODES) {
+      motionRow.appendChild(panelChip(MOTION_LABELS[mode], store.motion === mode, () => {
+        store.motion = mode;
+        settingsSave();
+        rerenderEmotes();
+        pickerRefreshIfBuilt();
+        settingsPanelRender();
+      }));
+    }
+    const motionNote = prefersReducedMotion()
+      ? 'Your system\'s Reduce motion setting is on, so emotes stay still whatever you pick.'
+      : 'BTTV serves no still frames, so its animated emotes always move.';
+    card.appendChild(panelGroup('Animated emotes', motionRow, panelEl('div', 'kte-panel-note', motionNote)));
+
+    const acRow = panelEl('div', 'kte-switch-row');
+    const acSwitch = panelEl('button', 'kte-switch');
+    acSwitch.type = 'button';
+    acSwitch.setAttribute('role', 'switch');
+    acSwitch.setAttribute('aria-label', 'Suggest emotes while typing');
+    acSwitch.setAttribute('aria-checked', String(store.autocomplete));
+    acSwitch.addEventListener('click', () => {
+      store.autocomplete = !store.autocomplete;
+      settingsSave();
+      if (!store.autocomplete) acHide();
+      settingsPanelRender();
+    });
+    acRow.append(panelEl('span', null, 'Suggest emotes while typing'), acSwitch);
+    card.appendChild(panelGroup('Chat input', acRow));
+  }
+
+  // Escape closes the panel, swallowed so the same press can't also close
+  // something of Kick's. Only listening while the panel is open.
+  function settingsPanelKeydown(e) {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    e.stopPropagation();
+    settingsPanelClose();
+  }
+
+  function settingsPanelOpen() {
+    if (panelBackdrop) return;
+    hideTooltip();
+    hideEmoteMenu();
+    panelBackdrop = panelEl('div', 'kte-panel-backdrop');
+    const card = panelEl('div');
+    card.id = 'kte-panel';
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    card.setAttribute('aria-label', 'Third-party emote settings');
+    panelBackdrop.addEventListener('click', e => {
+      if (e.target === panelBackdrop) settingsPanelClose();
+    });
+    panelBackdrop.appendChild(card);
+    overlayParent().appendChild(panelBackdrop);
+    document.addEventListener('keydown', settingsPanelKeydown, true);
+    settingsPanelRender();
+    card.querySelector('.kte-panel-close')?.focus();
+  }
+
+  function settingsPanelClose() {
+    panelBackdrop?.remove();
+    panelBackdrop = null;
+    document.removeEventListener('keydown', settingsPanelKeydown, true);
+  }
+
   // ── Emote Picker ─────────────────────────────────────────────────────────
 
   const PICKER_PROVIDER_LIMIT = 40;
@@ -2176,7 +2535,7 @@
     btn.className = 'kte-picker-btn';
     btn.setAttribute('aria-label', `Insert ${code}`);
     btn.dataset.code = code;
-    setEmoteTooltip(btn, code, emote.source, emoteDisplayUrl(emote));
+    setEmoteTooltip(btn, code, emote.source, emoteHoverUrl(emote));
     if (favHas(code)) btn.dataset.kteFav = '1';
 
     const animUrl = safeUrl(emote.url);
@@ -2193,8 +2552,9 @@
     // and animated URLs actually differ (i.e. the provider serves a separate
     // frozen frame). Without that, the emote either is naturally static or has
     // no static variant available, so we just show whatever the default is.
-    // Under reduced motion the still frame stays put on hover too.
-    if (!prefersReducedMotion() && staticUrl && animUrl && staticUrl !== animUrl) {
+    // With motion off (or under reduced motion) the still frame stays put on
+    // hover too.
+    if (motionMode() !== 'never' && staticUrl && animUrl && staticUrl !== animUrl) {
       img.dataset.kteAnimSrc = animUrl;
     }
     img.addEventListener('error', () => {
@@ -2677,6 +3037,11 @@
       });
       row.appendChild(chip);
     }
+
+    const more = pickerBuildChip('Settings', 'Global emotes, animation and autocomplete');
+    more.classList.add('kte-chip-panel');
+    more.addEventListener('click', settingsPanelOpen);
+    row.appendChild(more);
 
     return row;
   }
@@ -3389,13 +3754,21 @@
   reducedMotionQuery?.addEventListener?.('change', () => {
     rerenderEmotes();
     pickerRefreshIfBuilt();
+    settingsPanelRender();
   });
 
   document.addEventListener('fullscreenchange', () => {
     if (tipEl) reparentOverlay(tipEl);
     if (acDropdown) reparentOverlay(acDropdown);
     hideEmoteMenu();
+    settingsPanelClose();
   });
+
+  // Not every manager has a menu (Safari's Userscripts extension doesn't); the
+  // picker's settings row opens the same panel there.
+  if (typeof GM_registerMenuCommand === 'function') {
+    GM_registerMenuCommand('Emote settings', settingsPanelOpen);
+  }
 
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', waitForDOMThenInit)

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-11-03
+
+### Added
+- **A settings panel.** Open it with the **Settings** chip at the end of the 7TV+ picker tab's chip row, or from your userscript manager's menu (**Emote settings**; Safari's Userscripts extension has no menu, so use the chip there). Changes apply straight away, to messages already on screen too.
+- **Global emotes on or off, per provider.** Turn off a provider's global set to keep only the streamer's own emotes, so global emotes stop turning ordinary words in chat into images.
+- **Animated emotes: Always, On hover or Never.** *On hover* shows 7TV and FFZ emotes on their still frame until the pointer is on them, zero-width overlays included; *Never* keeps them still, in the hover preview and the picker too. BTTV serves no still frames, so its animated emotes move in every mode. The system's *Reduce motion* setting still wins over *Always* and *On hover*.
+- **Autocomplete on or off.** With it off, Tab and Enter in the chat input go straight to Kick.
+- The script now asks for `GM_registerMenuCommand`, used only for the menu entry above.
+
+### Changed
+- `kte_v2_settings` also stores `globals`, `autocomplete` and `motion`. A record saved by an earlier version keeps its provider choices and takes the defaults for the rest.
+
 ## [2.12.4] - 2026-10-15
 
 ### Changed

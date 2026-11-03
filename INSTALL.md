@@ -26,7 +26,7 @@ Safari requires a userscript host app. **[Userscripts](https://apps.apple.com/ap
 
 ## Other browsers (untested)
 
-The script uses standard GM APIs (only `GM_xmlhttpRequest`) and should work with any userscript manager that honours `@grant GM_xmlhttpRequest` and `@connect`. Tested only on Safari + Userscripts; the rest are listed for reference.
+The script uses standard GM APIs (`GM_xmlhttpRequest`, plus `GM_registerMenuCommand` for an optional menu entry) and should work with any userscript manager that honours `@grant GM_xmlhttpRequest` and `@connect`. Without `GM_registerMenuCommand` (Greasemonkey 4, Safari's Userscripts) the settings panel opens from the picker instead. Tested only on Safari + Userscripts; the rest are listed for reference.
 
 **[Tampermonkey](https://www.tampermonkey.net)** (Chrome, Firefox, Edge, Safari, Opera):
 1. Install the Tampermonkey extension for your browser.
@@ -67,7 +67,8 @@ Global sets are each provider's small curated default; channel sets are where th
 - Favourited emotes get a ★, a **Favourites** section at the top of the picker, and first place in autocomplete.
 - Open Kick's emote picker and choose the **7TV+** tab to browse/search loaded third-party emotes; clicking one inserts its text code into chat, and right-clicking one opens the same menu as in chat. The picker starts with 40 matches per provider for performance, offers **Load more** per provider, and search narrows across all loaded emotes.
 - With your system's **Reduce motion** setting on (macOS: System Settings → Accessibility → Display; Windows: Settings → Accessibility → Visual effects → Animation effects off), animated 7TV and FFZ emotes show a still frame in chat, autocomplete, previews and the picker, and switch live when you change it. BTTV has no still frames, so its animated emotes keep moving.
-- The chips at the top of the **7TV+** tab are the settings: turn 7TV, BTTV or FFZ off individually. Changes apply immediately, including to messages already on screen, and are remembered locally. The row tucks away while you scroll the grid and returns when you scroll back to the top.
+- The chips at the top of the **7TV+** tab turn 7TV, BTTV or FFZ off individually. Changes apply immediately, including to messages already on screen, and are remembered locally. The row tucks away while you scroll the grid and returns when you scroll back to the top.
+- The **Settings** chip at the end of that row opens the settings panel; managers with a script menu (Tampermonkey, Violentmonkey, ScriptCat) also list it there as **Emote settings**. It turns each provider's global emotes on or off, sets animated emotes to *Always*, *On hover* or *Never*, and switches autocomplete on or off.
 - Navigating between channels reloads the channel-specific emote sets automatically. Kick's popout chat (`/popout/<channel>/chat`) is supported too.
 
 ## Updating
@@ -80,6 +81,8 @@ The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the
 |---------|-----|
 | No emotes appear | Open your browser's DevTools → Console on kick.com and look for `[KickEmotes]` log lines — the first is `[KickEmotes] v<version> active`. If missing, check the extension is enabled for kick.com. |
 | Emotes from one provider are missing | That provider may be switched off — check its chip at the top of the **7TV+** picker tab. |
+| Global emotes are missing | That provider's global set may be off — check **Global emotes** in the settings panel. |
+| No autocomplete popup | It may be switched off — check **Suggest emotes while typing** in the settings panel. |
 | Emotes appear for global but not channel | The streamer may not have BTTV/7TV/FFZ set up for their channel. BTTV and FFZ only find a channel through a Twitch account linked on the streamer's 7TV profile, or a Twitch channel with the same name. A `[KickEmotes] … failed:` line in the console means a provider was unreachable; it is retried after 5, 15 and 45 seconds, and again on the next page load. |
 | 7TV+ tab missing | Close and reopen Kick's native emote picker after the `[KickEmotes] Ready` log appears. |
 | Console says `[KickEmotes] … is standing down` | Two copies of the script are installed — typically a manual copy next to the Greasy Fork or auto-updating one, or two managers both enabled for kick.com. The second copy stopped itself and the first is running normally; remove the duplicate. |

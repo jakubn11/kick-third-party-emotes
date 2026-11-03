@@ -3,6 +3,8 @@
 loadConst(['PROVIDERS']);
 var hidden = new Set();
 var providerEnabled = p => !hidden.has(p);
+var noGlobals = new Set();
+var globalsEnabled = p => !noGlobals.has(p);
 var emoteMap = new Map(), loadedProviders = new Map();
 load(['loaderRank', 'rebuildEmoteMap']);
 
@@ -31,3 +33,14 @@ check('FFZ channel beats FFZ global', emoteMap.get('F').source === 'FFZ (channel
 hidden.add('7TV');
 rebuildEmoteMap();
 check('hiding 7TV falls through to BTTV', emoteMap.get('C').source === 'BTTV (twitch)' && emoteMap.get('G').source === 'BTTV');
+
+hidden.clear();
+noGlobals.add('BTTV');
+rebuildEmoteMap();
+check('BTTV globals off: its channel set stays', emoteMap.get('A').source === 'BTTV (twitch)');
+check('BTTV globals off: 7TV global still wins G', emoteMap.get('G').source === '7TV');
+noGlobals.add('7TV');
+noGlobals.add('FFZ');
+rebuildEmoteMap();
+check('every global set off: no global-only emote', !emoteMap.has('G'));
+check('every global set off: channel emotes stay', emoteMap.get('C').source === '7TV' && emoteMap.get('F').source === 'FFZ (channel)');
