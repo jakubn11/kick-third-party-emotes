@@ -4,11 +4,15 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.12.4** — visual tidy-up to match the other kick-* scripts
+**2.13.0** — a settings panel, opened from Kick's own chat settings menu
 
-- **Popups:** the tooltip, context menu and autocomplete lose their green edge stripe and use the shared shadow and corner radius.
-- **Labels** are semibold instead of bold.
-- **Picker chips:** the 7TV/BTTV/FFZ toggles are rounded rectangles with readable text when off, instead of faint grey pills. When on they still show green or the provider's colour.
+- **Settings panel:** open **Third-party emotes** in Kick's chat settings (the gear beside **Chat**), or **Emote settings** in your userscript manager's menu. Every change applies straight away, to emotes already in chat too.
+- **Global emotes per provider:** turn off 7TV's, BTTV's or FFZ's global set to keep only the streamer's own emotes, so ordinary words stop turning into images.
+- **Animated emotes:** *Always*, *On hover* or *Never*. 7TV and FFZ emotes can stay on their still frame until you point at them; BTTV has no still frames, so its animated emotes always move.
+- **Emote size in chat:** Small, Medium or Large (24, 28 or 36 px; Medium is the size you had).
+- **Switches** for autocomplete and for the large preview on hover.
+- **Clear recently used:** empties the picker's *Recently used* section and the autocomplete ranking, after a confirm click. Favourites stay.
+- **Open tabs stay in step:** a setting, a star or a cleared list in one Kick tab now applies in the others, instead of being overwritten by them.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
@@ -17,12 +21,12 @@ Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes
 - **Emotes from 7TV, BTTV and FFZ** rendered inline in chat, with each channel's own sets loaded automatically as you switch channels
 - **Animated emotes** (GIF and animated WebP) — play always, only on hover, or never; with your system's *Reduce motion* setting on, 7TV and FFZ animated emotes show a still frame
 - **Zero-width emotes** layered over the previous emote (7TV overlays and BTTV's `cvMask`, `SoSnowy`, `SantaHat` and similar)
-- **Hover previews** — a large preview with the emote's name and provider
+- **Hover previews** — a large preview with the emote's name and provider (can be switched off)
 - **Autocomplete** while typing — favourites first, then your most-used emotes, with keyboard navigation
 - **Favourites** — star emotes from the right-click menu; up to 100 are kept
 - **Right-click menu** — favourite an emote, copy its name or image URL, or open its 7TV/BTTV/FFZ page
 - **7TV+ picker tab** inside Kick's emote picker, with Favourites and Recently used sections, search, and **Load more** per provider (40 at a time)
-- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker, and open the settings panel to switch off global emote sets, choose how animated emotes play, resize emotes, turn autocomplete or the large preview off, or clear recently used emotes; changes apply instantly
+- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker; the settings panel switches off each provider's global emotes, sets how animated emotes play, resizes emotes in chat (24, 28 or 36 px), turns autocomplete or the large preview off, and clears recently used emotes. Changes apply instantly and carry over to your other open Kick tabs
 - **Fast repeat visits** — emote sets are cached locally and refreshed in the background
 - A dark popup style with a green accent that matches the other kick-* userscripts
 

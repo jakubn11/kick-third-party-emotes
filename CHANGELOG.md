@@ -16,12 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Clear recently used.** Empties the picker's *Recently used* section and the usage ranking in autocomplete, after a second click to confirm. Favourites are kept.
 - The script now asks for `GM_registerMenuCommand`, used only for the menu entry above.
 
+### Changed
+- `kte_v2_settings` also stores `globals`, `autocomplete`, `motion`, `size` and `preview`. A record saved by an earlier version keeps its provider choices and takes the defaults for the rest.
+
 ### Fixed
 - **Open Kick tabs no longer undo each other.** Settings, favourites and recently used emotes were read once per tab and saved whole, so a change in one tab could be overwritten by the next save in another — and a cleared *Recently used* list came back as soon as another tab inserted an emote. Every change now re-reads the stored copy before saving, and a change made in one tab applies live in the others.
 - **The 7TV+ tab no longer says "Emotes loading…" forever** when a channel has no emotes of its own. Once loading has finished it says the channel has none, or that global emotes are switched off in Settings.
-
-### Changed
-- `kte_v2_settings` also stores `globals`, `autocomplete`, `motion`, `size` and `preview`. A record saved by an earlier version keeps its provider choices and takes the defaults for the rest.
 
 ## [2.12.4] - 2026-10-15
 
