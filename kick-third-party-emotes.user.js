@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.13.0
+// @version      2.13.1
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.13.0';
+  const VERSION = '2.13.1';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -1000,8 +1000,8 @@
       width: min(380px, calc(100vw - 32px));
       max-height: 76vh;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      align-content: start;
       gap: .7rem;
       padding: 1rem;
       border: 1px solid rgba(255,255,255,.1);
@@ -1020,12 +1020,6 @@
     /* A centred card, so it rises with kick-quality-saver's scale too. */
     @keyframes kte-panel-rise {
       from { opacity: 0; transform: translateY(8px) scale(.97); }
-    }
-    /* The card scrolls rather than squeezing its sections: WebKit lets the
-       children of a scrolling flex column shrink below their content, which
-       pushed the last group's button out through its bottom edge in Safari. */
-    #kte-panel > * {
-      flex-shrink: 0;
     }
     #kte-panel :focus-visible {
       outline: 2px solid rgba(34,197,94,.65);
@@ -1111,10 +1105,12 @@
     .kte-panel-close:active {
       transform: scale(.97);
     }
-    /* One inset group per topic. */
+    /* One inset group per topic. The card and its groups are grid rows, not
+       flex columns: in Safari a group came out a note line short of its
+       content, with the Clear recently used button poking out through its
+       bottom edge, and grid rows always size to what they hold. */
     .kte-panel-group {
-      display: flex;
-      flex-direction: column;
+      display: grid;
       gap: .6rem;
       padding: .7rem;
       border: 1px solid rgba(255,255,255,.06);

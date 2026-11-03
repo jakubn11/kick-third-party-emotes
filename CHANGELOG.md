@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.1] - 2026-11-03
+
+### Fixed
+- **The settings panel's Clear recently used button stays inside its section in Safari.** The section could come out a line short of its text, leaving the button hanging over its bottom edge; the panel's sections now always grow to fit what they hold.
+
 ## [2.13.0] - 2026-11-03
 
 ### Added
