@@ -60,7 +60,8 @@ Do not add `Co-Authored-By:` trailers to git commits.
 - Local emote-usage tracker (`kte_v2_usage`) powering autocomplete ranking and the picker's "Recently used" section
 - Local favourites store (`kte_v2_favs`) powering the picker's "Favourites" section, the top of the autocomplete ranking, and the ★ markers
 - Local settings store (`kte_v2_settings`) — provider visibility, global sets, autocomplete and motion — the providers surfaced as the chip row at the top of the picker tab, everything in the settings panel
-- Settings panel (`#kte-panel` in `.kte-panel-backdrop`) — a modal card opened by the picker row's **Settings** chip and the manager menu command
+- Settings panel (`#kte-panel` in `.kte-panel-backdrop`) — a modal card opened by the picker row's **Settings** chip, the manager menu command, and a row in Kick's chat settings menu
+- Chat settings row (`#kte-chat-settings-row`) — **Third-party emotes** in Kick's own chat settings menu; see DOM And Routing Notes
 - Module-level provider layers (`loadedProviders` / `activeLoaders`) and `rebuildEmoteMap()`, so a settings change can refilter `emoteMap` without re-running `init()`
 - Emote context menu (`#kte-menu`) on right-clicked chat **and picker** emotes
 - Channel lookup (`kickChannel` → `sevenTvKickUser` / `ffzRoom` → `channelTwitchId`), shared by the three channel loaders through the short-lived `channelLookups` memo
@@ -160,6 +161,15 @@ Kick is a single-page app and may change class names. The fragile selectors live
 - `NON_CHANNEL_SLUGS` — site pages that would otherwise read as a channel slug. The channel API can't decide this: short words like `home`, `login` and `clips` are real usernames there, but on kick.com the route wins. Check a candidate by fetching `https://kick.com/<path>` and reading its `<title>` (a channel reads `<Name> Stream - Watch Live on Kick`). Plus the popout special case in `currentChannelSlug()`: Kick's popout chat is `/popout/<channel>/chat`, so the channel is the *second* segment there. Verified against the live page — it carries the same chat DOM as embedded chat, so the only thing that ever broke was the slug.
 
 These can be checked against the live site without a Kick account: open a **live** channel (an offline one has no chat DOM at all), then in the console count hits per selector and walk a message row's text nodes through the same `acceptNode` logic `processMessageEl` uses. Measured this way in July 2026: only `MSG_SELECTORS[0]`/`[1]` and the last `INPUT_SELECTORS` fallback matched anything, and chat produced roughly 5 added message elements and 22 mutation batches per 20 s — the body-wide `MutationObserver` costs well under a millisecond of selector work over that window, so it is not worth scoping to the chat container.
+
+### Chat settings menu
+
+The gear beside **Chat** opens `#chat-settings-panel`, and only for signed-in viewers — logged out, it opens a sign-in dialog, so inspecting it needs a Kick account in the browser. Two layouts carry the same id and the same `ul > li` rows (checked November 2026):
+
+- **Desktop:** an inline popover inside `#chatroom-footer`. Closing it collapses it to height 0 and leaves it mounted, with our row still in it.
+- **Narrow screens:** a vaul bottom drawer (`data-vaul-drawer`, Radix dialog). It is modal, so `<body>` gets `pointer-events: none` until it has finished closing — why `.kte-panel-backdrop` sets `pointer-events: auto` itself, and why `chatSettingsRowOpen()` opens the panel a tick after closing the menu.
+
+The top level is found by its rows' `ChevronRight` icons (`svg[data-ds-icon="ChevronRight"]`); sub-pages (*Identity*, *Chat appearance*, *Muted users*) have a `ChevronLeft` back button and no such list. Kick re-renders the list on every visit, so the chat observer calls `chatSettingsInject()` whenever nodes land in the panel. Our row is a clone of a native one with its text and icon swapped, appended last, below *Pop out chat*. The menu is closed through its `Cross` button before the panel opens.
 
 When fixing Kick DOM breakage, prefer adding fallback selectors rather than replacing working selectors. After selector changes, manually test:
 
@@ -313,7 +323,7 @@ Manual testing is required in a browser with a userscript manager installed:
 17. Open a channel whose URL has a dash where the username has an underscore (e.g. `/xqc-lobotomy`) and confirm its 7TV channel emotes load. Open one with Twitch BTTV emotes (e.g. `/trainwreckstv`) and confirm BTTV channel emotes load, tagged `BTTV (twitch)`.
 18. Enable a **second** copy of the script (a duplicate entry in the same manager, or a second manager) and reload. The console must show one `[KickEmotes] v… active` line and one `… is standing down` warning naming both versions; chat, the picker and autocomplete behave exactly as with one copy.
 19. Turn on the system's **Reduce motion** setting with a channel open (macOS: System Settings → Accessibility → Display). Without a reload, animated 7TV and FFZ emotes in chat, autocomplete, the hover preview and the picker should freeze on their still frame, the picker should stop animating on hover, and turning the setting off should bring the animation back. Animated BTTV emotes keep moving.
-20. Open the settings panel from the picker's **Settings** chip and from the manager menu (where it has one). Turn one provider's **Global emotes** off: its global-only emotes leave chat, autocomplete and the picker while its channel emotes stay. Set **Animated emotes** to *On hover* and check a 7TV emote (and an overlay on it) is still until hovered, then *Never* and check the hover preview stays still too. Switch **Suggest emotes while typing** off and confirm Tab and Enter behave as without the script. Reload: every choice is kept. Esc and a click outside close the panel.
+20. Signed in, open Kick's chat settings (the gear beside **Chat**): **Third-party emotes** is the last row, matching the others, and comes back after visiting a sub-page and returning. Clicking it closes Kick's menu and opens the settings panel — check this on a wide window (popover) and a narrow one, around 500px wide (drawer), and that the page is clickable again after closing the panel. Open the panel from the picker's **Settings** chip and from the manager menu (where it has one) too. Turn one provider's **Global emotes** off: its global-only emotes leave chat, autocomplete and the picker while its channel emotes stay. Set **Animated emotes** to *On hover* and check a 7TV emote (and an overlay on it) is still until hovered, then *Never* and check the hover preview stays still too. Switch **Suggest emotes while typing** off and confirm Tab and Enter behave as without the script. Reload: every choice is kept. Esc and a click outside close the panel.
 
 ## Documentation
 

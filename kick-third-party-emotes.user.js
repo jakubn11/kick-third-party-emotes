@@ -953,6 +953,9 @@
 
     /* Settings panel — the family settings card (kick-quality-saver's .kqs-card) */
     .kte-panel-backdrop {
+      /* Kick's narrow-screen drawer is a modal that sets pointer-events: none
+         on <body>; the backdrop must not inherit it while that closes. */
+      pointer-events: auto;
       position: fixed;
       inset: 0;
       z-index: 2147483646;
@@ -2069,8 +2072,10 @@
     return node.id === 'kte-picker-content'
       || node.id === 'kte-ac'
       || node.id === 'kte-menu'
+      || node.id === CHAT_SETTINGS_ROW_ID
       || node.classList.contains('kte-wrap')
-      || Boolean(node.closest?.('#kte-picker-content, #kte-ac, #kte-menu, .kte-wrap'));
+      || node.classList.contains('kte-panel-backdrop')
+      || Boolean(node.closest?.(`#kte-picker-content, #kte-ac, #kte-menu, .kte-wrap, .kte-panel-backdrop, #${CHAT_SETTINGS_ROW_ID}`));
   }
 
   // ── Autocomplete ─────────────────────────────────────────────────────────
@@ -2503,6 +2508,74 @@
     panelBackdrop?.remove();
     panelBackdrop = null;
     document.removeEventListener('keydown', settingsPanelKeydown, true);
+  }
+
+  // ── Chat settings row ────────────────────────────────────────────────────
+  // A row in Kick's own chat settings menu (the gear beside Chat, signed-in
+  // viewers only) that opens the settings panel. The menu is
+  // #chat-settings-panel: an inline popover on desktop, a bottom drawer on
+  // narrow screens, with the same list markup in both. Its top level is the
+  // one list whose rows carry a ChevronRight icon — sub-pages have a
+  // ChevronLeft back button and toggle rows instead. Kick re-renders the list
+  // on every open and on coming back from a sub-page, so the chat observer
+  // re-injects whenever the panel changes.
+
+  const CHAT_SETTINGS_ROW_ID = 'kte-chat-settings-row';
+
+  function chatSettingsMenuList(panel) {
+    return panel?.querySelector('li svg[data-ds-icon="ChevronRight"]')?.closest('ul') ?? null;
+  }
+
+  // Kick's close button is the only one in the header with a Cross icon.
+  function chatSettingsMenuClose(panel) {
+    panel.querySelector('button svg[data-ds-icon="Cross"]')?.closest('button')?.click();
+  }
+
+  function chatSettingsRowOpen() {
+    const panel = document.getElementById('chat-settings-panel');
+    if (panel) chatSettingsMenuClose(panel);
+    // A tick later, so the narrow-screen drawer has let go of focus and
+    // pointer events before the panel opens over it.
+    setTimeout(settingsPanelOpen, 0);
+  }
+
+  // Cloned from Kick's own row for the same reason as the picker tab: its
+  // padding, hover and height are Tailwind classes a hand-written copy would
+  // drift from.
+  function chatSettingsBuildRow(template) {
+    const row = template.cloneNode(true);
+    for (const node of [row, ...row.querySelectorAll('[id], [data-testid]')]) {
+      node.removeAttribute('id');
+      node.removeAttribute('data-testid');
+    }
+    row.id = CHAT_SETTINGS_ROW_ID;
+    row.tabIndex = 0;
+    row.setAttribute('role', 'button');
+
+    const label = row.querySelector('span');
+    if (label) label.textContent = 'Third-party emotes';
+    const nativeIcon = row.querySelector('svg');
+    if (nativeIcon) {
+      const icon = pickerBuildTabIcon();
+      icon.setAttribute('class', nativeIcon.getAttribute('class') ?? '');
+      nativeIcon.replaceWith(icon);
+    }
+
+    row.addEventListener('click', chatSettingsRowOpen);
+    row.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      chatSettingsRowOpen();
+    });
+    return row;
+  }
+
+  function chatSettingsInject(panel) {
+    const list = chatSettingsMenuList(panel);
+    if (!list || list.querySelector(`#${CHAT_SETTINGS_ROW_ID}`)) return;
+    const template = [...list.children].find(li => li.querySelector('svg[data-ds-icon="ChevronRight"]'));
+    if (!template) return;
+    list.appendChild(chatSettingsBuildRow(template));
   }
 
   // ── Emote Picker ─────────────────────────────────────────────────────────
@@ -3499,6 +3572,7 @@
     if (chatObserver) chatObserver.disconnect();
     chatObserver = new MutationObserver(mutations => {
       let pickerPanelToInject = null;
+      let chatSettingsChanged = false;
 
       for (const mut of mutations) {
         // Virtual list recycles elements by changing data-index — clear stale marks
@@ -3513,6 +3587,11 @@
         for (const added of mut.addedNodes) {
           if (added.nodeType !== Node.ELEMENT_NODE) continue;
           if (isOwnUINode(added)) continue;
+          if (added.id === 'chat-settings-panel' || added.closest?.('#chat-settings-panel')
+            || added.querySelector?.('#chat-settings-panel')) {
+            chatSettingsChanged = true;
+            continue;
+          }
           if (added.id === 'chat-emotes-picker-panel') {
             pickerPanelToInject = added;
             continue;
@@ -3532,6 +3611,7 @@
       }
 
       if (pickerPanelToInject) queuePickerInject(pickerPanelToInject);
+      if (chatSettingsChanged) chatSettingsInject(document.getElementById('chat-settings-panel'));
       // Kick may replace the chat input element during stream switches — piggyback
       // on this observer (already watching body subtree) to re-attach autocomplete
       // when the tracked input disconnects.
