@@ -108,7 +108,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 - **Emote size in chat** — Small, Medium or Large.
 - **Suggest emotes while typing** — autocomplete on or off.
 - **Large preview on hover** — off leaves just the name and provider.
-- **Clear recently used** — empties the picker's *Recently used* section and the usage ranking, after a confirm click. Favourites stay.
+- **Recently used** — the emotes in the picker's *Recently used* section, and **Clear recently used** to empty it and the usage ranking, after a confirm click. Favourites stay.
 
 Your choices are stored locally in `kte_v2_settings`.
 

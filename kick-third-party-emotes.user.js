@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.13.1
+// @version      2.14.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.13.1';
+  const VERSION = '2.14.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -578,7 +578,8 @@
       border-radius: 8px;
       white-space: nowrap;
       pointer-events: none;
-      z-index: 9999;
+      /* Above the settings panel's backdrop, for its Recently used emotes. */
+      z-index: 2147483647;
       border: 1px solid rgba(255,255,255,.1);
       box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
       -webkit-backdrop-filter: blur(10px);
@@ -674,6 +675,7 @@
 
     .kte-tip-star,
     .kte-picker-btn[data-kte-fav="1"]::after,
+    .kte-panel-recent-emote[data-kte-fav="1"]::after,
     .kte-ac-fav {
       color: #facc15;
     }
@@ -808,7 +810,8 @@
     .kte-picker-btn img[data-kte-loaded="1"] {
       visibility: visible;
     }
-    .kte-picker-btn[data-kte-fav="1"]::after {
+    .kte-picker-btn[data-kte-fav="1"]::after,
+    .kte-panel-recent-emote[data-kte-fav="1"]::after {
       content: '★';
       position: absolute;
       top: 1px;
@@ -1186,6 +1189,34 @@
       cursor: not-allowed;
       transform: none;
     }
+    /* Eight to a row, as square tiles on the chip surface. */
+    .kte-panel-recent {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 4px;
+    }
+    .kte-panel-recent-emote {
+      position: relative;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .kte-panel-recent-emote:hover {
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.16);
+    }
+    .kte-panel-recent-emote img {
+      max-width: 70%;
+      max-height: 70%;
+      object-fit: contain;
+      pointer-events: none;
+    }
     .kte-panel-note {
       font: 500 11px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
       color: rgba(255,255,255,.4);
@@ -1252,6 +1283,7 @@
         animation: none;
       }
       #kte-panel .kte-chip,
+      .kte-panel-recent-emote,
       .kte-panel-close,
       .kte-switch,
       .kte-switch::after {
@@ -2710,7 +2742,43 @@
     const usedNote = used
       ? `${used} emote${used === 1 ? '' : 's'} remembered for the picker's Recently used section and the autocomplete ranking. Favourites are kept.`
       : 'Nothing remembered yet. Emotes you insert show up in the picker\'s Recently used section.';
-    card.appendChild(panelGroup('Recently used', panelEl('div', 'kte-panel-note', usedNote), clearRow));
+    const recent = pickerRecentEmotes('');
+    card.appendChild(panelGroup('Recently used',
+      ...(recent.length ? [panelRecentStrip(recent)] : []),
+      panelEl('div', 'kte-panel-note', usedNote),
+      clearRow,
+    ));
+  }
+
+  // The picker's Recently used emotes, to look at before clearing them: the
+  // hover tooltip and animate-on-hover as in chat, but no click — the chat
+  // input sits behind the modal.
+  function panelRecentStrip(recent) {
+    const strip = panelEl('div', 'kte-panel-recent');
+    for (const { code, emote } of recent) {
+      const url = emoteDisplayUrl(emote);
+      if (!url) continue;
+      const cell = panelEl('span', 'kte-panel-recent-emote');
+      setEmoteTooltip(cell, code, emote.source, emoteHoverUrl(emote));
+      if (favHas(code)) cell.dataset.kteFav = '1';
+      const img = panelEl('img');
+      img.src = url;
+      img.alt = code;
+      img.draggable = false;
+      img.decoding = 'async';
+      setEmoteHoverSrc(img, emote, url);
+      cell.appendChild(img);
+      cell.addEventListener('mouseenter', () => {
+        showTooltip(cell);
+        emoteWrapAnimate(cell, true);
+      });
+      cell.addEventListener('mouseleave', () => {
+        hideTooltip();
+        emoteWrapAnimate(cell, false);
+      });
+      strip.appendChild(cell);
+    }
+    return strip;
   }
 
   // Escape closes the panel, swallowed so the same press can't also close
@@ -2744,6 +2812,7 @@
 
   function settingsPanelClose() {
     panelConfirmClear = false;
+    hideTooltip(); // may be anchored to a Recently used emote
     panelBackdrop?.remove();
     panelBackdrop = null;
     document.removeEventListener('keydown', settingsPanelKeydown, true);

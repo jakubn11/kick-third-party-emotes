@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.0] - 2026-11-03
+
+### Added
+- **The settings panel shows your recently used emotes.** The *Recently used* section lists the same emotes as the picker's *Recently used* row (up to 16, newest first, with a ★ on favourites), so you can see what **Clear recently used** would forget. Hovering one shows its usual preview, and animated ones play as they do in chat.
+
 ## [2.13.1] - 2026-11-03
 
 ### Fixed
