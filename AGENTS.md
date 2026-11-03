@@ -59,8 +59,9 @@ Do not add `Co-Authored-By:` trailers to git commits.
 - Cache helper using `localStorage` keys prefixed with `kte_v5_` (old-prefix and long-expired keys are swept once per page load)
 - Local emote-usage tracker (`kte_v2_usage`) powering autocomplete ranking and the picker's "Recently used" section
 - Local favourites store (`kte_v2_favs`) powering the picker's "Favourites" section, the top of the autocomplete ranking, and the ★ markers
-- Local settings store (`kte_v2_settings`) — provider visibility, global sets, autocomplete and motion — the providers surfaced as the chip row at the top of the picker tab, everything in the settings panel
+- Local settings store (`kte_v2_settings`) — provider visibility, global sets, autocomplete, motion, emote size and hover preview — the providers surfaced as the chip row at the top of the picker tab, everything in the settings panel
 - Settings panel (`#kte-panel` in `.kte-panel-backdrop`) — a modal card opened by a row in Kick's chat settings menu and the manager menu command. The picker's chip row stays providers-only: a **Settings** chip there wrapped onto a second line, the same reason 2.11.0 took the size chips out of it
+- Cross-tab sync (`onStorageSync`, the `storage` listener) — takes in the user-state keys written by other Kick tabs; see Storage keys
 - Chat settings row (`#kte-chat-settings-row`) — **Third-party emotes** in Kick's own chat settings menu; see DOM And Routing Notes
 - Module-level provider layers (`loadedProviders` / `activeLoaders`) and `rebuildEmoteMap()`, so a settings change can refilter `emoteMap` without re-running `init()`
 - Emote context menu (`#kte-menu`) on right-clicked chat **and picker** emotes

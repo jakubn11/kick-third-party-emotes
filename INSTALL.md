@@ -26,7 +26,7 @@ Safari requires a userscript host app. **[Userscripts](https://apps.apple.com/ap
 
 ## Other browsers (untested)
 
-The script uses standard GM APIs (`GM_xmlhttpRequest`, plus `GM_registerMenuCommand` for an optional menu entry) and should work with any userscript manager that honours `@grant GM_xmlhttpRequest` and `@connect`. Without `GM_registerMenuCommand` (Greasemonkey 4, Safari's Userscripts) the settings panel opens from the picker instead. Tested only on Safari + Userscripts; the rest are listed for reference.
+The script uses standard GM APIs (`GM_xmlhttpRequest`, plus `GM_registerMenuCommand` for an optional menu entry) and should work with any userscript manager that honours `@grant GM_xmlhttpRequest` and `@connect`. Without `GM_registerMenuCommand` (Greasemonkey 4, Safari's Userscripts) the settings panel opens from **Third-party emotes** in Kick's chat settings menu instead. Tested only on Safari + Userscripts; the rest are listed for reference.
 
 **[Tampermonkey](https://www.tampermonkey.net)** (Chrome, Firefox, Edge, Safari, Opera):
 1. Install the Tampermonkey extension for your browser.
@@ -63,7 +63,7 @@ Global sets are each provider's small curated default; channel sets are where th
 - On every Kick channel page the script looks the channel up through Kick's own API, then fetches emotes from all three services.
 - Chat messages are scanned as they arrive; any matching word is replaced with the emote image. When two sets use the same name, channel emotes win over global ones, and 7TV over BTTV over FFZ.
 - Start typing an emote name in the chat input to get an autocomplete popup — ↑/↓ to navigate, Tab or Enter to insert, Esc to close. Favourites rank first, then your most-used emotes.
-- Hover over an emote to see a large preview with its name and source; right-click it to favourite it, copy the name/image URL, or open its provider page.
+- Hover over an emote to see a large preview with its name and source (the preview can be switched off in the settings panel); right-click it to favourite it, copy the name/image URL, or open its provider page.
 - Favourited emotes get a ★, a **Favourites** section at the top of the picker, and first place in autocomplete.
 - Open Kick's emote picker and choose the **7TV+** tab to browse/search loaded third-party emotes; clicking one inserts its text code into chat, and right-clicking one opens the same menu as in chat. The picker starts with 40 matches per provider for performance, offers **Load more** per provider, and search narrows across all loaded emotes.
 - With your system's **Reduce motion** setting on (macOS: System Settings → Accessibility → Display; Windows: Settings → Accessibility → Visual effects → Animation effects off), animated 7TV and FFZ emotes show a still frame in chat, autocomplete, previews and the picker, and switch live when you change it. BTTV has no still frames, so its animated emotes keep moving.
