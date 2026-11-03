@@ -4,6 +4,10 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
+**2.13.1** — a layout fix for the settings panel in Safari
+
+- **Clear recently used stays inside its section:** in Safari the panel's last section could come out a line short, leaving the button hanging over its bottom edge.
+
 **2.13.0** — a settings panel, opened from Kick's own chat settings menu
 
 - **Settings panel:** open **Third-party emotes** in Kick's chat settings (the gear beside **Chat**), or **Emote settings** in your userscript manager's menu. Every change applies straight away, to emotes already in chat too.
