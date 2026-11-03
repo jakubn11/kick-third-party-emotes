@@ -951,7 +951,9 @@
       margin-left: auto;
     }
 
-    /* Settings panel — the family settings card (kick-quality-saver's .kqs-card) */
+    /* Settings panel — the family settings card. Values follow
+       kick-quality-saver's .kqs-card and kick-fullscreen-chat's
+       #kfc-settings-panel; keep them in step with both. */
     .kte-panel-backdrop {
       /* Kick's narrow-screen drawer is a modal that sets pointer-events: none
          on <body>; the backdrop must not inherit it while that closes. */
@@ -965,6 +967,7 @@
       background: rgba(6,6,8,.6);
       -webkit-backdrop-filter: blur(3px);
       backdrop-filter: blur(3px);
+      animation: kte-panel-fade .16s ease-out;
     }
     #kte-panel {
       box-sizing: border-box;
@@ -983,44 +986,106 @@
       box-shadow: 0 24px 64px -16px rgba(0,0,0,.8), 0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
       color: #fff;
       font: 500 12px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+      animation: kte-panel-rise .2s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes kte-panel-fade {
+      from { opacity: 0; }
+    }
+    /* A centred card, so it rises with kick-quality-saver's scale too. */
+    @keyframes kte-panel-rise {
+      from { opacity: 0; transform: translateY(8px) scale(.97); }
     }
     #kte-panel :focus-visible {
       outline: 2px solid rgba(34,197,94,.65);
       outline-offset: 2px;
     }
+    #kte-panel button {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    /* The family scrollbar: thin, translucent, inset by a transparent border
+       so the thumb clears the card's rounded edge. */
+    #kte-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    #kte-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #kte-panel::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,.13);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      border-radius: 999px;
+    }
+    /* Header: icon mark, title and subtitle, close. */
     .kte-panel-head {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+    .kte-panel-mark {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(34,197,94,.22);
+      border-radius: 9px;
+      background: rgba(34,197,94,.1);
+    }
+    .kte-panel-mark svg {
+      width: 16px;
+      height: 16px;
+    }
+    .kte-panel-titles {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
     .kte-panel-title {
-      font-size: 13.5px;
-      font-weight: 600;
+      font: 600 13.5px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
       letter-spacing: -.01em;
+      color: #fff;
     }
     .kte-panel-sub {
-      font-size: 11px;
+      font: 500 11px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
       color: rgba(255,255,255,.42);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+    /* A red glyph on the neutral chip surface, red tint on hover — the
+       siblings' close button. */
     .kte-panel-close {
       margin-left: auto;
       flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 28px;
       height: 28px;
       padding: 0;
       border: 1px solid rgba(255,255,255,.09);
       border-radius: 8px;
       background: rgba(255,255,255,.05);
-      color: rgba(255,255,255,.85);
+      color: #fca5a5;
       font: 600 13px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
       cursor: pointer;
-      transition: background .12s ease, border-color .12s ease, color .12s ease;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
     }
-    .kte-panel-close:hover {
-      background: rgba(255,255,255,.09);
-      border-color: rgba(255,255,255,.16);
-      color: #fff;
+    .kte-panel-close:hover,
+    .kte-panel-close:focus-visible {
+      background: rgba(239,68,68,.14);
+      border-color: rgba(248,113,113,.5);
+      color: #fca5a5;
     }
+    .kte-panel-close:active {
+      transform: scale(.97);
+    }
+    /* One inset group per topic. */
     .kte-panel-group {
       display: flex;
       flex-direction: column;
@@ -1041,22 +1106,63 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
     }
-    .kte-panel-chips .kte-chip {
+    /* The panel chip is the family's grid chip (kqs .kqs-chip, kfc
+       .kfc-settings-chip): taller, centred, and pressed-in on click, with a
+       faint ring when selected. The picker row keeps the compact .kte-chip. */
+    #kte-panel .kte-chip {
+      box-sizing: border-box;
+      min-width: 0;
       min-height: 32px;
+      padding: 0 .4rem;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
+    }
+    #kte-panel .kte-chip:active {
+      transform: scale(.97);
+    }
+    #kte-panel .kte-chip[data-on="1"] {
+      box-shadow: 0 0 0 3px rgba(34,197,94,.07);
+    }
+    #kte-panel .kte-chip[data-on="1"][data-provider="7TV"] {
+      box-shadow: 0 0 0 3px rgba(77,166,255,.07);
+    }
+    #kte-panel .kte-chip[data-on="1"][data-provider="BTTV"] {
+      box-shadow: 0 0 0 3px rgba(255,107,107,.07);
+    }
+    #kte-panel .kte-chip[data-on="1"][data-provider="FFZ"] {
+      box-shadow: 0 0 0 3px rgba(192,132,252,.07);
     }
     .kte-panel-note {
-      font-size: 11px;
-      line-height: 1.45;
+      font: 500 11px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
       color: rgba(255,255,255,.4);
+    }
+    /* Switch rows sit in a gap-less container, so each row's own 7px padding
+       is the only spacing and the hairline falls midway between rows. When the
+       block ends a group, the last row's bottom padding is pulled back so the
+       group is as tight at the bottom as under its label. */
+    .kte-switches {
+      display: flex;
+      flex-direction: column;
+    }
+    .kte-panel-group > .kte-switches:last-child {
+      margin-bottom: -7px;
     }
     .kte-switch-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 7px 0;
+      font: 600 12px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
       color: rgba(255,255,255,.88);
+    }
+    .kte-switch-row + .kte-switch-row {
+      border-top: 1px solid rgba(255,255,255,.05);
     }
     .kte-switch {
       position: relative;
@@ -1068,11 +1174,12 @@
       border-radius: 999px;
       background: rgba(255,255,255,.14);
       cursor: pointer;
-      transition: background .18s ease, border-color .18s ease;
+      transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
     .kte-switch[aria-checked="true"] {
       background: #22c55e;
       border-color: rgba(34,197,94,.75);
+      box-shadow: 0 0 0 3px rgba(34,197,94,.1);
     }
     .kte-switch::after {
       content: '';
@@ -1091,6 +1198,12 @@
       transform: translate(15px, -50%);
     }
     @media (prefers-reduced-motion: reduce) {
+      .kte-panel-backdrop,
+      #kte-panel {
+        animation: none;
+      }
+      #kte-panel .kte-chip,
+      .kte-panel-close,
       .kte-switch,
       .kte-switch::after {
         transition: none;
@@ -2418,7 +2531,9 @@
     card.textContent = '';
 
     const head = panelEl('div', 'kte-panel-head');
-    const titles = panelEl('div');
+    const mark = panelEl('div', 'kte-panel-mark');
+    mark.appendChild(pickerBuildTabIcon());
+    const titles = panelEl('div', 'kte-panel-titles');
     titles.append(
       panelEl('div', 'kte-panel-title', 'Third-party emotes'),
       panelEl('div', 'kte-panel-sub', `v${VERSION} · saved on this device`),
@@ -2427,7 +2542,7 @@
     close.type = 'button';
     close.setAttribute('aria-label', 'Close emote settings');
     close.addEventListener('click', settingsPanelClose);
-    head.append(titles, close);
+    head.append(mark, titles, close);
     card.appendChild(head);
 
     card.appendChild(panelGroup('Providers',
@@ -2472,7 +2587,9 @@
       settingsPanelRender();
     });
     acRow.append(panelEl('span', null, 'Suggest emotes while typing'), acSwitch);
-    card.appendChild(panelGroup('Chat input', acRow));
+    const switches = panelEl('div', 'kte-switches');
+    switches.appendChild(acRow);
+    card.appendChild(panelGroup('Chat input', switches));
   }
 
   // Escape closes the panel, swallowed so the same press can't also close
