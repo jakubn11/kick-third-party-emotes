@@ -1038,7 +1038,7 @@
       background-clip: padding-box;
       border-radius: 999px;
     }
-    /* Header: icon mark, title and subtitle, close. */
+    /* Header: icon mark, title, close — kick-fullscreen-chat's header. */
     .kte-panel-head {
       display: flex;
       align-items: center;
@@ -1070,13 +1070,6 @@
       font: 600 13.5px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
       letter-spacing: -.01em;
       color: #fff;
-    }
-    .kte-panel-sub {
-      font: 500 11px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
-      color: rgba(255,255,255,.42);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     /* A red glyph on the neutral chip surface, red tint on hover — the
        siblings' close button. */
@@ -2627,10 +2620,7 @@
     const mark = panelEl('div', 'kte-panel-mark');
     mark.appendChild(panelMarkIcon());
     const titles = panelEl('div', 'kte-panel-titles');
-    titles.append(
-      panelEl('div', 'kte-panel-title', 'Third-party emotes'),
-      panelEl('div', 'kte-panel-sub', `v${VERSION} · saved on this device`),
-    );
+    titles.appendChild(panelEl('div', 'kte-panel-title', 'Third-party emotes'));
     const close = panelEl('button', 'kte-panel-close', '✕');
     close.type = 'button';
     close.setAttribute('aria-label', 'Close emote settings');
