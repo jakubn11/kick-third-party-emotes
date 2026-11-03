@@ -22,7 +22,7 @@ Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes
 - **Favourites** — star emotes from the right-click menu; up to 100 are kept
 - **Right-click menu** — favourite an emote, copy its name or image URL, or open its 7TV/BTTV/FFZ page
 - **7TV+ picker tab** inside Kick's emote picker, with Favourites and Recently used sections, search, and **Load more** per provider (40 at a time)
-- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker, and open the settings panel to switch off global emote sets, choose how animated emotes play, or turn autocomplete off; changes apply instantly
+- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker, and open the settings panel to switch off global emote sets, choose how animated emotes play, resize emotes, turn autocomplete or the large preview off, or clear recently used emotes; changes apply instantly
 - **Fast repeat visits** — emote sets are cached locally and refreshed in the background
 - A dark popup style with a green accent that matches the other kick-* userscripts
 

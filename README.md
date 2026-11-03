@@ -34,7 +34,7 @@
 - Zero-width emote overlays (7TV overlay emotes and BTTV's `cvMask`, `SoSnowy`, `SantaHat` & co.)
 - Hover tooltips showing a large emote preview with its name and provider
 - Favourite emotes — star them from the right-click menu for a pinned picker section and top billing in autocomplete
-- Settings, applied instantly — providers on or off from chips in the picker, plus a settings panel for global emote sets, animation and autocomplete
+- Settings, applied instantly — providers on or off from chips in the picker, plus a settings panel for global emote sets, animation, emote size, previews and autocomplete
 - Autocomplete popup when typing (prefix match with substring fallback, favourites then your most-used emotes first, keyboard navigation)
 - Right-click context menu on chat and picker emotes — favourite it, copy the name or image URL, or open the emote's 7TV/BTTV/FFZ page
 - Third-party emote tab inside Kick's native emote picker with **Favourites** and **Recently used** sections, search, animated emotes, and per-provider **Load more**
@@ -105,7 +105,10 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 - **Providers** — the same switches as the chips.
 - **Global emotes** — each provider's global set on or off. Turn them off to keep only the streamer's own emotes.
 - **Animated emotes** — *Always*, *On hover* (7TV and FFZ emotes stay on their still frame until you point at them) or *Never*. BTTV has no still frames, so its animated emotes always move.
+- **Emote size in chat** — Small, Medium or Large.
 - **Suggest emotes while typing** — autocomplete on or off.
+- **Large preview on hover** — off leaves just the name and provider.
+- **Clear recently used** — empties the picker's *Recently used* section and the usage ranking, after a confirm click. Favourites stay.
 
 Your choices are stored locally in `kte_v2_settings`.
 

@@ -11,10 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Global emotes on or off, per provider.** Turn off a provider's global set to keep only the streamer's own emotes, so global emotes stop turning ordinary words in chat into images.
 - **Animated emotes: Always, On hover or Never.** *On hover* shows 7TV and FFZ emotes on their still frame until the pointer is on them, zero-width overlays included; *Never* keeps them still, in the hover preview and the picker too. BTTV serves no still frames, so its animated emotes move in every mode. The system's *Reduce motion* setting still wins over *Always* and *On hover*.
 - **Autocomplete on or off.** With it off, Tab and Enter in the chat input go straight to Kick.
+- **Emote size in chat: Small, Medium or Large** (24, 28 or 36 px; Medium is the size until now). Zero-width overlays follow, and emotes already on screen resize straight away.
+- **Large preview on hover, on or off.** Off, hovering an emote shows just its name and provider.
+- **Clear recently used.** Empties the picker's *Recently used* section and the usage ranking in autocomplete, after a second click to confirm. Favourites are kept.
 - The script now asks for `GM_registerMenuCommand`, used only for the menu entry above.
 
 ### Changed
-- `kte_v2_settings` also stores `globals`, `autocomplete` and `motion`. A record saved by an earlier version keeps its provider choices and takes the defaults for the rest.
+- `kte_v2_settings` also stores `globals`, `autocomplete`, `motion`, `size` and `preview`. A record saved by an earlier version keeps its provider choices and takes the defaults for the rest.
 
 ## [2.12.4] - 2026-10-15
 

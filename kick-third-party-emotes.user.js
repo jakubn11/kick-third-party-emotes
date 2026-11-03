@@ -2,7 +2,7 @@
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
 // @version      2.13.0
-// @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation & autocomplete
+// @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
 // @icon         https://raw.githubusercontent.com/jakubn11/kick-third-party-emotes/main/icon.svg
@@ -315,6 +315,13 @@
     usageSave();
   }
 
+  // Forgets every insert, which empties "Recently used" and drops the usage
+  // ranking from autocomplete. Favourites are a separate store and stay.
+  function usageClear() {
+    usageMap = new Map();
+    usageSave();
+  }
+
   function usageSave() {
     if (usageSaveQueued) return;
     usageSaveQueued = true;
@@ -395,12 +402,16 @@
   // is on the emote, 'never' keeps them still. Only 7TV and FFZ serve a still
   // frame, so BTTV's animated emotes move in every mode.
   const MOTION_MODES = ['always', 'hover', 'never'];
+  // Chat emote height in px; 'medium' is the size before it was a setting.
+  const EMOTE_SIZES = { small: 24, medium: 28, large: 36 };
 
   let settings = null;
   let settingsSaveQueued = false;
 
   function settingsDefaults() {
-    const defaults = { providers: {}, globals: {}, autocomplete: true, motion: 'always' };
+    const defaults = {
+      providers: {}, globals: {}, autocomplete: true, motion: 'always', size: 'medium', preview: true,
+    };
     for (const provider of PROVIDERS) {
       defaults.providers[provider] = true;
       defaults.globals[provider] = true;
@@ -419,6 +430,8 @@
     }
     if (typeof saved?.autocomplete === 'boolean') next.autocomplete = saved.autocomplete;
     if (MOTION_MODES.includes(saved?.motion)) next.motion = saved.motion;
+    if (Object.hasOwn(EMOTE_SIZES, saved?.size ?? '')) next.size = saved.size;
+    if (typeof saved?.preview === 'boolean') next.preview = saved.preview;
     return next;
   }
 
@@ -443,14 +456,23 @@
     return settingsLoad().globals[provider] ?? true;
   }
 
+  // Chat emotes size themselves from this variable, so a change restyles
+  // every rendered emote at once with no re-render. On <html> so it also
+  // reaches into a fullscreen chat.
+  function applyEmoteSize() {
+    document.documentElement.style.setProperty('--kte-emote-size', `${EMOTE_SIZES[settingsLoad().size]}px`);
+  }
+
   function settingsSave() {
     if (settingsSaveQueued) return;
     settingsSaveQueued = true;
     RIC(() => {
       settingsSaveQueued = false;
       try {
-        const { providers, globals, autocomplete, motion } = settingsLoad();
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ts: Date.now(), providers, globals, autocomplete, motion }));
+        const { providers, globals, autocomplete, motion, size, preview } = settingsLoad();
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+          ts: Date.now(), providers, globals, autocomplete, motion, size, preview,
+        }));
       } catch { /* quota exceeded – skip silently */ }
     });
   }
@@ -515,9 +537,9 @@
       vertical-align: middle;
     }
     .kte-img {
-      height: 28px;
+      height: var(--kte-emote-size, 28px);
       width: auto;
-      max-width: 112px;
+      max-width: calc(var(--kte-emote-size, 28px) * 4);
       vertical-align: middle;
       display: block;
       cursor: default;
@@ -529,7 +551,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      height: 28px;
+      height: var(--kte-emote-size, 28px);
       width: auto;
       pointer-events: none;
     }
@@ -1036,6 +1058,7 @@
     .kte-panel-mark svg {
       width: 16px;
       height: 16px;
+      color: #22c55e;
     }
     .kte-panel-titles {
       display: flex;
@@ -1136,6 +1159,33 @@
     }
     #kte-panel .kte-chip[data-on="1"][data-provider="FFZ"] {
       box-shadow: 0 0 0 3px rgba(192,132,252,.07);
+    }
+    /* Destructive action: a red glyph at rest, red tint on hover, solid red
+       once armed — kick-quality-saver's .kqs-chip--danger. */
+    #kte-panel .kte-chip-danger {
+      color: #fca5a5;
+    }
+    #kte-panel .kte-chip-danger:hover,
+    #kte-panel .kte-chip-danger:focus-visible {
+      background: rgba(239,68,68,.14);
+      border-color: rgba(248,113,113,.5);
+      color: #fca5a5;
+    }
+    #kte-panel .kte-chip-danger[data-on="1"],
+    #kte-panel .kte-chip-danger[data-on="1"]:hover {
+      background: rgba(248,113,113,.18);
+      border-color: #f87171;
+      color: #fca5a5;
+      box-shadow: 0 0 0 3px rgba(248,113,113,.08);
+    }
+    #kte-panel .kte-chip:disabled,
+    #kte-panel .kte-chip:disabled:hover {
+      background: rgba(255,255,255,.02);
+      border-color: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.28);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
     }
     .kte-panel-note {
       font: 500 11px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -1775,9 +1825,10 @@
 
     tipEl.textContent = '';
 
-    // Large preview above the label — the emote is already decoded from chat or
-    // the picker, so this costs nothing beyond layout.
-    const previewUrl = safeUrl(wrap.dataset.kteTipUrl ?? '');
+    // Large preview above the label, unless switched off in settings — the
+    // emote is already decoded from chat or the picker, so this costs nothing
+    // beyond layout.
+    const previewUrl = settingsLoad().preview ? safeUrl(wrap.dataset.kteTipUrl ?? '') : '';
     if (previewUrl) {
       const preview = document.createElement('img');
       preview.className = 'kte-tip-preview';
@@ -2484,8 +2535,50 @@
   // once, and the card re-renders from the store after each one.
 
   let panelBackdrop = null;
+  // Clearing recents takes two clicks; this is the armed state in between.
+  // Never survives a close, so the panel can't reopen one click from wiping.
+  let panelConfirmClear = false;
 
   const MOTION_LABELS = { always: 'Always', hover: 'On hover', never: 'Never' };
+  const SIZE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' };
+
+  // The 7TV+ face as a line glyph in currentColor, for the header mark: the
+  // siblings put a flat green icon on that tinted tile, and the filled tab
+  // icon reads as a solid blob at 16px.
+  function panelMarkIcon() {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '5.5 5.5 53 53');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('aria-hidden', 'true');
+    const add = (name, attrs) => {
+      const node = document.createElementNS(ns, name);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      svg.appendChild(node);
+    };
+    const line = { fill: 'none', stroke: 'currentColor', 'stroke-linecap': 'round' };
+    add('circle', { cx: '32', cy: '32', r: '22', ...line, 'stroke-width': '5' });
+    add('circle', { cx: '24.5', cy: '27.5', r: '3.5', fill: 'currentColor' });
+    add('path', { d: 'M36 27.5 Q39.5 24 43 27.5', ...line, 'stroke-width': '4.5' });
+    add('path', { d: 'M22 38 Q32 48 42 38', ...line, 'stroke-width': '5' });
+    return svg;
+  }
+
+  function panelSwitch(label, on, flip) {
+    const row = panelEl('div', 'kte-switch-row');
+    const toggle = panelEl('button', 'kte-switch');
+    toggle.type = 'button';
+    toggle.setAttribute('role', 'switch');
+    toggle.setAttribute('aria-label', label);
+    toggle.setAttribute('aria-checked', String(on));
+    toggle.addEventListener('click', () => {
+      flip();
+      settingsSave();
+      settingsPanelRender();
+    });
+    row.append(panelEl('span', null, label), toggle);
+    return row;
+  }
 
   function panelEl(tag, className, text) {
     const el = document.createElement(tag);
@@ -2532,7 +2625,7 @@
 
     const head = panelEl('div', 'kte-panel-head');
     const mark = panelEl('div', 'kte-panel-mark');
-    mark.appendChild(pickerBuildTabIcon());
+    mark.appendChild(panelMarkIcon());
     const titles = panelEl('div', 'kte-panel-titles');
     titles.append(
       panelEl('div', 'kte-panel-title', 'Third-party emotes'),
@@ -2574,22 +2667,58 @@
       : 'BTTV serves no still frames, so its animated emotes always move.';
     card.appendChild(panelGroup('Animated emotes', motionRow, panelEl('div', 'kte-panel-note', motionNote)));
 
-    const acRow = panelEl('div', 'kte-switch-row');
-    const acSwitch = panelEl('button', 'kte-switch');
-    acSwitch.type = 'button';
-    acSwitch.setAttribute('role', 'switch');
-    acSwitch.setAttribute('aria-label', 'Suggest emotes while typing');
-    acSwitch.setAttribute('aria-checked', String(store.autocomplete));
-    acSwitch.addEventListener('click', () => {
-      store.autocomplete = !store.autocomplete;
-      settingsSave();
-      if (!store.autocomplete) acHide();
+    const sizeRow = panelEl('div', 'kte-panel-chips');
+    for (const size of Object.keys(EMOTE_SIZES)) {
+      sizeRow.appendChild(panelChip(SIZE_LABELS[size], store.size === size, () => {
+        store.size = size;
+        settingsSave();
+        applyEmoteSize();
+        hideTooltip(); // anchored to an emote that just changed size
+        settingsPanelRender();
+      }));
+    }
+    card.appendChild(panelGroup('Emote size in chat', sizeRow));
+
+    const switches = panelEl('div', 'kte-switches');
+    switches.append(
+      panelSwitch('Suggest emotes while typing', store.autocomplete, () => {
+        store.autocomplete = !store.autocomplete;
+        if (!store.autocomplete) acHide();
+      }),
+      panelSwitch('Large preview on hover', store.preview, () => {
+        store.preview = !store.preview;
+      }),
+    );
+    card.appendChild(panelGroup('Options', switches));
+
+    const used = usageLoad().size;
+    const clearRow = panelEl('div', 'kte-panel-chips');
+    clearRow.style.gridTemplateColumns = panelConfirmClear ? 'repeat(2, minmax(0, 1fr))' : '1fr';
+    const clear = panelChip(panelConfirmClear ? 'Confirm clear' : 'Clear recently used', panelConfirmClear, () => {
+      if (!panelConfirmClear) {
+        panelConfirmClear = true;
+        settingsPanelRender();
+        return;
+      }
+      panelConfirmClear = false;
+      usageClear();
+      pickerRefreshIfBuilt();
+      acRefreshOpen();
       settingsPanelRender();
     });
-    acRow.append(panelEl('span', null, 'Suggest emotes while typing'), acSwitch);
-    const switches = panelEl('div', 'kte-switches');
-    switches.appendChild(acRow);
-    card.appendChild(panelGroup('Chat input', switches));
+    clear.classList.add('kte-chip-danger');
+    clear.disabled = !used;
+    clearRow.appendChild(clear);
+    if (panelConfirmClear) {
+      clearRow.appendChild(panelChip('Cancel', false, () => {
+        panelConfirmClear = false;
+        settingsPanelRender();
+      }));
+    }
+    const usedNote = used
+      ? `${used} emote${used === 1 ? '' : 's'} remembered for the picker's Recently used section and the autocomplete ranking. Favourites are kept.`
+      : 'Nothing remembered yet. Emotes you insert show up in the picker\'s Recently used section.';
+    card.appendChild(panelGroup('Recently used', panelEl('div', 'kte-panel-note', usedNote), clearRow));
   }
 
   // Escape closes the panel, swallowed so the same press can't also close
@@ -2622,6 +2751,7 @@
   }
 
   function settingsPanelClose() {
+    panelConfirmClear = false;
     panelBackdrop?.remove();
     panelBackdrop = null;
     document.removeEventListener('keydown', settingsPanelKeydown, true);
@@ -3960,6 +4090,8 @@
     hideEmoteMenu();
     settingsPanelClose();
   });
+
+  applyEmoteSize();
 
   // Not every manager has a menu (Safari's Userscripts extension doesn't); the
   // picker's settings row opens the same panel there.
