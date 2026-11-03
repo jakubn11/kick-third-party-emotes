@@ -976,10 +976,6 @@
       cursor: progress;
       opacity: .68;
     }
-    /* Opens the settings panel; pushed to the far end of the chip row. */
-    .kte-picker-settings .kte-chip-panel {
-      margin-left: auto;
-    }
 
     /* Settings panel — the family settings card. Values follow
        kick-quality-saver's .kqs-card and kick-fullscreen-chat's
@@ -1024,6 +1020,12 @@
     /* A centred card, so it rises with kick-quality-saver's scale too. */
     @keyframes kte-panel-rise {
       from { opacity: 0; transform: translateY(8px) scale(.97); }
+    }
+    /* The card scrolls rather than squeezing its sections: WebKit lets the
+       children of a scrolling flex column shrink below their content, which
+       pushed the last group's button out through its bottom edge in Safari. */
+    #kte-panel > * {
+      flex-shrink: 0;
     }
     #kte-panel :focus-visible {
       outline: 2px solid rgba(34,197,94,.65);
@@ -2531,9 +2533,9 @@
   }
 
   // ── Settings panel ───────────────────────────────────────────────────────
-  // Everything in kte_v2_settings in one modal card. Opened from the picker's
-  // settings row and the userscript manager's menu; every change applies at
-  // once, and the card re-renders from the store after each one.
+  // Everything in kte_v2_settings in one modal card. Opened from the row in
+  // Kick's chat settings menu and the userscript manager's menu; every change
+  // applies at once, and the card re-renders from the store after each one.
 
   let panelBackdrop = null;
   // Clearing recents takes two clicks; this is the armed state in between.
@@ -3350,11 +3352,6 @@
       row.appendChild(chip);
     }
 
-    const more = pickerBuildChip('Settings', 'All emote settings');
-    more.classList.add('kte-chip-panel');
-    more.addEventListener('click', settingsPanelOpen);
-    row.appendChild(more);
-
     return row;
   }
 
@@ -4131,7 +4128,7 @@
   applyEmoteSize();
 
   // Not every manager has a menu (Safari's Userscripts extension doesn't); the
-  // picker's settings row opens the same panel there.
+  // row in Kick's chat settings menu opens the same panel there.
   if (typeof GM_registerMenuCommand === 'function') {
     GM_registerMenuCommand('Emote settings', settingsPanelOpen);
   }

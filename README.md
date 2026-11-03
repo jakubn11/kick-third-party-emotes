@@ -100,7 +100,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 
 **Favourites:** starred emotes get a ★ marker wherever they appear, a **Favourites** section at the top of the picker (most recently starred first), and first place in the autocomplete ranking, ahead of your most-used emotes. Up to 100 are kept locally; starring a 101st drops the oldest.
 
-**Settings:** the 7TV+ picker tab opens with a row of chips that turn 7TV, BTTV and FFZ on or off. Changes apply straight away — already-rendered messages update in place. The row hides itself as soon as you scroll the grid and slides back when you scroll to the top, so it never covers emotes. Hidden providers are still fetched in the background so switching one back on is instant. The **Settings** chip at the end of the row opens the settings panel. So does **Third-party emotes** in Kick's chat settings menu (the gear beside **Chat**), and **Emote settings** in your userscript manager's menu where it has one:
+**Settings:** the 7TV+ picker tab opens with a row of chips that turn 7TV, BTTV and FFZ on or off. Changes apply straight away — already-rendered messages update in place. The row hides itself as soon as you scroll the grid and slides back when you scroll to the top, so it never covers emotes. Hidden providers are still fetched in the background so switching one back on is instant. Everything else is in the settings panel: open **Third-party emotes** in Kick's chat settings menu (the gear beside **Chat**), or **Emote settings** in your userscript manager's menu where it has one:
 
 - **Providers** — the same switches as the chips.
 - **Global emotes** — each provider's global set on or off. Turn them off to keep only the streamer's own emotes.

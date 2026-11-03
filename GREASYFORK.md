@@ -37,7 +37,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Enter | Insert the highlighted emote, or send the message if nothing is highlighted |
 | Esc | Close autocomplete |
 
-Open Kick's emote picker and choose the **7TV+** tab to browse, search and toggle providers; its **Settings** chip opens the settings panel, which is also under **Third-party emotes** in Kick's chat settings menu (the gear beside **Chat**) and **Emote settings** in your userscript manager's menu. Right-click any third-party emote for the context menu.
+Open Kick's emote picker and choose the **7TV+** tab to browse, search and toggle providers; the settings panel is under **Third-party emotes** in Kick's chat settings menu (the gear beside **Chat**) and **Emote settings** in your userscript manager's menu. Right-click any third-party emote for the context menu.
 
 ## Privacy & permissions
 
