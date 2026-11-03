@@ -27,3 +27,17 @@ check('an inherited key is not a size', settingsFromRecord({ size: 'toString' })
 
 var proto = settingsFromRecord(JSON.parse('{"__proto__": {"motion": "never"}, "providers": {"__proto__": {"BTTV": false}}}'));
 check('prototype keys are not read as settings', proto.motion === 'always' && proto.providers.BTTV === true);
+
+// pickerEmptyMessage: why the 7TV+ tab is empty.
+load(['pickerEmptyMessage']);
+var shownSet = new Set(PROVIDERS), globalsOn = new Set(PROVIDERS), emotesSettled = false;
+var providerEnabled = p => shownSet.has(p);
+var globalsEnabled = p => globalsOn.has(p);
+check('empty: a search says no match', pickerEmptyMessage('xyz') === 'No matching emotes');
+check('empty: still loading', pickerEmptyMessage('') === 'Emotes loading…');
+emotesSettled = true;
+check('empty: loaded, nothing anywhere', pickerEmptyMessage('') === 'No emotes for this channel');
+globalsOn.clear();
+check('empty: global sets off points at Settings', /global emotes are off/.test(pickerEmptyMessage('')));
+shownSet.clear();
+check('empty: every provider hidden', /Every provider is hidden/.test(pickerEmptyMessage('')));

@@ -275,22 +275,34 @@
   const USAGE_MAX_ENTRIES = 200;
 
   let usageMap = null; // code → { n: insert count, t: last-used timestamp }
-  let usageSaveQueued = false;
 
-  function usageLoad() {
-    if (usageMap) return usageMap;
-    usageMap = new Map();
+  // Usage, favourites and settings all follow one rule, because every open
+  // Kick tab writes the same keys: a change re-reads the stored copy, applies
+  // itself, and writes straight back. Saving this tab's in-memory copy instead
+  // would put back whatever another tab changed since — a cleared list, a
+  // star, a setting. Between writes, the `storage` listener (Cross-tab sync)
+  // keeps reads current.
+
+  // The stored map, or null when storage can't be read — then the caller
+  // keeps what it has rather than starting from empty.
+  function usageRead() {
     try {
+      const map = new Map();
       const raw = localStorage.getItem(USAGE_KEY);
       if (raw) {
         const { counts } = JSON.parse(raw);
         for (const [code, v] of Object.entries(counts ?? {})) {
           if (!isSafeTextToken(code, 100)) continue;
           if (typeof v?.[0] !== 'number' || typeof v?.[1] !== 'number') continue;
-          usageMap.set(code, { n: v[0], t: v[1] });
+          map.set(code, { n: v[0], t: v[1] });
         }
       }
-    } catch { /* corrupted record – start fresh */ }
+      return map;
+    } catch { return null; }
+  }
+
+  function usageLoad() {
+    if (!usageMap) usageMap = usageRead() ?? new Map();
     return usageMap;
   }
 
@@ -299,7 +311,7 @@
   }
 
   function usageBump(code) {
-    const map = usageLoad();
+    const map = usageMap = usageRead() ?? usageLoad();
     const cur = map.get(code) ?? { n: 0, t: 0 };
     cur.n++;
     cur.t = Date.now();
@@ -323,16 +335,11 @@
   }
 
   function usageSave() {
-    if (usageSaveQueued) return;
-    usageSaveQueued = true;
-    RIC(() => {
-      usageSaveQueued = false;
-      try {
-        const counts = {};
-        for (const [code, v] of usageLoad()) counts[code] = [v.n, v.t];
-        localStorage.setItem(USAGE_KEY, JSON.stringify({ ts: Date.now(), counts }));
-      } catch { /* quota exceeded – skip silently */ }
-    });
+    try {
+      const counts = {};
+      for (const [code, v] of usageLoad()) counts[code] = [v.n, v.t];
+      localStorage.setItem(USAGE_KEY, JSON.stringify({ ts: Date.now(), counts }));
+    } catch { /* quota exceeded – skip silently */ }
   }
 
   // ── Favourites ───────────────────────────────────────────────────────────
@@ -342,20 +349,24 @@
   const FAVS_MAX_ENTRIES = 100;
 
   let favSet = null; // insertion-ordered Set of codes, oldest first
-  let favSaveQueued = false;
 
-  function favLoad() {
-    if (favSet) return favSet;
-    favSet = new Set();
+  // The stored set, or null when storage can't be read (see usageRead).
+  function favRead() {
     try {
+      const set = new Set();
       const raw = localStorage.getItem(FAVS_KEY);
       if (raw) {
         const { codes } = JSON.parse(raw);
         for (const code of Array.isArray(codes) ? codes : []) {
-          if (isSafeTextToken(code, 100)) favSet.add(code);
+          if (isSafeTextToken(code, 100)) set.add(code);
         }
       }
-    } catch { /* corrupted record – start fresh */ }
+      return set;
+    } catch { return null; }
+  }
+
+  function favLoad() {
+    if (!favSet) favSet = favRead() ?? new Set();
     return favSet;
   }
 
@@ -369,7 +380,7 @@
   }
 
   function favToggle(code) {
-    const set = favLoad();
+    const set = favSet = favRead() ?? favLoad();
     const added = !set.delete(code);
     if (added) {
       set.add(code);
@@ -381,14 +392,9 @@
   }
 
   function favSave() {
-    if (favSaveQueued) return;
-    favSaveQueued = true;
-    RIC(() => {
-      favSaveQueued = false;
-      try {
-        localStorage.setItem(FAVS_KEY, JSON.stringify({ ts: Date.now(), codes: [...favLoad()] }));
-      } catch { /* quota exceeded – skip silently */ }
-    });
+    try {
+      localStorage.setItem(FAVS_KEY, JSON.stringify({ ts: Date.now(), codes: [...favLoad()] }));
+    } catch { /* quota exceeded – skip silently */ }
   }
 
   // ── Settings ─────────────────────────────────────────────────────────────
@@ -406,7 +412,6 @@
   const EMOTE_SIZES = { small: 24, medium: 28, large: 36 };
 
   let settings = null;
-  let settingsSaveQueued = false;
 
   function settingsDefaults() {
     const defaults = {
@@ -435,15 +440,29 @@
     return next;
   }
 
-  function settingsLoad() {
-    if (settings) return settings;
-    let saved = null;
+  // The stored settings, or null when storage can't be read (see usageRead).
+  function settingsRead() {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw) saved = JSON.parse(raw);
-    } catch { /* corrupted record – fall back to defaults */ }
-    settings = settingsFromRecord(saved);
+      return settingsFromRecord(raw ? JSON.parse(raw) : null);
+    } catch { return null; }
+  }
+
+  function settingsLoad() {
+    if (!settings) settings = settingsRead() ?? settingsDefaults();
     return settings;
+  }
+
+  // The only way to change a setting: mutate the freshly read copy, then save.
+  function settingsUpdate(mutate) {
+    settings = settingsRead() ?? settingsLoad();
+    mutate(settings);
+    try {
+      const { providers, globals, autocomplete, motion, size, preview } = settings;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        ts: Date.now(), providers, globals, autocomplete, motion, size, preview,
+      }));
+    } catch { /* quota exceeded – skip silently */ }
   }
 
   // Anything outside the known set — a future provider, or the 'Other' bucket
@@ -461,20 +480,6 @@
   // reaches into a fullscreen chat.
   function applyEmoteSize() {
     document.documentElement.style.setProperty('--kte-emote-size', `${EMOTE_SIZES[settingsLoad().size]}px`);
-  }
-
-  function settingsSave() {
-    if (settingsSaveQueued) return;
-    settingsSaveQueued = true;
-    RIC(() => {
-      settingsSaveQueued = false;
-      try {
-        const { providers, globals, autocomplete, motion, size, preview } = settingsLoad();
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-          ts: Date.now(), providers, globals, autocomplete, motion, size, preview,
-        }));
-      } catch { /* quota exceeded – skip silently */ }
-    });
   }
 
   // ── State ────────────────────────────────────────────────────────────────
@@ -501,6 +506,9 @@
   let chatObserver = null;
   let initSeq = 0;
   let emoteVersion = 0;
+  // Whether this channel's first round of provider loads has finished, so an
+  // empty picker can say why instead of "loading" forever.
+  let emotesSettled = false;
   let visibleRefreshTimer = null;
   let pickerInjectTimer = null;
   let pickerDeferredRefreshTimer = null;
@@ -2565,8 +2573,7 @@
     toggle.setAttribute('aria-label', label);
     toggle.setAttribute('aria-checked', String(on));
     toggle.addEventListener('click', () => {
-      flip();
-      settingsSave();
+      settingsUpdate(flip);
       settingsPanelRender();
     });
     row.append(panelEl('span', null, label), toggle);
@@ -2598,8 +2605,7 @@
     const row = panelEl('div', 'kte-panel-chips');
     for (const provider of PROVIDERS) {
       const chip = panelChip(provider, isOn(provider), () => {
-        flip(provider);
-        settingsSave();
+        settingsUpdate(store => flip(store, provider));
         applyProviderSettings(); // hides the tooltip and re-renders chat
         pickerRefreshIfBuilt();
         settingsPanelRender();
@@ -2629,15 +2635,15 @@
     card.appendChild(head);
 
     card.appendChild(panelGroup('Providers',
-      panelProviderChips(providerEnabled, provider => {
-        store.providers[provider] = !providerEnabled(provider);
+      panelProviderChips(providerEnabled, (store, provider) => {
+        store.providers[provider] = !store.providers[provider];
       }),
       panelEl('div', 'kte-panel-note', 'Hiding a provider removes all of its emotes, from chat too.'),
     ));
 
     card.appendChild(panelGroup('Global emotes',
-      panelProviderChips(globalsEnabled, provider => {
-        store.globals[provider] = !globalsEnabled(provider);
+      panelProviderChips(globalsEnabled, (store, provider) => {
+        store.globals[provider] = !store.globals[provider];
       }),
       panelEl('div', 'kte-panel-note', 'Each provider\'s emotes for every channel. Turn them off to keep only the streamer\'s own set.'),
     ));
@@ -2645,8 +2651,7 @@
     const motionRow = panelEl('div', 'kte-panel-chips');
     for (const mode of MOTION_MODES) {
       motionRow.appendChild(panelChip(MOTION_LABELS[mode], store.motion === mode, () => {
-        store.motion = mode;
-        settingsSave();
+        settingsUpdate(store => { store.motion = mode; });
         rerenderEmotes();
         pickerRefreshIfBuilt();
         settingsPanelRender();
@@ -2660,8 +2665,7 @@
     const sizeRow = panelEl('div', 'kte-panel-chips');
     for (const size of Object.keys(EMOTE_SIZES)) {
       sizeRow.appendChild(panelChip(SIZE_LABELS[size], store.size === size, () => {
-        store.size = size;
-        settingsSave();
+        settingsUpdate(store => { store.size = size; });
         applyEmoteSize();
         hideTooltip(); // anchored to an emote that just changed size
         settingsPanelRender();
@@ -2671,12 +2675,12 @@
 
     const switches = panelEl('div', 'kte-switches');
     switches.append(
-      panelSwitch('Suggest emotes while typing', store.autocomplete, () => {
-        store.autocomplete = !store.autocomplete;
-        if (!store.autocomplete) acHide();
+      panelSwitch('Suggest emotes while typing', store.autocomplete, next => {
+        next.autocomplete = !next.autocomplete;
+        if (!next.autocomplete) acHide();
       }),
-      panelSwitch('Large preview on hover', store.preview, () => {
-        store.preview = !store.preview;
+      panelSwitch('Large preview on hover', store.preview, next => {
+        next.preview = !next.preview;
       }),
     );
     card.appendChild(panelGroup('Options', switches));
@@ -3334,9 +3338,7 @@
       chip.dataset.provider = provider;
       pickerChipState(chip, providerEnabled(provider));
       chip.addEventListener('click', () => {
-        const store = settingsLoad();
-        store.providers[provider] = !providerEnabled(provider);
-        settingsSave();
+        settingsUpdate(store => { store.providers[provider] = !store.providers[provider]; });
         applyProviderSettings(); // hides the tooltip and re-renders chat
         // The section list changes, so the tab content has to be rebuilt.
         const panel = document.getElementById('chat-emotes-picker-panel');
@@ -3348,7 +3350,7 @@
       row.appendChild(chip);
     }
 
-    const more = pickerBuildChip('Settings', 'Global emotes, animation and autocomplete');
+    const more = pickerBuildChip('Settings', 'All emote settings');
     more.classList.add('kte-chip-panel');
     more.addEventListener('click', settingsPanelOpen);
     row.appendChild(more);
@@ -3430,16 +3432,23 @@
     if (!any) {
       const msg = document.createElement('p');
       msg.className = 'kte-picker-empty';
-      msg.textContent = query
-        ? 'No matching emotes'
-        : (PROVIDERS.every(provider => !providerEnabled(provider))
-          ? 'Every provider is hidden — turn one back on above'
-          : 'Emotes loading…');
+      msg.textContent = pickerEmptyMessage(query);
       wrap.appendChild(msg);
     } else {
       wrap.appendChild(sectionsContainer);
     }
     return wrap;
+  }
+
+  function pickerEmptyMessage(query) {
+    if (query) return 'No matching emotes';
+    const shown = PROVIDERS.filter(provider => providerEnabled(provider));
+    if (!shown.length) return 'Every provider is hidden — turn one back on above';
+    if (!emotesSettled) return 'Emotes loading…';
+    if (shown.some(provider => !globalsEnabled(provider))) {
+      return 'No channel emotes here, and global emotes are off — turn them back on in Settings';
+    }
+    return 'No emotes for this channel';
   }
 
   function pickerCommonAncestor(a, b, limit) {
@@ -3886,6 +3895,7 @@
   async function init() {
     const seq = ++initSeq;
     const slug = currentChannelSlug();
+    emotesSettled = false;
     loadedProviders = new Map();
     activeLoaders = [];
     preconnectEmoteHosts();
@@ -3952,6 +3962,7 @@
 
     await Promise.allSettled(promises);
     if (seq !== initSeq || currentChannelSlug() !== slug) return;
+    emotesSettled = true;
 
     log(`Ready – ${emoteMap.size} emotes for /${channelSlug}`);
 
@@ -3995,10 +4006,46 @@
     if (failedLoaders.length) retryFailedLoaders(failedLoaders, 0);
   }
 
+  // ── Cross-tab sync ───────────────────────────────────────────────────────
+  // `storage` fires only in the other tabs, after one of them wrote. Take the
+  // new value and repaint whatever shows it, the same way a local change does.
+  // Chat re-renders only when something it draws from changed: a size or
+  // preview change needs no re-render, and every insert in another tab
+  // rewrites the usage key.
+
+  function settingsRenderKey(s) {
+    return JSON.stringify([s.providers, s.globals, s.motion]);
+  }
+
+  function onStorageSync(e) {
+    if (e.storageArea !== localStorage) return;
+    const all = e.key === null; // another tab cleared localStorage
+    if (all || e.key === SETTINGS_KEY) {
+      const before = settingsRenderKey(settingsLoad());
+      settings = settingsRead() ?? settings;
+      applyEmoteSize();
+      if (!settings.autocomplete) acHide();
+      if (settingsRenderKey(settings) !== before) {
+        applyProviderSettings(); // rebuilds emoteMap and re-renders chat
+        pickerRefreshIfBuilt();
+      }
+    }
+    if (all || e.key === USAGE_KEY || e.key === FAVS_KEY) {
+      if (all || e.key === USAGE_KEY) usageMap = usageRead() ?? usageMap;
+      if (all || e.key === FAVS_KEY) favSet = favRead() ?? favSet;
+      pickerRefreshIfBuilt();
+      acRefreshOpen();
+    }
+    settingsPanelRender();
+  }
+
+  window.addEventListener('storage', onStorageSync);
+
   // ── SPA Routing ──────────────────────────────────────────────────────────
 
   function handleNavigation() {
     initSeq++;
+    emotesSettled = false;
     lastNavigationAt = Date.now();
     chatObserver?.disconnect(); chatObserver = null;
     if (visibleRefreshTimer) {
