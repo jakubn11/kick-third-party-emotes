@@ -87,3 +87,4 @@ The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the
 | 7TV+ tab missing | Close and reopen Kick's native emote picker after the `[KickEmotes] Ready` log appears. |
 | Console says `[KickEmotes] … is standing down` | Two copies of the script are installed — typically a manual copy next to the Greasy Fork or auto-updating one, or two managers both enabled for kick.com. The second copy stopped itself and the first is running normally; remove the duplicate. |
 | Images broken after Kick update | Kick may have changed their chat DOM class names. Open an issue with the new class names found in the browser inspector. |
+| The rows in the settings panel sit further from the right edge than the left | Update to **2.14.1+** — the scrollbar took its width from the right side of the content whenever the panel had to scroll. |

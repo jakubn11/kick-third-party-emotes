@@ -4,6 +4,10 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
+**2.14.1** — even margins in the settings panel
+
+- **Contents stay centred when the panel scrolls:** on screens too short to fit the whole panel, the scrollbar pushed its contents to the left. The gaps on both sides now match whether the panel scrolls or not.
+
 **2.14.0** — your recently used emotes in the settings panel
 
 - **See what you'd clear:** the panel's *Recently used* section now shows the same emotes as the picker's *Recently used* row (up to 16, newest first, ★ on favourites). Hover one for its usual preview.
