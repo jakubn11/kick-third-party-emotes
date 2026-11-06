@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.1] - 2026-11-06
+
+### Fixed
+- **The settings panel's contents sat to the left whenever the panel had to scroll.** The panel is ~765px tall and caps at `76vh`, so it scrolls on anything shorter than about 1007px. Its 8px scrollbar then took its width from the right side of the content only, leaving 17px of inset on the left and 25px on the right. The panel now always reserves the transparent scrollbar track and takes its width back out of the right padding, so both insets are 17px and the content is 346px wide whether the panel scrolls or not. Measured in WebKit at 1440×600, 1440×900 and 1920×1400. Browsers without `::-webkit-scrollbar` (Firefox) keep the old behaviour, since their scrollbar's width isn't known.
+
 ## [2.14.0] - 2026-11-03
 
 ### Added

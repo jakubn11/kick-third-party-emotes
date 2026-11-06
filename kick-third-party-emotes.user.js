@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.14.0
+// @version      2.14.1
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.14.0';
+  const VERSION = '2.14.1';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -1044,6 +1044,20 @@
       border: 2px solid transparent;
       background-clip: padding-box;
       border-radius: 999px;
+    }
+    /* That 8px track comes out of the content box, on the right only, so a
+       card tall enough to scroll sat 8px off-centre (17px of inset on the
+       left, 25px on the right). Always reserving the track and taking its
+       width back out of the right padding keeps both insets equal, and keeps
+       the content the same width whether the card scrolls or not. The track
+       is transparent and has no thumb until there is something to scroll, so
+       a card that fits shows nothing. Only where ::-webkit-scrollbar sets the
+       width: elsewhere the scrollbar is the platform's, of unknown size. */
+    @supports selector(::-webkit-scrollbar) {
+      #kte-panel {
+        overflow-y: scroll;
+        padding-right: calc(1rem - 8px);
+      }
     }
     /* Header: icon mark, title, close — kick-fullscreen-chat's header. */
     .kte-panel-head {
