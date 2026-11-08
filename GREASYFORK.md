@@ -4,6 +4,12 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
+**2.14.4** — a tidier 7TV+ picker tab
+
+- **Emote rows reach the right edge:** each row used to stop short, leaving an empty strip on the right. The emotes now spread across the full width, as in Kick's own emote tabs.
+- **Provider chips fill their row:** 7TV, BTTV and FFZ split the filter at the top of the tab into three equal buttons instead of bunching at the left.
+- **The filter blends in:** it sits on a faint raised surface instead of a near-black block, and a chip you tab to keeps its provider colour.
+
 **2.14.1** — even margins in the settings panel
 
 - **Contents stay centred when the panel scrolls:** on screens too short to fit the whole panel, the scrollbar pushed its contents to the left. The gaps on both sides now match whether the panel scrolls or not.
