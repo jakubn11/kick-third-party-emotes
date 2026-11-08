@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.14.3
+// @version      2.14.4
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.14.3';
+  const VERSION = '2.14.4';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -862,11 +862,13 @@
       /* One inset on every side, and a corner radius of the chip's 8px plus
          that inset, so the chips' corners sit concentric with the card's. */
       padding: 6px;
-      border: 1px solid rgba(255,255,255,.1);
+      /* The settings panel's inset-group surface: a faint lift off Kick's
+         panel, not the opaque #101013 of the floating popups, which read as a
+         black hole inside the grey picker. It hides as soon as the grid
+         scrolls, so nothing ever has to stay legible through it. */
+      border: 1px solid rgba(255,255,255,.06);
       border-radius: 14px;
-      background: #101013;
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.026);
       transition: opacity .12s ease, transform .12s ease;
     }
     /* Out of the way while the grid is scrolled, so it never sits on emotes. */

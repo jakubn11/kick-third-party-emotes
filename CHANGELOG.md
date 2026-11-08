@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.4] - 2026-11-08
+
+### Changed
+- **The picker's provider filter blends into the picker.** Its card used the near-black background of the floating popups, which looked like a dark hole on Kick's grey emote panel. It now has the same faint raised surface and softer border as the groups in the settings panel. The card still hides as soon as the emote grid scrolls, so emotes never show through it.
+
 ## [2.14.3] - 2026-11-08
 
 ### Changed
