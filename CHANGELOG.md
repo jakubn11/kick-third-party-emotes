@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.2] - 2026-11-08
+
+### Fixed
+- **The emote picker's rows reach the right edge.** Each emote button was a fixed 38px, so whatever width a row couldn't fit another emote into (up to a whole slot) was left as a gap on the right. The columns now stretch to share the full width, the way Kick's own emote tabs do, and as many fit as before. Measured in headless Chrome at 300, 340, 360 and 397px panel widths: 0px left over on the right at each.
+
 ## [2.14.1] - 2026-11-06
 
 ### Fixed

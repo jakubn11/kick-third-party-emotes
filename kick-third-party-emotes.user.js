@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.14.1
+// @version      2.14.2
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.14.1';
+  const VERSION = '2.14.2';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -766,16 +766,18 @@
       line-height: 1.5;
       padding-top: 2px;
     }
+    /* As many 38px columns as fit, stretched to share the row's width the way
+       Kick's own picker grid does. Fixed-width wrapping items left the row's
+       remainder (up to a whole slot) as a gap on the right. */
     .kte-picker-grid {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
       gap: 2px;
     }
     .kte-picker-btn {
       position: relative;
-      width: 38px;
+      min-width: 0;
       height: 38px;
-      flex: 0 0 38px;
       border: 0;
       border-radius: 4px;
       padding: 3px;
