@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.3] - 2026-11-08
+
+### Changed
+- **The picker's provider filter fills its card.** The 7TV, BTTV and FFZ chips now split the row into three equal columns, like the chips in the settings panel, instead of sitting at the left with empty space to their right. The card's inset is the same 6px on every side, and its corners stay concentric with the chips'.
+
+### Fixed
+- **A keyboard-focused provider chip keeps its brand colour.** Tabbing onto an enabled 7TV, BTTV or FFZ chip turned it the generic green; it now gets the same brighter brand tint as on hover.
+
 ## [2.14.2] - 2026-11-08
 
 ### Fixed

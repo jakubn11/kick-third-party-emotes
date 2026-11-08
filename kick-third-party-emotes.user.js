@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.14.2
+// @version      2.14.3
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.14.2';
+  const VERSION = '2.14.3';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -849,16 +849,19 @@
       position: sticky;
       top: 0;
       z-index: 2;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
+      /* The provider chips share the row's width evenly, like the settings
+         panel's chip grid, rather than bunching at the left of a wide card. */
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
       /* A rounded card rather than a full-bleed bar. It auto-hides once the grid
          scrolls, so it no longer needs the negative margin that made it cover
          #kte-picker-content's top padding. The bottom margin keeps the first
          section header clear of it. */
       margin: 0 0 12px;
-      padding: 8px 12px;
+      /* One inset on every side, and a corner radius of the chip's 8px plus
+         that inset, so the chips' corners sit concentric with the card's. */
+      padding: 6px;
       border: 1px solid rgba(255,255,255,.1);
       border-radius: 14px;
       background: #101013;
@@ -871,6 +874,16 @@
       opacity: 0;
       transform: translateY(-100%);
       pointer-events: none;
+    }
+    .kte-picker-settings .kte-chip {
+      box-sizing: border-box;
+      min-width: 0;
+      min-height: 30px;
+      padding: 0 .4rem;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     /* The family chip (kick-fullscreen-chat's .kfc-settings-chip,
        kick-quality-saver's .kqs-chip): neutral at rest, green tint when on. */
@@ -906,19 +919,22 @@
     .kte-chip[data-on="1"][data-provider="7TV"] {
       background: rgba(77,166,255,.14); border-color: rgba(77,166,255,.5); color: #4da6ff;
     }
-    .kte-chip[data-on="1"][data-provider="7TV"]:hover {
+    .kte-chip[data-on="1"][data-provider="7TV"]:hover,
+    .kte-chip[data-on="1"][data-provider="7TV"]:focus-visible {
       background: rgba(77,166,255,.2); border-color: rgba(77,166,255,.6);
     }
     .kte-chip[data-on="1"][data-provider="BTTV"] {
       background: rgba(255,107,107,.14); border-color: rgba(255,107,107,.5); color: #ff6b6b;
     }
-    .kte-chip[data-on="1"][data-provider="BTTV"]:hover {
+    .kte-chip[data-on="1"][data-provider="BTTV"]:hover,
+    .kte-chip[data-on="1"][data-provider="BTTV"]:focus-visible {
       background: rgba(255,107,107,.2); border-color: rgba(255,107,107,.6);
     }
     .kte-chip[data-on="1"][data-provider="FFZ"] {
       background: rgba(192,132,252,.14); border-color: rgba(192,132,252,.5); color: #c084fc;
     }
-    .kte-chip[data-on="1"][data-provider="FFZ"]:hover {
+    .kte-chip[data-on="1"][data-provider="FFZ"]:hover,
+    .kte-chip[data-on="1"][data-provider="FFZ"]:focus-visible {
       background: rgba(192,132,252,.2); border-color: rgba(192,132,252,.6);
     }
     .kte-picker-empty {
