@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.1] - 2026-11-10
+
+### Fixed
+- **Expanded picker groups stay expanded.** Starring or unstarring an emote, a channel's emotes refreshing in the background, or inserting an emote in another Kick tab rebuilt the 7TV+ tab and folded every group back to 40, leaving the view scrolled somewhere unrelated. Each group now keeps however many emotes you had loaded. A new channel or a new search still starts every group at 40.
+
 ## [2.15.0] - 2026-11-10
 
 ### Added

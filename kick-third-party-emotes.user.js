@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.0
+// @version      2.15.1
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.0';
+  const VERSION = '2.15.1';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -3284,13 +3284,38 @@
     }
   }
 
+  // How many emotes each section showed, by label, so a rebuild (a star, a
+  // provider refresh, another tab's insert) doesn't fold expanded groups back.
+  function pickerShownCounts(content) {
+    const counts = new Map();
+    content?.querySelectorAll('.kte-picker-section[data-kte-shown]').forEach(section => {
+      const shown = Number(section.dataset.kteShown);
+      if (section.dataset.kteLabel && Number.isInteger(shown)) counts.set(section.dataset.kteLabel, shown);
+    });
+    return counts;
+  }
+
+  // A remembered count, clamped to what the section has now. Never below the
+  // first page: the group may have grown since, and that page is the floor.
+  function pickerRestoredShown(saved, total) {
+    const base = Math.min(PICKER_PROVIDER_LIMIT, total);
+    return Number.isInteger(saved) && saved > base ? Math.min(saved, total) : base;
+  }
+
   // Count line, Load more and Show less for a section that starts trimmed to
-  // PICKER_PROVIDER_LIMIT. Built right after the first append, so the grid's
-  // current child count is what Show less trims back to (pickerBuildButton
-  // skips emotes whose URL fails safeUrl, so it can differ from the limit).
-  function pickerBuildFooter(grid, emotes, shown) {
-    const baseShown = shown;
+  // PICKER_PROVIDER_LIMIT. Built right after the first page is appended, so
+  // the grid's current child count is what Show less trims back to
+  // (pickerBuildButton skips emotes whose URL fails safeUrl, so it can differ
+  // from the limit). Anything past the first page up to `restoreTo` is added
+  // here, at once: it is a group the user had already loaded.
+  function pickerBuildFooter(section, grid, emotes, restoreTo) {
+    const baseShown = PICKER_PROVIDER_LIMIT;
     const baseCount = grid.children.length;
+    let shown = baseShown;
+    if (restoreTo > shown) {
+      pickerAppendButtons(grid, emotes, shown, restoreTo);
+      shown = restoreTo;
+    }
 
     const footer = document.createElement('div');
     footer.className = 'kte-picker-footer';
@@ -3311,6 +3336,7 @@
 
     function sync() {
       limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
+      section.dataset.kteShown = String(shown);
       more.hidden = shown >= emotes.length;
       less.hidden = shown <= baseShown;
     }
@@ -3434,9 +3460,10 @@
     return grid;
   }
 
-  function pickerBuildSection(label, emotes) {
+  function pickerBuildSection(label, emotes, savedShown) {
     const section = document.createElement('div');
     section.className = 'kte-picker-section grid gap-2';
+    section.dataset.kteLabel = label;
 
     const hdr = document.createElement('span');
     hdr.className = 'kte-picker-provider text-xs font-medium text-neutral-400';
@@ -3449,7 +3476,7 @@
     section.appendChild(grid);
 
     if (shown < emotes.length) {
-      section.appendChild(pickerBuildFooter(grid, emotes, shown));
+      section.appendChild(pickerBuildFooter(section, grid, emotes, pickerRestoredShown(savedShown, emotes.length)));
     }
     return section;
   }
@@ -3548,7 +3575,7 @@
     if (content) content._kteSettingsObserver = null;
   }
 
-  function pickerBuildContent(query) {
+  function pickerBuildContent(query, savedShown = new Map()) {
     const wrap = document.createElement('div');
     wrap.id = 'kte-picker-content';
     const sentinel = document.createElement('div');
@@ -3579,20 +3606,20 @@
     const favourites = pickerFavouriteEmotes(lower);
     if (favourites.length) {
       any = true;
-      sectionsContainer.appendChild(pickerBuildSection('Favourites', favourites));
+      sectionsContainer.appendChild(pickerBuildSection('Favourites', favourites, savedShown.get('Favourites')));
     }
 
     const recent = pickerRecentEmotes(lower);
     if (recent.length) {
       any = true;
-      sectionsContainer.appendChild(pickerBuildSection('Recently used', recent));
+      sectionsContainer.appendChild(pickerBuildSection('Recently used', recent, savedShown.get('Recently used')));
     }
 
     for (const [source, emotes] of orderedGroups) {
       if (!emotes.length) continue;
       any = true;
       emotes.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
-      sectionsContainer.appendChild(pickerBuildSection(source, emotes));
+      sectionsContainer.appendChild(pickerBuildSection(source, emotes, savedShown.get(source)));
     }
 
     if (!any) {
@@ -3684,8 +3711,13 @@
     const tab = panel.querySelector('#kte-picker-tab');
     const active = tab?.getAttribute('data-active') === 'true';
 
-    const content = pickerBuildContent(parts.searchInput?.value ?? '');
+    const query = parts.searchInput?.value ?? '';
+    // Expanded groups survive a rebuild of the same view; a new channel or
+    // search starts every group at its first page again.
+    const sameView = keepScroll && oldContent.dataset.kteQuery === query.trim().toLowerCase();
+    const content = pickerBuildContent(query, sameView ? pickerShownCounts(oldContent) : undefined);
     content.dataset.kteChannel = channelSlug ?? '';
+    content.dataset.kteQuery = query.trim().toLowerCase();
     content.dataset.kteEmoteVersion = String(emoteVersion);
     content.hidden = !active;
 
