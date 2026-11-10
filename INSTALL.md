@@ -89,3 +89,6 @@ The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the
 | Images broken after Kick update | Kick may have changed their chat DOM class names. Open an issue with the new class names found in the browser inspector. |
 | The rows in the settings panel sit further from the right edge than the left | Update to **2.14.1+** — the scrollbar took its width from the right side of the content whenever the panel had to scroll. |
 | The emotes in the **7TV+** tab leave an empty strip on the right | Update to **2.14.2+** — each emote had a fixed width, so whatever width a row couldn't fit another emote into was left over on the right. The columns now stretch to fill the row. |
+| A provider group in the **7TV+** tab folds back to 40 emotes after starring one | Update to **2.15.1+** — starring an emote, a background refresh or an emote sent from another Kick tab rebuilt the tab from scratch. Groups now keep however many emotes you had loaded. |
+| The grey line under the emote picker's tabs stops before the **7TV+** tab | Update to **2.15.3+** — Kick draws that line to the strip's visible width, so it ended early whenever the strip scrolled sideways. |
+| Kick's emote picker closes when you pick an item from an emote's right-click menu | Update to **2.15.5+** — the menu sits outside the picker, and Kick closed the picker on any click outside it. |
