@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.3
+// @version      2.15.4
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.3';
+  const VERSION = '2.15.4';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -3672,7 +3672,7 @@
     for (const [source, emotes] of orderedGroups) {
       if (!emotes.length) continue;
       any = true;
-      emotes.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
+      emotes.sort(pickerCompareEmotes(lower));
       sectionsContainer.appendChild(pickerBuildSection(source, emotes, savedShown.get(source)));
     }
 
@@ -3685,6 +3685,20 @@
       wrap.appendChild(sectionsContainer);
     }
     return wrap;
+  }
+
+  // Provider groups are alphabetical. Under a search, an exact match comes
+  // first, then names that start with the query, then the rest — the same
+  // prefix-first order autocomplete uses, so `pog` puts POGGERS ahead of
+  // AYAYApog.
+  function pickerCompareEmotes(lowerQuery) {
+    const rank = code => {
+      if (!lowerQuery) return 0;
+      const lower = code.toLowerCase();
+      return lower === lowerQuery ? 0 : lower.startsWith(lowerQuery) ? 1 : 2;
+    };
+    return (a, b) => rank(a.code) - rank(b.code)
+      || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0);
   }
 
   function pickerEmptyMessage(query) {
@@ -3944,7 +3958,7 @@
     } else {
       tab.appendChild(icon);
       const underline = document.createElement('div');
-      underline.className = 'z-common h-0.5 w-full transition-colors duration-300 group-data-[active=true]:bg-green-500! betterhover:group-hover:bg-[#475054]';
+      underline.className = 'z-common h-0.5 w-full transition-colors duration-300 group-data-[active=true]:bg-kick-voltGreen-150! betterhover:group-hover:bg-[#475054]';
       tab.appendChild(underline);
     }
 

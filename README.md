@@ -112,7 +112,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 
 Your choices are stored locally in `kte_v2_settings`.
 
-**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. **Favourites** and **Recently used** sections appear above the provider groups. The picker starts with 40 matches per provider for performance, then offers **Load more** per provider; once a group is expanded, **Show less** folds it back to the first 40. Search narrows across all loaded emotes. Clicking an emote inserts its code into the chat input. Animated 7TV and FFZ emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets. With your system's **Reduce motion** setting on, they stay on the still frame.
+**Emote picker:** open Kick's native emote picker and choose the **7TV+** tab to browse animated third-party emotes. **Favourites** and **Recently used** sections appear above the provider groups. The picker starts with 40 matches per provider for performance, then offers **Load more** per provider; once a group is expanded, **Show less** folds it back to the first 40. Search narrows across all loaded emotes, listing names that start with your search first. Clicking an emote inserts its code into the chat input. Animated 7TV and FFZ emotes show their frozen first frame in the picker and start animating when you hover them — this keeps the page responsive when browsing large emote sets. With your system's **Reduce motion** setting on, they stay on the still frame.
 
 ## Troubleshooting
 

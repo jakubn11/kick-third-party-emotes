@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.4] - 2026-11-10
+
+### Changed
+- **Picker search puts the closest names first.** Within each provider, an exact match now comes first, then names that start with what you typed, then names that only contain it — the same order autocomplete uses. Searching `pog` lists `Pog` and `POGGERS` before `AYAYApog`. Without a search, groups stay alphabetical.
+
+### Fixed
+- **The 7TV+ tab's backup underline uses Kick's current green.** When the script can't copy one of Kick's tabs and builds its own, the active underline used a class Kick has since renamed (`bg-green-500` → `bg-kick-voltGreen-150`), so it could show no underline at all.
+
 ## [2.15.3] - 2026-11-10
 
 ### Fixed
