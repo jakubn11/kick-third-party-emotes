@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.5] - 2026-11-10
+
+### Fixed
+- **Using the right-click menu no longer closes Kick's emote picker.** The menu sits outside the picker, and Kick closes the picker on any click outside it, so choosing **Add to favourites** (or any other item) on a picker emote shut the picker. Clicks on the menu are now kept from reaching Kick, and the chat input keeps focus. Checked against a test page with the usual kinds of close-on-outside-click listeners: without the fix the click closes it, with the fix it stays open and the item still runs.
+
 ## [2.15.4] - 2026-11-10
 
 ### Changed

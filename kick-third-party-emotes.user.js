@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.4
+// @version      2.15.5
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.4';
+  const VERSION = '2.15.5';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2050,6 +2050,28 @@
     menuEl = null;
     document.removeEventListener('mousedown', emoteMenuDismiss, true);
     document.removeEventListener('keydown', emoteMenuKeydown, true);
+    for (const type of MENU_GUARD_EVENTS) window.removeEventListener(type, emoteMenuGuard, true);
+  }
+
+  // Kick's emote picker closes on any press outside it, and the menu lives in
+  // <body>, so clicking an item opened from the picker closed the picker.
+  // Presses on the menu are stopped in window capture, ahead of every document
+  // or element listener Kick has, and mousedown's default is cancelled so
+  // focus stays put and a focus-outside check can't fire either. That stops
+  // the click from reaching the item too, so the item's action runs from here.
+  const MENU_GUARD_EVENTS = ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'touchstart', 'touchend', 'click'];
+
+  function emoteMenuGuard(e) {
+    if (!menuEl?.contains(e.target)) return;
+    e.stopPropagation();
+    if (e.type === 'pointerdown' || e.type === 'mousedown') e.preventDefault();
+    if (e.type === 'click') {
+      const action = e.target.closest?.('.kte-menu-item')?._kteAction;
+      if (action) {
+        action();
+        hideEmoteMenu();
+      }
+    }
   }
 
   function emoteMenuDismiss(e) {
@@ -2123,7 +2145,7 @@
       btn.type = 'button';
       btn.className = 'kte-menu-item';
       btn.textContent = label;
-      btn.addEventListener('click', () => { action(); hideEmoteMenu(); });
+      btn._kteAction = action; // run by emoteMenuGuard
       menu.appendChild(btn);
     };
 
@@ -2142,6 +2164,7 @@
 
     document.addEventListener('mousedown', emoteMenuDismiss, true);
     document.addEventListener('keydown', emoteMenuKeydown, true);
+    for (const type of MENU_GUARD_EVENTS) window.addEventListener(type, emoteMenuGuard, true);
   }
 
   // Records an image's hover frame when it differs from what it shows at rest,
