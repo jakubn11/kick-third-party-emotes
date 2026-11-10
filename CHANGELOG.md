@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.3] - 2026-11-10
+
+### Fixed
+- **The grey line under the emote picker's tabs reaches the 7TV+ tab.** Kick draws that line to the visible width of the tab strip, so when the strip had to scroll sideways it ended before the last tab, which is ours. The line now runs under every tab, scrolled or not, and the tabs still shrink to fit before the strip starts scrolling. Checked against a copy of Kick's tab strip at 300px with 4, 6 and 10 tabs.
+
 ## [2.15.2] - 2026-11-10
 
 ### Fixed

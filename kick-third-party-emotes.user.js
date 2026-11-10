@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.2
+// @version      2.15.3
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.2';
+  const VERSION = '2.15.3';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -824,9 +824,7 @@
       text-shadow: 0 1px 2px rgba(0,0,0,.9);
     }
     /* Kick sizes the tab strip to fit exactly the tabs it ships with, so our
-       extra one tips its scroller (overflow-x: auto) into scrolling and it
-       paints a horizontal scrollbar directly under the icons — which reads as
-       a line under the native tabs that stops short of ours. Tighten the row
+       extra one tips its scroller (overflow-x: auto) into scrolling. Tighten the row
        instead of overflowing it: a slightly smaller gap, and tabs allowed to
        give up a few pixels down to a floor that still holds their 28px icon.
        With enough native tabs it will scroll anyway, exactly as Kick's own
@@ -835,8 +833,39 @@
       gap: 6px;
     }
     div:has(> #kte-picker-tab) > button {
-      flex-shrink: 1;
+      flex: 0 1 44px; /* Kick's size-11 */
+      width: auto;
       min-width: 32px;
+    }
+    @media (min-width: 1024px) {
+      div:has(> #kte-picker-tab) > button {
+        flex-basis: 40px; /* Kick's lg:size-10 */
+      }
+    }
+    /* The grey track under the tabs is Kick's own absolutely positioned
+       sibling of the row (left-0 right-3 bottom-1.5 h-0.5), so it spans the
+       scroller's visible width, not its content: once the strip scrolls, the
+       last tab — ours — sits past its end. Draw the track on the row instead,
+       and let the row grow to hold its tabs at their floor. The tabs' width
+       moves into flex-basis above for that: with a fixed width, max-content
+       would count each at full size and they would never shrink. The tab
+       underlines are z-index 1 flex items, so they still paint over it. */
+    div:has(> #kte-picker-tab) {
+      position: relative;
+      min-width: max-content;
+    }
+    div:has(> #kte-picker-tab)::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 6px;
+      height: 2px;
+      background: var(--color-surface-fg-decorative, rgba(255,255,255,.15));
+      pointer-events: none;
+    }
+    div:has(> #kte-picker-tab) + div.absolute[class~="h-0.5"] {
+      display: none;
     }
     /* Zero-height marker at the very top of the tab. While it is in view the
        tab is scrolled to the top; once it scrolls out, the settings row hides. */
