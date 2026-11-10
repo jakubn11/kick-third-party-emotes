@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.2] - 2026-11-10
+
+### Fixed
+- **Show less is the same size as Load more.** Load more's plus disc made it 32px tall while Show less was a 28px text button; Show less now has a matching minus disc, in grey so green stays on Load more. On a narrow picker the two buttons wrap together under the "Showing … of …" line instead of Show less dropping onto a line of its own. Measured at 280, 340 and 380px footer widths: both 32px, always on one row.
+
 ## [2.15.1] - 2026-11-10
 
 ### Fixed

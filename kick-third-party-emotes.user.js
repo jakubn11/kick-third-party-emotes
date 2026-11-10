@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.1
+// @version      2.15.2
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.1';
+  const VERSION = '2.15.2';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -958,6 +958,11 @@
       flex-wrap: wrap;
       margin: 4px 0 2px;
     }
+    .kte-picker-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .kte-picker-more {
       width: fit-content;
       border: 1px solid rgba(34,197,94,.5);
@@ -999,8 +1004,11 @@
       cursor: progress;
       opacity: .68;
     }
-    /* Show less is the family chip at rest: the green stays Load more's alone. */
+    /* Show less is the family chip at rest: the green stays Load more's alone.
+       Its minus disc matches Load more's plus disc, which is what sets both
+       buttons' height — keep the two in step. */
     .kte-picker-less {
+      width: fit-content;
       border: 1px solid rgba(255,255,255,.09);
       border-radius: 8px;
       background: rgba(255,255,255,.05);
@@ -1011,7 +1019,20 @@
       line-height: 1;
       padding: 7px 12px;
       margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
       transition: background .12s ease, border-color .12s ease, color .12s ease;
+    }
+    .kte-picker-less::before {
+      content: '';
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background:
+        linear-gradient(#101013, #101013) center / 9px 2px no-repeat,
+        rgba(255,255,255,.7);
+      flex: none;
     }
     .kte-picker-less:hover,
     .kte-picker-less:focus-visible {
@@ -3394,7 +3415,11 @@
       more.focus({ preventScroll: true });
     });
 
-    footer.append(limitEl, more, less);
+    // The pair wraps as one, under the count, when the picker is narrow.
+    const actions = document.createElement('div');
+    actions.className = 'kte-picker-actions';
+    actions.append(more, less);
+    footer.append(limitEl, actions);
     sync();
     return footer;
   }
