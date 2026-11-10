@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-11-10
+
+### Added
+- **Show less in the emote picker.** Once you've clicked **Load more** in a provider group, a **Show less** button appears beside it and folds the group back to its first 40 emotes, keeping the button in view so you aren't left scrolled into the next group. The emotes it hides are unloaded, so a long browse doesn't keep their images in memory.
+
 ## [2.14.4] - 2026-11-08
 
 ### Changed

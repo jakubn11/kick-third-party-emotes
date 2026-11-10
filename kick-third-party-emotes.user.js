@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.14.4
+// @version      2.15.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.14.4';
+  const VERSION = '2.15.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -998,6 +998,35 @@
     .kte-picker-more:disabled {
       cursor: progress;
       opacity: .68;
+    }
+    /* Show less is the family chip at rest: the green stays Load more's alone. */
+    .kte-picker-less {
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 8px;
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.85);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 7px 12px;
+      margin: 0;
+      transition: background .12s ease, border-color .12s ease, color .12s ease;
+    }
+    .kte-picker-less:hover,
+    .kte-picker-less:focus-visible {
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.16);
+      color: #fff;
+      outline: none;
+    }
+    .kte-picker-less:disabled {
+      cursor: progress;
+      opacity: .68;
+    }
+    .kte-picker-more[hidden],
+    .kte-picker-less[hidden] {
+      display: none;
     }
 
     /* Settings panel — the family settings card. Values follow
@@ -3255,24 +3284,49 @@
     }
   }
 
-  function pickerBuildLoadMore(grid, emotes, shown, limitEl) {
+  // Count line, Load more and Show less for a section that starts trimmed to
+  // PICKER_PROVIDER_LIMIT. Built right after the first append, so the grid's
+  // current child count is what Show less trims back to (pickerBuildButton
+  // skips emotes whose URL fails safeUrl, so it can differ from the limit).
+  function pickerBuildFooter(grid, emotes, shown) {
+    const baseShown = shown;
+    const baseCount = grid.children.length;
+
+    const footer = document.createElement('div');
+    footer.className = 'kte-picker-footer';
+    const limitEl = document.createElement('p');
+    limitEl.className = 'kte-picker-limit';
+
     const more = document.createElement('button');
     more.type = 'button';
     more.className = 'kte-picker-more';
     more.textContent = 'Load more';
     more.setAttribute('aria-label', 'Load more emotes');
 
+    const less = document.createElement('button');
+    less.type = 'button';
+    less.className = 'kte-picker-less';
+    less.textContent = 'Show less';
+    less.setAttribute('aria-label', 'Show fewer emotes');
+
+    function sync() {
+      limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
+      more.hidden = shown >= emotes.length;
+      less.hidden = shown <= baseShown;
+    }
+
     more.addEventListener('mousedown', e => e.preventDefault());
     more.addEventListener('click', () => {
       const next = Math.min(shown + PICKER_PROVIDER_LIMIT, emotes.length);
       more.disabled = true;
+      less.disabled = true;
       more.textContent = 'Loading...';
       const content = grid.closest('#kte-picker-content');
       if (content) content._kteAppendingMore = true;
 
       pickerAppendButtonsChunked(grid, emotes, shown, next, current => {
         shown = current;
-        limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
+        sync();
         pickerAttachImageLoader(content, content?._kteImageViewportFallback ?? content?._kteImageScrollTarget);
       }, () => {
         if (content) {
@@ -3284,16 +3338,39 @@
           }
         }
         if (!more.isConnected) return;
-        if (shown >= emotes.length) {
-          more.remove();
-        } else {
-          more.disabled = false;
-          more.textContent = 'Load more';
-        }
+        more.disabled = false;
+        less.disabled = false;
+        more.textContent = 'Load more';
+        sync();
       });
     });
 
-    return more;
+    less.addEventListener('mousedown', e => e.preventDefault());
+    less.addEventListener('click', () => {
+      const content = grid.closest('#kte-picker-content');
+      hideTooltip();
+      while (grid.children.length > baseCount) {
+        const btn = grid.lastElementChild;
+        const img = btn.querySelector('img');
+        if (img) {
+          content?._kteLoadObserver?.unobserve(img);
+          const idx = content?._kteImageQueue?.indexOf(img) ?? -1;
+          if (idx >= 0) content._kteImageQueue.splice(idx, 1);
+          pickerUnloadImg(img);
+        }
+        btn.remove();
+      }
+      shown = baseShown;
+      sync();
+      // The footer was just below a long grid; bring it back under the cursor
+      // instead of leaving the view scrolled into the next section.
+      footer.scrollIntoView({ block: 'nearest' });
+      more.focus({ preventScroll: true });
+    });
+
+    footer.append(limitEl, more, less);
+    sync();
+    return footer;
   }
 
   function pickerInsert(code) {
@@ -3372,14 +3449,7 @@
     section.appendChild(grid);
 
     if (shown < emotes.length) {
-      const footer = document.createElement('div');
-      footer.className = 'kte-picker-footer';
-      const limit = document.createElement('p');
-      limit.className = 'kte-picker-limit';
-      limit.textContent = `Showing ${shown} of ${emotes.length}`;
-      footer.appendChild(limit);
-      footer.appendChild(pickerBuildLoadMore(grid, emotes, shown, limit));
-      section.appendChild(footer);
+      section.appendChild(pickerBuildFooter(grid, emotes, shown));
     }
     return section;
   }
