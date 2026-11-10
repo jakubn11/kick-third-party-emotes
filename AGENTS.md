@@ -178,6 +178,10 @@ The gear beside **Chat** opens `#chat-settings-panel`, and only for signed-in vi
 
 The top level is found by its rows' `ChevronRight` icons (`svg[data-ds-icon="ChevronRight"]`); sub-pages (*Identity*, *Chat appearance*, *Muted users*) have a `ChevronLeft` back button and no such list. Kick re-renders the list on every visit, so the chat observer calls `chatSettingsInject()` whenever nodes land in the panel. Our row is a clone of a native one with its text and icon swapped, appended last, below *Pop out chat*. The menu is closed through its `Cross` button before the panel opens.
 
+### Emote picker
+
+`#chat-emotes-picker-panel` only exists where you can post: logged out, the emote button opens a sign-in dialog, and on a **followers-only** chat you don't follow the button isn't rendered at all (no `Smile` icon in `#chatroom-footer`). To inspect the picker, use a signed-in browser on a channel whose chat is open to you.
+
 When fixing Kick DOM breakage, prefer adding fallback selectors rather than replacing working selectors. After selector changes, manually test:
 
 - Existing visible chat messages
