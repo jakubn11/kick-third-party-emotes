@@ -40,7 +40,7 @@
 - Third-party emote tab inside Kick's native emote picker with **Favourites** and **Recently used** sections, search, animated emotes, and per-provider **Load more** / **Show less**
 - Stale-while-revalidate local cache per provider to show repeat-visit emotes immediately while refreshing in the background
 - Works with Kick's SPA routing — no page reload needed when switching channels
-- A clean dark glass popup style with a green accent, matching the sibling [kick-fullscreen-chat](https://github.com/jakubn11/kick-fullscreen-chat), [kick-quality-saver](https://github.com/jakubn11/kick-quality-saver), [kick-chat-utils](https://github.com/jakubn11/kick-chat-utils), and [kick-vod-resume](https://github.com/jakubn11/kick-vod-resume) userscripts' design language
+- A clean dark glass popup style with a green accent, matching the sibling [kick-fullscreen-chat](https://github.com/jakubn11/kick-fullscreen-chat), kick-quality-saver, kick-chat-utils, and kick-vod-resume userscripts' design language
 
 ## Requirements
 
