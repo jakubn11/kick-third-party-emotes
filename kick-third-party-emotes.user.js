@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.7
+// @version      2.15.8
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.7';
+  const VERSION = '2.15.8';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2078,8 +2078,13 @@
     if (!menuEl?.contains(e.target)) hideEmoteMenu();
   }
 
+  // Escape closes the menu, swallowed like the panel's so the same press can't
+  // also reach Kick, which would take the player out of theatre mode.
   function emoteMenuKeydown(e) {
-    if (e.key === 'Escape') hideEmoteMenu();
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    e.stopPropagation();
+    hideEmoteMenu();
   }
 
   // Derive the emote's public page from its (already allowlisted) CDN URL.

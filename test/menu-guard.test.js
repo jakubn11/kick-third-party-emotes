@@ -4,7 +4,7 @@
 
 var hidden = 0;
 var hideEmoteMenu = () => { hidden++; };
-load(['emoteMenuGuard']);
+load(['emoteMenuGuard', 'emoteMenuKeydown']);
 
 function node(inside, action) {
   var item = action ? { _kteAction: action } : null;
@@ -36,3 +36,18 @@ check('a press outside the menu is left alone', !outside.stopped && !outside.pre
 check('a click outside runs nothing', (fire('click', node(false, () => { ran++; })), ran === 1));
 menuEl = null;
 check('no menu open: nothing is stopped', !fire('click', item).stopped);
+
+// Escape closes the menu and stops there: Kick takes the player out of theatre
+// mode on the same key.
+function keydown(k) {
+  var e = { key: k, stopped: false, prevented: false,
+    stopPropagation() { this.stopped = true; }, preventDefault() { this.prevented = true; } };
+  emoteMenuKeydown(e);
+  return e;
+}
+hidden = 0;
+var esc = keydown('Escape');
+check('Escape closes the menu', hidden === 1);
+check('and is kept from Kick (stopped and prevented)', esc.stopped && esc.prevented);
+var other = keydown('a');
+check('other keys leave the menu open and pass through', hidden === 1 && !other.stopped && !other.prevented);

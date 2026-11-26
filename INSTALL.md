@@ -94,3 +94,4 @@ The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the
 | Kick's emote picker closes when you pick an item from an emote's right-click menu | Update to **2.15.5+** — the menu sits outside the picker, and Kick closed the picker on any click outside it. |
 | Pressing Enter on a highlighted suggestion sends what you typed instead of the emote | Update to **2.15.7+** — Kick's chat box saw Enter before the script did. |
 | Tab or Enter on the first word of a message leaves the word as typed | Update to **2.15.7+** — Kick's chat box reverted the replacement when the word was the only text in it. |
+| Pressing Esc to close an emote's right-click menu also leaves theatre mode | Update to **2.15.8+** — the key went on to Kick after closing the menu. |

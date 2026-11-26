@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.8] - 2026-11-26
+
+### Fixed
+- **Esc on the emote menu no longer leaves theatre mode.** Closing the right-click menu with Esc also passed the key on to Kick, which took the player out of theatre mode. The menu now keeps the key, as the settings panel already did. Checked live in theatre mode on Kick.
+
 ## [2.15.7] - 2026-11-26
 
 ### Fixed
