@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.7] - 2026-11-26
+
+### Fixed
+- **Picking a suggestion with Enter no longer sends the half-typed message.** Kick's chat box handles Enter in its own listener on the box itself, which ran before the script's, so with a suggestion highlighted, Enter could send what you had typed (`kek`) instead of inserting the emote (`KEKW`). The script now takes Tab, Enter, the arrow keys and Esc before Kick sees them, but only while the suggestions are open. Enter with nothing highlighted still sends. Reproduced on a stand-in chat box whose own Enter listener sends: 2.15.5 sent `hi lu`, and this version inserts `LuL`.
+- **Autocomplete works on the first word of a message.** Completing a word at the very start of the chat box (`lo` → `LOL`) left the word as typed, while still counting the emote as used. Kick's chat box reverts an edit that swaps out its whole text node, which replacing the only word did. The word's first character now stays put during the replacement and is swapped in a second step. Checked live on Kick with Tab and arrow keys: `lo`, `kek` and `KEK` at the start, and `hi lo` mid-message, all complete, and typing straight afterwards continues after the emote.
+
 ## [2.15.6] - 2026-11-26
 
 ### Fixed

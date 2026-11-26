@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.6
+// @version      2.15.7
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.6';
+  const VERSION = '2.15.7';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2531,19 +2531,23 @@
 
   function acCommit(code) {
     if (!acInput) return;
-    acInput.focus();
+    // The edit below fires input, and acOnInput can close the popup and clear
+    // acInput before this function is done with the editor.
+    const editor = acInput;
+    editor.focus();
 
-    if (acInput.tagName === 'TEXTAREA' || acInput.tagName === 'INPUT') {
-      const pos = acInput.selectionStart ?? acInput.value.length;
-      const head = acInput.value.slice(0, pos).replace(/\S+$/, '');
-      const tail = acInput.value.slice(pos);
-      acInput.value = head + code + ' ' + tail;
+    if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
+      const pos = editor.selectionStart ?? editor.value.length;
+      const head = editor.value.slice(0, pos).replace(/\S+$/, '');
+      const tail = editor.value.slice(pos);
+      editor.value = head + code + ' ' + tail;
       const newPos = head.length + code.length + 1;
-      acInput.setSelectionRange(newPos, newPos);
-      acInput.dispatchEvent(new Event('input', { bubbles: true }));
+      editor.setSelectionRange(newPos, newPos);
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
       // contenteditable — execCommand keeps Vue/React reactivity intact
       const sel = window.getSelection();
+      let keep = 0; // leading characters of the word left in place, see below
       if (sel?.rangeCount) {
         const range = sel.getRangeAt(0);
         const node = range.startContainer;
@@ -2551,19 +2555,53 @@
           const offset = range.startOffset;
           const wordStart = node.textContent.slice(0, offset).search(/\S+$/);
           if (wordStart >= 0) {
+            // Replacing all of a text node's text (a word that starts the
+            // message) swaps the node out, and Lexical, Kick's editor, puts
+            // the old one back: the word stayed as typed. Leave its first
+            // character in place so the node survives; acFixFirstChar swaps
+            // that one in a second edit.
+            if (wordStart === 0 && offset === node.textContent.length) keep = 1;
             const wr = document.createRange();
-            wr.setStart(node, wordStart);
+            wr.setStart(node, wordStart + keep);
             wr.setEnd(node, offset);
             sel.removeAllRanges();
             sel.addRange(wr);
           }
         }
       }
-      document.execCommand('insertText', false, code + ' ');
+      document.execCommand('insertText', false, code.slice(keep) + ' ');
+      if (keep) acFixFirstChar(editor, code);
     }
 
     usageBump(code);
     acHide();
+  }
+
+  // The second half of acCommit for a word that started the message: the node
+  // now reads its typed first character, then the rest of `code` and a space
+  // ("lOL " for `lo` → LOL). Lexical takes a second edit only once it has
+  // caught up with the first, so each step waits a tick; the caret then goes
+  // back after the space, where the first edit left it.
+  function acFixFirstChar(editor, code) {
+    setTimeout(() => {
+      const sel = window.getSelection();
+      const node = sel?.anchorNode;
+      if (node?.nodeType !== Node.TEXT_NODE || !editor.contains(node)) return;
+      const text = node.textContent;
+      if (text[0] === code[0] || !text.startsWith(code.slice(1) + ' ', 1)) return;
+      const range = document.createRange();
+      range.setStart(node, 0);
+      range.setEnd(node, 1);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('insertText', false, code[0]);
+      setTimeout(() => {
+        const at = sel.anchorNode;
+        if (at?.nodeType === Node.TEXT_NODE && editor.contains(at)) {
+          sel.collapse(at, Math.min(code.length + 1, at.textContent.length));
+        }
+      }, 0);
+    }, 0);
   }
 
   function acRender(matches, inputEl) {
@@ -2643,14 +2681,20 @@
     matches.length ? acRender(matches, e.currentTarget) : acHide();
   }
 
+  // Runs in window capture (see attachAutocomplete), ahead of every listener
+  // Kick has, so a key the popup takes is stopped before Kick's editor sees
+  // it: Lexical's own keydown listener sits on the editor itself, registered
+  // before ours, and an Enter that picks a suggestion could reach it first and
+  // send the half-typed message.
   function acOnKeydown(e) {
-    if (!acDropdown) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); acSetFocus(Math.min(acFocusIdx + 1, acMatches.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); acSetFocus(Math.max(acFocusIdx - 1, 0)); }
+    if (!acDropdown || !acInput?.contains(e.target)) return;
+    const take = () => { e.preventDefault(); e.stopPropagation(); };
+    if (e.key === 'ArrowDown') { take(); acSetFocus(Math.min(acFocusIdx + 1, acMatches.length - 1)); }
+    else if (e.key === 'ArrowUp') { take(); acSetFocus(Math.max(acFocusIdx - 1, 0)); }
     else if (e.key === 'Tab') {
       // No explicit focus → complete the top match (matches Twitch/7TV behaviour)
       const pick = acMatches[acFocusIdx >= 0 ? acFocusIdx : 0];
-      if (pick) { e.preventDefault(); acCommit(pick.code); }
+      if (pick) { take(); acCommit(pick.code); }
     }
     else if (e.key === 'Enter') {
       // An explicitly focused row means the user navigated to it — insert it
@@ -2658,17 +2702,16 @@
       // popup: Kick clears the Lexical editor programmatically, which fires no
       // input event, so the suggestions would hang around over an empty input.
       const pick = acFocusIdx >= 0 ? acMatches[acFocusIdx] : null;
-      if (pick) { e.preventDefault(); acCommit(pick.code); }
+      if (pick) { take(); acCommit(pick.code); }
       else acHide();
     }
-    else if (e.key === 'Escape') { e.preventDefault(); acHide(); }
+    else if (e.key === 'Escape') { take(); acHide(); }
   }
 
   function attachAutocomplete(el) {
     if (el._kteAC) return;
     el._kteAC = true;
     el.addEventListener('input', acOnInput);
-    el.addEventListener('keydown', acOnKeydown);
     // Lexical intercepts beforeinput for deletions so input doesn't always fire;
     // keyup is a reliable fallback for backspace/delete.
     el.addEventListener('keyup', e => {
@@ -4363,6 +4406,7 @@
   }
 
   window.addEventListener('storage', onStorageSync);
+  window.addEventListener('keydown', acOnKeydown, true);
 
   // ── SPA Routing ──────────────────────────────────────────────────────────
 

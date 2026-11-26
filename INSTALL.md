@@ -92,3 +92,5 @@ The userscript metadata includes `@updateURL` and `@downloadURL` pointing at the
 | A provider group in the **7TV+** tab folds back to 40 emotes after starring one | Update to **2.15.1+** — starring an emote, a background refresh or an emote sent from another Kick tab rebuilt the tab from scratch. Groups now keep however many emotes you had loaded. |
 | The grey line under the emote picker's tabs stops before the **7TV+** tab | Update to **2.15.3+** — Kick draws that line to the strip's visible width, so it ended early whenever the strip scrolled sideways. |
 | Kick's emote picker closes when you pick an item from an emote's right-click menu | Update to **2.15.5+** — the menu sits outside the picker, and Kick closed the picker on any click outside it. |
+| Pressing Enter on a highlighted suggestion sends what you typed instead of the emote | Update to **2.15.7+** — Kick's chat box saw Enter before the script did. |
+| Tab or Enter on the first word of a message leaves the word as typed | Update to **2.15.7+** — Kick's chat box reverted the replacement when the word was the only text in it. |
