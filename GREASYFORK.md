@@ -4,13 +4,9 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.15.8** — keyboard fixes for autocomplete, the settings panel and the emote menu (covers 2.15.6–2.15.8)
+**2.15.9** — the settings row in Kick's chat menu, every time
 
-- **Enter picks the highlighted suggestion:** with a suggestion highlighted, Enter could send the half-typed message (`kek`) instead of inserting the emote (`KEKW`). Tab, Enter, the arrow keys and Esc now go to autocomplete first while suggestions are open; Enter with nothing highlighted still sends.
-- **Autocomplete works on the first word:** completing a word at the very start of the chat box (`lo` → `LOL`) used to leave the word as typed.
-- **Esc on the emote menu keeps theatre mode:** closing the right-click menu with Esc no longer also takes the player out of theatre mode.
-- **The settings panel keeps keyboard focus** and its scroll position after each change, so Tab stays inside the panel.
-- **Other Kick tabs no longer rebuild the open settings panel** for unrelated changes — only settings, recently used or favourites trigger it.
+- **The "Third-party emotes" row shows up in a chat settings menu that was already open when the script started.** Before, a menu left open while the script loaded late went without the row until you visited a sub-page or reopened the menu.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
