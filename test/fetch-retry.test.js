@@ -43,7 +43,8 @@ var initSeq = 0, emoteMap = new Map(), loadedProviders, activeLoaders, emoteVers
 var currentChannelSlug = () => 'chan';
 for (var noop of ['preconnectEmoteHosts', 'acHide', 'hideTooltip', 'hideEmoteMenu', 'resetPicker',
   'startChatObserver', 'waitForInput', 'queueVisibleEmoteRefresh', 'queueProviderPickerRefresh',
-  'acRefreshOpen', 'rebuildEmoteMap']) this[noop] = () => {};
+  'acRefreshOpen', 'rebuildEmoteMap', 'chatSettingsInject']) this[noop] = () => {};
+if (typeof document === 'undefined') document = { getElementById: () => null };
 var routeChatRefreshDelay = () => 0;
 var sameEmoteEntries = () => false;
 

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.9] - 2026-11-26
+
+### Fixed
+- **The "Third-party emotes" row shows up in a chat settings menu that was already open when the script started.** The row was only added when Kick's menu changed, so a menu left open while the script loaded late went without it until you visited a sub-page or reopened it. The script now adds the row once at startup too. Checked live on Kick: with the menu opened before the script loaded, the row appears straight away, only once, and opens the settings panel as usual.
+
 ## [2.15.8] - 2026-11-26
 
 ### Fixed
