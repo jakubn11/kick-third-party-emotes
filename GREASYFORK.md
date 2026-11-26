@@ -4,13 +4,13 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.15.5** — a smoother 7TV+ picker tab
+**2.15.8** — keyboard fixes for autocomplete, the settings panel and the emote menu (covers 2.15.6–2.15.8)
 
-- **Show less:** once you've loaded more emotes in a provider group, **Show less** folds it back to the first 40 and keeps the buttons in view. It's the same size as **Load more**, and the two wrap together on a narrow picker.
-- **Expanded groups stay expanded:** starring an emote, a background refresh of the channel's emotes, or sending an emote from another Kick tab no longer folds every group back to 40.
-- **Closest matches first in search:** within each provider, an exact match comes first, then names that start with what you typed, then the rest — `pog` lists `Pog` and `POGGERS` before `AYAYApog`.
-- **The right-click menu keeps the picker open:** choosing **Add to favourites** or any other item on a picker emote no longer closes Kick's emote picker.
-- **The tab strip's grey line reaches the 7TV+ tab,** even when the strip has to scroll sideways.
+- **Enter picks the highlighted suggestion:** with a suggestion highlighted, Enter could send the half-typed message (`kek`) instead of inserting the emote (`KEKW`). Tab, Enter, the arrow keys and Esc now go to autocomplete first while suggestions are open; Enter with nothing highlighted still sends.
+- **Autocomplete works on the first word:** completing a word at the very start of the chat box (`lo` → `LOL`) used to leave the word as typed.
+- **Esc on the emote menu keeps theatre mode:** closing the right-click menu with Esc no longer also takes the player out of theatre mode.
+- **The settings panel keeps keyboard focus** and its scroll position after each change, so Tab stays inside the panel.
+- **Other Kick tabs no longer rebuild the open settings panel** for unrelated changes — only settings, recently used or favourites trigger it.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
