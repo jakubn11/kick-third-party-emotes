@@ -81,6 +81,16 @@ resetCalls();
 otherTab(SETTINGS_KEY, Object.assign({}, rec, { autocomplete: false }));
 check('autocomplete switched off elsewhere closes the popup', calls.acHide === 1 && settingsLoad().autocomplete === false);
 
+resetCalls();
+otherTab('kte_v2_cache_bttv_global', { ts: 1, emotes: [] });
+otherTab('kick_some_key', 1);
+check('other keys leave the panel, picker and chat alone',
+  calls.panel === 0 && calls.picker === 0 && calls.rerender === 0 && calls.size === 0);
+
+resetCalls();
+onStorageSync({ storageArea: localStorage, key: null });
+check('a cleared localStorage refreshes the panel', calls.panel === 1);
+
 // ─── Unreadable storage ───────────────────────────────────────────────────
 var before = settingsLoad();
 localStorage.getItem = () => { throw new Error('SecurityError'); };

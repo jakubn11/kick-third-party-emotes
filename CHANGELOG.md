@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.6] - 2026-11-26
+
+### Fixed
+- **The settings panel keeps keyboard focus.** Every change rebuilds the panel, which removed the button you had just pressed, so focus fell to the page behind it and the next Tab left the panel. The same button now takes focus back, and the panel keeps its scroll position. Once **Cancel** or a now-disabled **Clear recently used** is gone, focus moves to the Clear button or to Close. Checked with the keyboard on a test page: picking a size, flipping a switch, and arming, cancelling and confirming Clear all keep focus in the panel.
+- **Other Kick tabs no longer rebuild the open settings panel for unrelated changes.** It rebuilt whenever another tab wrote anything to storage, Kick's own keys and the emote caches included, which dropped focus and could leave a Recently used emote's tooltip stuck. It now rebuilds only when settings, recently used or favourites change.
+
 ## [2.15.5] - 2026-11-10
 
 ### Fixed

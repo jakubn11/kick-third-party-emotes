@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.5
+// @version      2.15.6
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.5';
+  const VERSION = '2.15.6';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2731,10 +2731,11 @@
     return svg;
   }
 
-  function panelSwitch(label, on, flip) {
+  function panelSwitch(key, label, on, flip) {
     const row = panelEl('div', 'kte-switch-row');
     const toggle = panelEl('button', 'kte-switch');
     toggle.type = 'button';
+    toggle.dataset.kteKey = key;
     toggle.setAttribute('role', 'switch');
     toggle.setAttribute('aria-label', label);
     toggle.setAttribute('aria-checked', String(on));
@@ -2767,7 +2768,7 @@
     return group;
   }
 
-  function panelProviderChips(isOn, flip) {
+  function panelProviderChips(group, isOn, flip) {
     const row = panelEl('div', 'kte-panel-chips');
     for (const provider of PROVIDERS) {
       const chip = panelChip(provider, isOn(provider), () => {
@@ -2777,14 +2778,23 @@
         settingsPanelRender();
       });
       chip.dataset.provider = provider;
+      chip.dataset.kteKey = `${group}:${provider}`;
       row.appendChild(chip);
     }
     return row;
   }
 
+  // Every change rebuilds the card, which removes the control that had focus
+  // (sending focus to <body>, behind the modal) and any Recently used emote
+  // the tooltip is anchored to. Each control carries a data-kte-key naming
+  // it, so the rebuilt one takes focus back; the scroll position is kept too.
   function settingsPanelRender() {
     const card = panelBackdrop?.querySelector('#kte-panel');
     if (!card) return;
+    const active = document.activeElement;
+    const focusKey = active && card.contains(active) ? active.dataset?.kteKey : null;
+    const scrollTop = card.scrollTop;
+    if (tipAnchor && card.contains(tipAnchor)) hideTooltip();
     const store = settingsLoad();
     card.textContent = '';
 
@@ -2795,20 +2805,21 @@
     titles.appendChild(panelEl('div', 'kte-panel-title', 'Third-party emotes'));
     const close = panelEl('button', 'kte-panel-close', '✕');
     close.type = 'button';
+    close.dataset.kteKey = 'close';
     close.setAttribute('aria-label', 'Close emote settings');
     close.addEventListener('click', settingsPanelClose);
     head.append(mark, titles, close);
     card.appendChild(head);
 
     card.appendChild(panelGroup('Providers',
-      panelProviderChips(providerEnabled, (store, provider) => {
+      panelProviderChips('providers', providerEnabled, (store, provider) => {
         store.providers[provider] = !store.providers[provider];
       }),
       panelEl('div', 'kte-panel-note', 'Hiding a provider removes all of its emotes, from chat too.'),
     ));
 
     card.appendChild(panelGroup('Global emotes',
-      panelProviderChips(globalsEnabled, (store, provider) => {
+      panelProviderChips('globals', globalsEnabled, (store, provider) => {
         store.globals[provider] = !store.globals[provider];
       }),
       panelEl('div', 'kte-panel-note', 'Each provider\'s emotes for every channel. Turn them off to keep only the streamer\'s own set.'),
@@ -2816,12 +2827,14 @@
 
     const motionRow = panelEl('div', 'kte-panel-chips');
     for (const mode of MOTION_MODES) {
-      motionRow.appendChild(panelChip(MOTION_LABELS[mode], store.motion === mode, () => {
+      const chip = panelChip(MOTION_LABELS[mode], store.motion === mode, () => {
         settingsUpdate(store => { store.motion = mode; });
         rerenderEmotes();
         pickerRefreshIfBuilt();
         settingsPanelRender();
-      }));
+      });
+      chip.dataset.kteKey = `motion:${mode}`;
+      motionRow.appendChild(chip);
     }
     const motionNote = prefersReducedMotion()
       ? 'Your system\'s Reduce motion setting is on, so emotes stay still whatever you pick.'
@@ -2830,22 +2843,24 @@
 
     const sizeRow = panelEl('div', 'kte-panel-chips');
     for (const size of Object.keys(EMOTE_SIZES)) {
-      sizeRow.appendChild(panelChip(SIZE_LABELS[size], store.size === size, () => {
+      const chip = panelChip(SIZE_LABELS[size], store.size === size, () => {
         settingsUpdate(store => { store.size = size; });
         applyEmoteSize();
         hideTooltip(); // anchored to an emote that just changed size
         settingsPanelRender();
-      }));
+      });
+      chip.dataset.kteKey = `size:${size}`;
+      sizeRow.appendChild(chip);
     }
     card.appendChild(panelGroup('Emote size in chat', sizeRow));
 
     const switches = panelEl('div', 'kte-switches');
     switches.append(
-      panelSwitch('Suggest emotes while typing', store.autocomplete, next => {
+      panelSwitch('autocomplete', 'Suggest emotes while typing', store.autocomplete, next => {
         next.autocomplete = !next.autocomplete;
         if (!next.autocomplete) acHide();
       }),
-      panelSwitch('Large preview on hover', store.preview, next => {
+      panelSwitch('preview', 'Large preview on hover', store.preview, next => {
         next.preview = !next.preview;
       }),
     );
@@ -2867,13 +2882,16 @@
       settingsPanelRender();
     });
     clear.classList.add('kte-chip-danger');
+    clear.dataset.kteKey = 'clear';
     clear.disabled = !used;
     clearRow.appendChild(clear);
     if (panelConfirmClear) {
-      clearRow.appendChild(panelChip('Cancel', false, () => {
+      const cancel = panelChip('Cancel', false, () => {
         panelConfirmClear = false;
         settingsPanelRender();
-      }));
+      });
+      cancel.dataset.kteKey = 'cancel';
+      clearRow.appendChild(cancel);
     }
     const usedNote = used
       ? `${used} emote${used === 1 ? '' : 's'} remembered for the picker's Recently used section and the autocomplete ranking. Favourites are kept.`
@@ -2884,6 +2902,18 @@
       panelEl('div', 'kte-panel-note', usedNote),
       clearRow,
     ));
+
+    card.scrollTop = scrollTop;
+    if (focusKey) panelFocusTarget(card, focusKey)?.focus({ preventScroll: true });
+  }
+
+  // The rebuilt control to focus after a render. Cancel is gone once used, so
+  // its focus goes to the Clear button beside it; a control that is now
+  // disabled (Clear, once there is nothing left to clear) hands it to Close,
+  // which keeps focus inside the dialog.
+  function panelFocusTarget(card, key) {
+    const find = name => card.querySelector(`[data-kte-key="${name}"]:not(:disabled)`);
+    return find(key) ?? (key === 'cancel' ? find('clear') : null) ?? find('close');
   }
 
   // The picker's Recently used emotes, to look at before clearing them: the
@@ -4309,6 +4339,10 @@
   function onStorageSync(e) {
     if (e.storageArea !== localStorage) return;
     const all = e.key === null; // another tab cleared localStorage
+    // Other tabs also write the emote caches and Kick's own keys; none of
+    // those show here, and rebuilding the open panel for them would cost it
+    // its hover state.
+    if (!all && e.key !== SETTINGS_KEY && e.key !== USAGE_KEY && e.key !== FAVS_KEY) return;
     if (all || e.key === SETTINGS_KEY) {
       const before = settingsRenderKey(settingsLoad());
       settings = settingsRead() ?? settings;
