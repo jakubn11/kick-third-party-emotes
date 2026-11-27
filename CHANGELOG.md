@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.0] - 2026-11-27
+
+### Added
+- **The console and the manager menu speak Kick's language.** The start-up line, the warning a duplicate copy gives, and the status lines (*Loading emotes for /channel…*, *Ready – 1234 emotes*, the retry and give-up lines, *Autocomplete attached*) now follow the language Kick is shown in, for the same 28 languages as the rest of the script, and English otherwise. So does the **Emote settings** entry in your userscript manager's menu (*Nastavení emotů* in Czech), in the language Kick was in when the page loaded. A provider's *failed* line stays English, for bug reports; provider and channel names stay as they are.
+
 ## [2.19.0] - 2026-11-27
 
 ### Added

@@ -45,4 +45,33 @@ check('…and the right-click menu and autocomplete', /uiText\(\)/.test(fnSource
   !/'(Add to favourites|Remove from favourites|Copy name|Copy image URL|Emotes)'/.test(popupSrc) && !/`Open on /.test(popupSrc) && !/navigate {2}·/.test(popupSrc));
 check('the autocomplete hint keeps the keys as they are on the keyboard', langs.every(l => /^↑↓ .+ {2}· {2}Tab\/(Enter|Entrée|Invio) .+ {2}· {2}(Esc|Échap) /.test(UI_TEXT[l].acHint)));
 
+// The console and the manager-menu entry (2.20.0).
+check('console placeholders are there, once', langs.every(l => [['active', '{v}'], ['duplicate', '{v}'], ['duplicate', '{running}'],
+  ['loadingFor', '{slug}'], ['ready', '{slug}'], ['ready', '{n}'], ['retrying', '{n}'], ['retrying', '{s}'], ['retryLoaded', '{n}'],
+  ['givingUp', '{providers}']].every(([k, ph]) => UI_TEXT[l][k].split(ph).length === 2)));
+check('English console lines and menu entry are word for word what they were',
+  en.active === 'v{v} active' && en.loadingFor === 'Loading emotes for /{slug}…' && en.ready === 'Ready – {n} emotes for /{slug}' &&
+  en.autocomplete === 'Autocomplete attached' && en.retrying === '{n} provider(s) failed, retrying in {s}s…' &&
+  en.retryLoaded === 'Retry loaded {n} emotes' && en.givingUp === 'Giving up on {providers} until the next page load' &&
+  en.menuSettings === 'Emote settings' &&
+  en.duplicate === 'v{v} is standing down: v{running} is already running on this page. Disable or uninstall the duplicate copy.');
+document.documentElement.lang = 'cs';
+check('Czech: the menu entry and the boot line', uiText().menuSettings === 'Nastavení emotů' &&
+  uiText().active.replace('{v}', '2.20.0') === 'v2.20.0 běží');
+document.documentElement.lang = 'de';
+check('German: the ready line', uiText().ready.replace('{n}', 42).replace('{slug}', 'xqc') === 'Bereit – Emotes für /xqc: 42');
+// The table must be defined before the guard reads it (a const read before
+// its line throws), and the guard, boot line, status lines and menu use it.
+var top = SRC.indexOf('\n  const UI_TEXT = '), guard = SRC.indexOf('\n  if (alreadyRunning) {');
+check('UI_TEXT sits before the single-instance guard', top > 0 && guard > top);
+var guardSrc = SRC.slice(guard, SRC.indexOf('\n  }\n', guard));
+check('…whose warning is uiText().duplicate', /uiText\(\)\.duplicate/.test(guardSrc) && !/is standing down/.test(guardSrc));
+check('the boot line, the status lines and the menu entry use uiText()',
+  /log\(uiText\(\)\.active\./.test(SRC) && /log\(uiText\(\)\.autocomplete\)/.test(SRC) &&
+  ['loadingFor', 'ready', 'retrying', 'retryLoaded', 'givingUp'].every(k => SRC.indexOf('log(uiText().' + k + '.') > 0) &&
+  /GM_registerMenuCommand\(uiText\(\)\.menuSettings,/.test(SRC) &&
+  !/log\(`(Loading emotes|Ready –|Retry loaded|Giving up)/.test(SRC) && !/log\('Autocomplete attached'\)/.test(SRC));
+check('…while a provider\'s failure stays English, for bug reports', SRC.indexOf('log(`${loader.key} failed:`') > 0 &&
+  SRC.indexOf('log(`${loaders[i].key} failed again:`') > 0);
+
 if (savedDoc !== undefined) globalThis.document = savedDoc;

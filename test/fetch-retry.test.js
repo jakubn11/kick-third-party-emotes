@@ -45,6 +45,10 @@ for (var noop of ['preconnectEmoteHosts', 'acHide', 'hideTooltip', 'hideEmoteMen
   'startChatObserver', 'waitForInput', 'queueVisibleEmoteRefresh', 'queueProviderPickerRefresh',
   'acRefreshOpen', 'rebuildEmoteMap', 'chatSettingsInject']) this[noop] = () => {};
 if (typeof document === 'undefined') document = { getElementById: () => null };
+// The status lines come from UI_TEXT (2.20.0); with no <html lang> they're English.
+document.documentElement = { lang: '' };
+loadConst(['UI_TEXT']);
+load(['kickLang', 'uiText']);
 var routeChatRefreshDelay = () => 0;
 var sameEmoteEntries = () => false;
 
