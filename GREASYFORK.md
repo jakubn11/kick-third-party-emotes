@@ -4,9 +4,10 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.15.9** — the settings row in Kick's chat menu, every time
+**2.15.12** — the settings row in Kick's chat menu, in the script's own style
 
-- **The "Third-party emotes" row shows up in a chat settings menu that was already open when the script started.** Before, a menu left open while the script loaded late went without the row until you visited a sub-page or reopened the menu.
+- **The row looks like the script's own UI.** It stays in the same place in Kick's chat settings menu, but sits on its own dark card, apart from Kick's rows, with the settings panel's green icon tile.
+- **Green hover and focus.** Hovering the row or tabbing to it shows the green tint the script's other buttons use, never Kick's grey.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
