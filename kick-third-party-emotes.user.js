@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.20.0
+// @version      2.21.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.20.0';
+  const VERSION = '2.21.0';
 
   // ── Words in Kick's language ───────────────────────────────────────────
   // Every word the script shows, in Kick's language, English for any other:
@@ -1475,6 +1475,63 @@
       retryLoaded: 'Yeniden deneme {n} emote yükledi',
       givingUp: '{providers} bir sonraki sayfa yüklemesine kadar bırakıldı',
       menuSettings: 'Emote ayarları',
+    }),
+    uk: Object.freeze({
+      close: 'Закрити',
+      providers: 'Джерела',
+      globals: 'Глобальні емоути',
+      animated: 'Анімовані емоути',
+      size: 'Розмір емоутів у чаті',
+      options: 'Налаштування',
+      recent: 'Нещодавні',
+      providersNote: 'Якщо приховати джерело, зникнуть усі його емоути, і в чаті теж.',
+      globalsNote: 'Емоути кожного джерела для всіх каналів. Вимкніть, щоб лишився тільки набір стримера.',
+      reducedNote: 'У системі ввімкнено «Зменшення руху», тому емоути не рухаються, хоч би що ви вибрали.',
+      bttvNote: 'BTTV не віддає статичних кадрів, тому його анімовані емоути завжди рухаються.',
+      always: 'Завжди',
+      hover: 'Під курсором',
+      never: 'Ніколи',
+      small: 'Малий',
+      medium: 'Середній',
+      large: 'Великий',
+      suggest: 'Підказувати емоути під час введення',
+      preview: 'Великий перегляд при наведенні',
+      clear: 'Очистити нещодавні',
+      confirmClear: 'Підтвердити очищення',
+      cancel: 'Скасувати',
+      usedNote: 'Запам’ятовано емоутів: {n}. Для розділу «Нещодавні» та порядку підказок. Обране зберігається.',
+      usedNone: 'Поки нічого не запам’ятовано. Вставлені емоути з’являться в розділі «Нещодавні».',
+      favourites: 'Обране',
+      insert: 'Вставити {code}',
+      loadMore: 'Завантажити ще',
+      loadMoreLabel: 'Завантажити ще емоути',
+      showLess: 'Згорнути',
+      showLessLabel: 'Показати менше емоутів',
+      showing: '{shown} з {total}',
+      loading: 'Завантаження…',
+      chipTip: 'Показати або приховати емоути {provider}',
+      tabTip: 'Емоути 7TV / BTTV / FFZ',
+      emptySearch: 'Немає відповідних емоутів',
+      emptyHidden: 'Усі джерела приховано — увімкніть одне вище',
+      emptyLoading: 'Емоути завантажуються…',
+      emptyGlobalsOff: 'Тут немає емоутів каналу, а глобальні вимкнено — увімкніть їх у налаштуваннях',
+      emptyChannel: 'Цей канал не має емоутів',
+      favAdd: 'Додати до обраного',
+      favRemove: 'Прибрати з обраного',
+      copyName: 'Копіювати назву',
+      copyUrl: 'Копіювати URL зображення',
+      openOn: 'Відкрити на {provider}',
+      acHeader: 'Емоути',
+      acHint: '↑↓ вибір  ·  Tab/Enter вставити  ·  Esc закрити',
+      active: 'v{v} працює',
+      duplicate: 'v{v} вимикається: на цій сторінці вже працює v{running}. Вимкніть або видаліть дублікат.',
+      autocomplete: 'Підказки під’єднано',
+      loadingFor: 'Завантаження емоутів для /{slug}…',
+      ready: 'Готово – емоутів для /{slug}: {n}',
+      retrying: 'Не відповіло джерел: {n}, повтор через {s} с…',
+      retryLoaded: 'Повтор завантажив емоутів: {n}',
+      givingUp: 'Відмова від {providers} до наступного завантаження сторінки',
+      menuSettings: 'Налаштування емоутів',
     }),
     vi: Object.freeze({
       close: 'Đóng',
@@ -4777,6 +4834,7 @@
     sv: 'Emotes från tredje part',
     th: 'อีโมตจากบุคคลที่สาม',
     tr: "Üçüncü taraf emote'lar",
+    uk: 'Сторонні емоути',
     vi: 'Emote bên thứ ba',
     zh: '第三方表情',
   });

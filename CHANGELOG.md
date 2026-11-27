@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.0] - 2026-11-27
+
+### Added
+- **Ukrainian.** Kick offers Ukrainian, and until now the script showed English there; it now has its own Ukrainian text — the chat settings row, the settings panel, the 7TV+ picker tab, the right-click menu, autocomplete, the manager-menu entry and the console, so it covers all 28 of Kick's languages.
+
 ## [2.20.0] - 2026-11-27
 
 ### Added
