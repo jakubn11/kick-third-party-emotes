@@ -37,8 +37,8 @@ var injectAt = initSrc.indexOf("chatSettingsInject(document.getElementById('chat
 check('init() adds the row at startup, after starting the observer', observerAt >= 0 && injectAt > observerAt);
 
 // The row's family look (2.15.10): it keeps Kick's cloned row (and so its
-// place and metrics) but is tagged for the shared stylesheet, the element
-// with Kick's hover classes is marked, and the chevron becomes the green tile.
+// place and metrics) but is tagged for the shared stylesheet and the chevron
+// becomes the green tile.
 (function () {
   function Node(tag, cls) {
     this.tag = tag; this.attrs = {}; this.kids = []; this.parent = null; this.listeners = {};
@@ -81,8 +81,6 @@ check('init() adds the row at startup, after starting the observer', observerAt 
   var tile = row.all().find(n => n.hasAttribute('data-kick-family-tile'));
   check('the row is tagged as a family row and keeps Kick\'s classes',
     row.hasAttribute('data-kick-family-row') && row.getAttribute('class') === 'h-10 px-1.5');
-  check('the element with Kick\'s hover classes is marked for the green hover',
-    row.kids[0].hasAttribute('data-kick-family-hit') && !row.hasAttribute('data-kick-family-hit'));
   check('the chevron is swapped for the tile holding the panel mark',
     !!tile && tile.kids[0].tag === 'svg' && !row.all().some(n => n.getAttribute('data-ds-icon') === 'ChevronRight'));
   check('Kick\'s own row is untouched', !li.hasAttribute('data-kick-family-row') && div.kids[1] === chev);

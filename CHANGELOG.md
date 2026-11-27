@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.12] - 2026-11-27
+
+### Changed
+- **Hover on the add-on menu rows is the kick-* green, not Kick's grey.** Hovering **Third-party emotes** (or kick-chat-utils' **Moderation history**) in Kick's chat settings menu showed Kick's own grey hover with a green tint on top. The row now paints the same green-over-dark hover as the other kick-* buttons, and Kick's hover is cleared wherever Kick puts it.
+
 ## [2.15.11] - 2026-11-27
 
 ### Changed

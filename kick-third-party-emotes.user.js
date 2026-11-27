@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.11
+// @version      2.15.12
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.11';
+  const VERSION = '2.15.12';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -1390,7 +1390,7 @@
     .kte-switch[aria-checked="true"]::after {
       transform: translate(15px, -50%);
     }
-    /* Family rows in Kick's chat settings menu (2.15.11). They keep their
+    /* Family rows in Kick's chat settings menu (2.15.12). They keep their
        place and Kick's row metrics (cloned), but wear the family look so they
        read as added by a script: together they sit on one card of the family
        surface (#101013, hairline border), set a little apart from Kick's rows,
@@ -1421,27 +1421,24 @@
       border-bottom-left-radius: 10px;
       border-bottom-right-radius: 10px;
     }
-    #chat-settings-panel [data-kick-family-hit] {
+    /* Hover and keyboard focus: the family button hover, the green tint
+       over #101013 (kick-fullscreen-chat's control buttons, kick-vod-resume's
+       toast buttons), painted by the row itself. Kick's own grey hover can sit
+       on the row, on any element inside it or on a pseudo-element, so all of
+       those are cleared rather than guessing which one Kick uses this week. */
+    #chat-settings-panel li[data-kick-family-row] {
       transition: background-color .12s ease;
     }
-    #chat-settings-panel [data-kick-family-hit]:not(li) {
-      border-radius: 8px;
+    #chat-settings-panel li[data-kick-family-row]:hover,
+    #chat-settings-panel li[data-kick-family-row]:focus-visible {
+      background: linear-gradient(rgba(34,197,94,.1), rgba(34,197,94,.1)), #101013 !important;
     }
-    /* Kick's own hover colour is dropped; the family green tint goes on top of
-       the card (when the li itself carries Kick's hover classes, it keeps the
-       card's colour under the tint). */
-    #chat-settings-panel [data-kick-family-hit]:not(li):hover,
-    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-hit]:not(li) {
-      background-color: transparent !important;
-    }
-    #chat-settings-panel li[data-kick-family-row][data-kick-family-hit]:hover,
-    #chat-settings-panel li[data-kick-family-row][data-kick-family-hit]:focus-visible {
-      background-color: #101013 !important;
-    }
-    #chat-settings-panel [data-kick-family-hit]:hover,
-    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-hit],
-    #chat-settings-panel li[data-kick-family-row][data-kick-family-hit]:focus-visible {
-      background-image: linear-gradient(rgba(34,197,94,.1), rgba(34,197,94,.1)) !important;
+    #chat-settings-panel li[data-kick-family-row] *:not([data-kick-family-tile]):not([data-kick-family-tile] *),
+    #chat-settings-panel li[data-kick-family-row]::before,
+    #chat-settings-panel li[data-kick-family-row]::after,
+    #chat-settings-panel li[data-kick-family-row] *::before,
+    #chat-settings-panel li[data-kick-family-row] *::after {
+      background: transparent !important;
     }
     #chat-settings-panel li[data-kick-family-row]:focus-visible {
       outline: 2px solid rgba(34,197,94,.65);
@@ -1472,7 +1469,7 @@
       background: rgba(34,197,94,.16);
     }
     @media (prefers-reduced-motion: reduce) {
-      #chat-settings-panel [data-kick-family-hit],
+      #chat-settings-panel li[data-kick-family-row],
       #chat-settings-panel [data-kick-family-tile] {
         transition: none;
       }
@@ -3164,13 +3161,9 @@
     const label = row.querySelector('span');
     if (label) label.textContent = 'Third-party emotes';
 
-    // Family look (2.15.10): Kick's chevron becomes the panel header's green
-    // icon tile, and the element carrying Kick's hover classes is tagged so
-    // the stylesheet can give it the family's green hover instead.
+    // Family look (2.15.10): tagged for the shared stylesheet (card, hover),
+    // and Kick's chevron becomes the panel header's green icon tile.
     row.setAttribute('data-kick-family-row', '');
-    const hit = [row, ...row.querySelectorAll('*')]
-      .find(node => (node.getAttribute?.('class') ?? '').includes('hover:')) ?? row;
-    hit.setAttribute('data-kick-family-hit', '');
     const nativeIcon = row.querySelector('svg');
     if (nativeIcon) {
       const tile = document.createElement('span');
