@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.10] - 2026-11-27
+
+### Changed
+- **The "Third-party emotes" row in Kick's chat settings menu now looks like the script's own UI.** It stays in the same place, but instead of passing for one of Kick's rows it gets the family look: a thin divider sets it apart from Kick's rows, its icon sits in the same green tile as the settings panel's header, and hovering or tabbing to it lights it green. kick-chat-utils' **Moderation history** row gets the identical treatment, so the two read as one group of add-ons.
+
 ## [2.15.9] - 2026-11-26
 
 ### Fixed

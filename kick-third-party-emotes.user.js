@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.9
+// @version      2.15.10
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.9';
+  const VERSION = '2.15.10';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -1389,6 +1389,63 @@
     }
     .kte-switch[aria-checked="true"]::after {
       transform: translate(15px, -50%);
+    }
+    /* Family rows in Kick's chat settings menu (2.15.10). They keep their
+       place and Kick's row metrics (cloned), but wear the family look so they
+       read as added by a script: a divider above the first one, the green
+       icon tile from the panels' headers, a green hover. The same block ships
+       in kick-chat-utils for its "Moderation history" row; keep them equal. */
+    #chat-settings-panel li[data-kick-family-row] {
+      cursor: pointer;
+    }
+    #chat-settings-panel li:not([data-kick-family-row]) + li[data-kick-family-row] {
+      box-sizing: content-box;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    #chat-settings-panel [data-kick-family-hit] {
+      border-radius: 8px;
+      transition: background-color .12s ease;
+    }
+    #chat-settings-panel [data-kick-family-hit]:hover,
+    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-hit] {
+      background: rgba(34,197,94,.1) !important;
+    }
+    #chat-settings-panel li[data-kick-family-row]:focus-visible {
+      outline: 2px solid rgba(34,197,94,.65);
+      outline-offset: -2px;
+      border-radius: 8px;
+    }
+    #chat-settings-panel [data-kick-family-tile] {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      width: 26px;
+      height: 26px;
+      border: 1px solid rgba(34,197,94,.22);
+      border-radius: 8px;
+      background: rgba(34,197,94,.1);
+      color: #22c55e;
+      transition: border-color .12s ease, background-color .12s ease;
+    }
+    #chat-settings-panel [data-kick-family-tile] svg {
+      display: block;
+      width: 15px;
+      height: 15px;
+    }
+    #chat-settings-panel li[data-kick-family-row]:hover [data-kick-family-tile],
+    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-tile] {
+      border-color: rgba(34,197,94,.45);
+      background: rgba(34,197,94,.16);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #chat-settings-panel [data-kick-family-hit],
+      #chat-settings-panel [data-kick-family-tile] {
+        transition: none;
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       .kte-panel-backdrop,
@@ -3076,11 +3133,21 @@
 
     const label = row.querySelector('span');
     if (label) label.textContent = 'Third-party emotes';
+
+    // Family look (2.15.10): Kick's chevron becomes the panel header's green
+    // icon tile, and the element carrying Kick's hover classes is tagged so
+    // the stylesheet can give it the family's green hover instead.
+    row.setAttribute('data-kick-family-row', '');
+    const hit = [row, ...row.querySelectorAll('*')]
+      .find(node => (node.getAttribute?.('class') ?? '').includes('hover:')) ?? row;
+    hit.setAttribute('data-kick-family-hit', '');
     const nativeIcon = row.querySelector('svg');
     if (nativeIcon) {
-      const icon = pickerBuildTabIcon();
-      icon.setAttribute('class', nativeIcon.getAttribute('class') ?? '');
-      nativeIcon.replaceWith(icon);
+      const tile = document.createElement('span');
+      tile.setAttribute('data-kick-family-tile', '');
+      tile.setAttribute('aria-hidden', 'true');
+      tile.appendChild(panelMarkIcon());
+      nativeIcon.replaceWith(tile);
     }
 
     row.addEventListener('click', chatSettingsRowOpen);
@@ -3095,7 +3162,9 @@
   function chatSettingsInject(panel) {
     const list = chatSettingsMenuList(panel);
     if (!list || list.querySelector(`#${CHAT_SETTINGS_ROW_ID}`)) return;
-    const template = [...list.children].find(li => li.querySelector('svg[data-ds-icon="ChevronRight"]'));
+    // One of Kick's own rows, never another kick-* script's restyled one.
+    const template = [...list.children].find(li =>
+      !li.hasAttribute?.('data-kick-family-row') && li.querySelector('svg[data-ds-icon="ChevronRight"]'));
     if (!template) return;
     list.appendChild(chatSettingsBuildRow(template));
   }
