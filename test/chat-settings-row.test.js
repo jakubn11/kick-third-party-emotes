@@ -70,7 +70,8 @@ check('init() adds the row at startup, after starting the observer', observerAt 
     createElementNS: (ns, t) => new Node(t),
   };
   globalThis.chatSettingsRowOpen = () => {};
-  load(['panelMarkIcon', 'chatSettingsBuildRow']);
+  loadConst(['CHAT_SETTINGS_ROW_LABELS']);
+  load(['panelMarkIcon', 'kickLang', 'chatSettingsRowLabel', 'chatSettingsBuildRow']);
 
   var li = new Node('li', 'h-10 px-1.5');
   var div = li.appendChild(new Node('div', 'flex items-center hover:bg-surface-tint rounded'));
@@ -84,6 +85,21 @@ check('init() adds the row at startup, after starting the observer', observerAt 
   check('the chevron is swapped for the tile holding the panel mark',
     !!tile && tile.kids[0].tag === 'svg' && !row.all().some(n => n.getAttribute('data-ds-icon') === 'ChevronRight'));
   check('Kick\'s own row is untouched', !li.hasAttribute('data-kick-family-row') && div.kids[1] === chev);
+
+  var labelOf = r => r.all().find(n => n.hasAttribute('data-kick-family-label'));
+  check('the label is English by default, and tagged', labelOf(row) && labelOf(row).text === 'Third-party emotes');
+
+  // Kick's language (2.16.0), read from <html lang>.
+  globalThis.document.documentElement = { lang: 'cs' };
+  check('Kick in Czech: Czech label', labelOf(chatSettingsBuildRow(li)).text === 'Emoty třetích stran');
+  document.documentElement.lang = 'pt-BR';
+  check('a regional code uses its language (pt-BR → pt)', labelOf(chatSettingsBuildRow(li)).text === 'Emotes de terceiros');
+  document.documentElement.lang = 'xx';
+  check('no translation: English', labelOf(chatSettingsBuildRow(li)).text === 'Third-party emotes');
+  check('every Kick language has a label, and none is empty',
+    ['en', 'ar', 'bg', 'cs', 'da', 'de', 'el', 'es', 'fi', 'fr', 'hu', 'id', 'it', 'ja', 'ko', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sk', 'sv', 'th', 'tr', 'vi', 'zh']
+      .every(l => typeof CHAT_SETTINGS_ROW_LABELS[l] === 'string' && CHAT_SETTINGS_ROW_LABELS[l].length > 0) &&
+    Object.keys(CHAT_SETTINGS_ROW_LABELS).length === 27);
 
   if (savedDoc !== undefined) globalThis.document = savedDoc;
 })();

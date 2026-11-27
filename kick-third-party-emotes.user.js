@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.13
+// @version      2.16.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.13';
+  const VERSION = '2.16.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -3160,7 +3160,10 @@
     row.setAttribute('role', 'button');
 
     const label = row.querySelector('span');
-    if (label) label.textContent = 'Third-party emotes';
+    if (label) {
+      label.textContent = chatSettingsRowLabel();
+      label.setAttribute('data-kick-family-label', '');
+    }
 
     // Family look (2.15.10): tagged for the shared stylesheet (card, hover),
     // and Kick's chevron becomes the panel header's green icon tile.
@@ -3183,9 +3186,61 @@
     return row;
   }
 
+  // The row's label in Kick's language (2.16.0), English for any other.
+  // Kept in step with kick-chat-utils' Moderation history row.
+  const CHAT_SETTINGS_ROW_LABELS = Object.freeze({
+    en: 'Third-party emotes',
+    ar: 'رموز تعبيرية من جهات خارجية',
+    bg: 'Емоути от трети страни',
+    cs: 'Emoty třetích stran',
+    da: 'Emotes fra tredjepart',
+    de: 'Drittanbieter-Emotes',
+    el: 'Emotes τρίτων',
+    es: 'Emotes de terceros',
+    fi: 'Kolmannen osapuolen emotet',
+    fr: 'Emotes tierces',
+    hu: 'Külső emote-ok',
+    id: 'Emote pihak ketiga',
+    it: 'Emote di terze parti',
+    ja: 'サードパーティのエモート',
+    ko: '서드파티 이모트',
+    nl: 'Emotes van derden',
+    no: 'Emotes fra tredjeparter',
+    pl: 'Emotki zewnętrzne',
+    pt: 'Emotes de terceiros',
+    ro: 'Emote-uri terțe',
+    ru: 'Сторонние эмоуты',
+    sk: 'Emoty tretích strán',
+    sv: 'Emotes från tredje part',
+    th: 'อีโมตจากบุคคลที่สาม',
+    tr: "Üçüncü taraf emote'lar",
+    vi: 'Emote bên thứ ba',
+    zh: '第三方表情',
+  });
+  // Kick's UI language, from <html lang> (Kick sets it from the viewer's
+  // language: "cs", "pt", … — checked 2026-11-27 for the 28 it serves).
+  function kickLang() {
+    const lang = (document.documentElement && document.documentElement.lang) || '';
+    return String(lang).toLowerCase().split('-')[0];
+  }
+  function chatSettingsRowLabel() {
+    const lang = kickLang();
+    return Object.hasOwn(CHAT_SETTINGS_ROW_LABELS, lang) ? CHAT_SETTINGS_ROW_LABELS[lang] : CHAT_SETTINGS_ROW_LABELS.en;
+  }
+
   function chatSettingsInject(panel) {
     const list = chatSettingsMenuList(panel);
-    if (!list || list.querySelector(`#${CHAT_SETTINGS_ROW_ID}`)) return;
+    if (!list) return;
+    const existing = list.querySelector(`#${CHAT_SETTINGS_ROW_ID}`);
+    if (existing) {
+      // Kick can switch language without re-rendering a menu it keeps mounted.
+      const label = existing.querySelector?.('[data-kick-family-label]');
+      if (label) {
+        const text = chatSettingsRowLabel();
+        if (label.textContent !== text) label.textContent = text;
+      }
+      return;
+    }
     // One of Kick's own rows, never another kick-* script's restyled one.
     const template = [...list.children].find(li =>
       !li.hasAttribute?.('data-kick-family-row') && li.querySelector('svg[data-ds-icon="ChevronRight"]'));
