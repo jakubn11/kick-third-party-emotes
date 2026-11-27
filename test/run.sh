@@ -19,11 +19,18 @@ echo "$syntax"
 for test in test/*.test.js; do
   echo "── $test"
   out=$("$JSC" test/harness.js "$test" 2>&1)
+  code=$?
   echo "$out"
-  if echo "$out" | grep -q '^FAIL ' || ! echo "$out" | grep -q '^PASS '; then
+  # A file that throws partway (jsc exits 3, prints "Exception:") still has
+  # the PASS lines from before the throw, so the exit code counts too.
+  if [ "$code" -ne 0 ] || echo "$out" | grep -q '^FAIL \|^Exception' || ! echo "$out" | grep -q '^PASS '; then
+    [ "$code" -ne 0 ] && echo "FAIL $test exited with code $code"
     status=1
   fi
 done
+
+echo "── test/family-style.js"
+"$JSC" test/family-style.js || status=1
 
 [ "$status" -eq 0 ] && echo "all tests passed" || echo "TESTS FAILED"
 exit "$status"

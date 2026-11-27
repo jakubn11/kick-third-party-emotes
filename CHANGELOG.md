@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.13] - 2026-11-27
+
+### Changed
+- **Development checks only, no change for users.** `test/run.sh` now fails when a test file throws partway through. Before, a crash after some checks had passed still ended in *all tests passed*. It also runs `test/family-style.js`, which fails if the script uses a colour outside the kick-* palette, or if the menu row's shared styling stops matching kick-chat-utils' copy. The script only gained a marker comment that ends that shared block.
+
 ## [2.15.12] - 2026-11-27
 
 ### Changed

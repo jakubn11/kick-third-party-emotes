@@ -14,7 +14,7 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 
 There is no package manager, build step, or linter. Tests run on macOS's built-in JavaScript engine, with no Node or dependencies:
 
-- Tests: `test/run.sh` — the one entry point: runs the syntax check below, then every `test/*.test.js`; exits non-zero on any failure.
+- Tests: `test/run.sh` — the one entry point: runs the syntax check below, then every `test/*.test.js`, then `test/family-style.js` (shared by all five kick-* repos; only its config block differs) checks that every colour in the script is a family colour or a listed exception with its reason, and that the *Family rows* CSS block (up to its `/* End of family rows` marker) matches the copy in kick-chat-utils, when that repo is checked out next to this one. It exits non-zero on any failure, including a test file that throws partway (jsc's exit code is checked, not just the FAIL/PASS lines).
 - There is no CI — don't add GitHub workflows. `test/run.sh` is the gate, run locally before every commit.
 
 - Syntax check: `node --check kick-third-party-emotes.user.js`. Without Node installed, macOS ships a JavaScript engine that can parse-check without executing (the file is an IIFE, so it must not be *run* to be checked):
