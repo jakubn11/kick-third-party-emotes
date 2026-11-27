@@ -4,12 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.17.0] - 2026-11-27
+
+### Added
+- **The emote settings panel speaks Kick's language.** Every group title, chip, switch, note and button in the settings panel now follows the language Kick is shown in, for the same 28 languages as the menu row, and English otherwise. Provider names (7TV, BTTV, FFZ) stay as they are, and the count of remembered emotes is worded so no plural forms are needed. The panel picks up a language change the next time it redraws. The emote picker, the autocomplete and the right-click menu stay in English.
+
+### Changed
+- **The panel's title and close button.** The dialog is now named like its title and the menu row (*Third-party emotes*), and the close button is labelled "Close" in Kick's language, with a tooltip.
+
+### Fixed
+- **Changelog heading.** The heading of 2.15.13 in this file had lost its version number.
+
 ## [2.16.0] - 2026-11-27
 
 ### Added
 - **The menu row speaks Kick's language.** The **Third-party emotes** row in Kick's chat settings menu now uses the language Kick is shown in, for all 28 languages Kick offers (*Emoty třetích stran* in Czech, *Drittanbieter-Emotes* in German, …), and English otherwise. It follows a language change straight away. The settings panel itself is still in English.
 
- - 2026-11-27
+## [2.15.13] - 2026-11-27
 
 ### Changed
 - **Development checks only, no change for users.** `test/run.sh` now fails when a test file throws partway through. Before, a crash after some checks had passed still ended in *all tests passed*. It also runs `test/family-style.js`, which fails if the script uses a colour outside the kick-* palette, or if the menu row's shared styling stops matching kick-chat-utils' copy. The script only gained a marker comment that ends that shared block.

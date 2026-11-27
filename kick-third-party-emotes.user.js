@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.16.0
+// @version      2.17.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.16.0';
+  const VERSION = '2.17.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2839,8 +2839,722 @@
   // Never survives a close, so the panel can't reopen one click from wiping.
   let panelConfirmClear = false;
 
-  const MOTION_LABELS = { always: 'Always', hover: 'On hover', never: 'Never' };
-  const SIZE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' };
+  // The panel's words in Kick's language (2.17.0), English for any other —
+  // the same languages as the chat settings row (CHAT_SETTINGS_ROW_LABELS,
+  // which is also the panel's title). Read on every render, so a language
+  // change shows the next time the panel draws. Provider names stay as they
+  // are; the picker and the autocomplete stay English. `usedNote` takes the
+  // count as {n}, phrased so no plural form is needed; English alone has a
+  // `usedOne` for a count of 1.
+  const PANEL_TEXT = Object.freeze({
+    en: Object.freeze({
+      close: 'Close',
+      providers: 'Providers',
+      globals: 'Global emotes',
+      animated: 'Animated emotes',
+      size: 'Emote size in chat',
+      options: 'Options',
+      recent: 'Recently used',
+      providersNote: 'Hiding a provider removes all of its emotes, from chat too.',
+      globalsNote: 'Each provider\'s emotes for every channel. Turn them off to keep only the streamer\'s own set.',
+      reducedNote: 'Your system\'s Reduce motion setting is on, so emotes stay still whatever you pick.',
+      bttvNote: 'BTTV serves no still frames, so its animated emotes always move.',
+      always: 'Always',
+      hover: 'On hover',
+      never: 'Never',
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large',
+      suggest: 'Suggest emotes while typing',
+      preview: 'Large preview on hover',
+      clear: 'Clear recently used',
+      confirmClear: 'Confirm clear',
+      cancel: 'Cancel',
+      usedNote: '{n} emotes remembered for the picker\'s Recently used section and the autocomplete ranking. Favourites are kept.',
+      usedNone: 'Nothing remembered yet. Emotes you insert show up in the picker\'s Recently used section.',
+      usedOne: '1 emote remembered for the picker\'s Recently used section and the autocomplete ranking. Favourites are kept.',
+    }),
+    ar: Object.freeze({
+      close: 'إغلاق',
+      providers: 'المزوّدون',
+      globals: 'الرموز العامة',
+      animated: 'الرموز المتحركة',
+      size: 'حجم الرموز في الدردشة',
+      options: 'خيارات',
+      recent: 'المستخدمة مؤخرًا',
+      providersNote: 'إخفاء مزوّد يزيل كل رموزه، من الدردشة أيضًا.',
+      globalsNote: 'رموز كل مزوّد المتاحة في جميع القنوات. أوقفها لتبقى رموز صاحب القناة فقط.',
+      reducedNote: 'إعداد تقليل الحركة في نظامك مفعّل، لذا تبقى الرموز ثابتة مهما اخترت.',
+      bttvNote: 'لا يوفّر BTTV إطارات ثابتة، لذا تتحرك رموزه المتحركة دائمًا.',
+      always: 'دائمًا',
+      hover: 'عند التمرير',
+      never: 'أبدًا',
+      small: 'صغير',
+      medium: 'متوسط',
+      large: 'كبير',
+      suggest: 'اقتراح الرموز أثناء الكتابة',
+      preview: 'معاينة كبيرة عند التمرير',
+      clear: 'مسح المستخدمة مؤخرًا',
+      confirmClear: 'تأكيد المسح',
+      cancel: 'إلغاء',
+      usedNote: 'رموز محفوظة: {n}. تُستخدم لقسم «المستخدمة مؤخرًا» في المنتقي ولترتيب الإكمال التلقائي. المفضلة تبقى.',
+      usedNone: 'لا شيء محفوظ بعد. الرموز التي تُدرجها تظهر في قسم «المستخدمة مؤخرًا» في المنتقي.',
+    }),
+    bg: Object.freeze({
+      close: 'Затвори',
+      providers: 'Доставчици',
+      globals: 'Глобални емоути',
+      animated: 'Анимирани емоути',
+      size: 'Размер на емоутите в чата',
+      options: 'Опции',
+      recent: 'Наскоро използвани',
+      providersNote: 'Скриването на доставчик премахва всичките му емоути, и от чата.',
+      globalsNote: 'Емоутите на всеки доставчик за всички канали. Изключи ги, за да остане само наборът на стриймъра.',
+      reducedNote: 'Системната настройка „Намаляване на движението“ е включена, така че емоутите остават неподвижни, каквото и да избереш.',
+      bttvNote: 'BTTV не предоставя неподвижни кадри, затова анимираните му емоути винаги се движат.',
+      always: 'Винаги',
+      hover: 'При курсор',
+      never: 'Никога',
+      small: 'Малък',
+      medium: 'Среден',
+      large: 'Голям',
+      suggest: 'Предлагай емоути при писане',
+      preview: 'Голям преглед при посочване',
+      clear: 'Изчисти наскоро използваните',
+      confirmClear: 'Потвърди',
+      cancel: 'Отказ',
+      usedNote: 'Запомнени емоути: {n}. За секцията „Наскоро използвани“ и за подредбата при автодовършване. Любимите остават.',
+      usedNone: 'Още нищо не е запомнено. Емоутите, които вмъкнеш, се появяват в „Наскоро използвани“.',
+    }),
+    cs: Object.freeze({
+      close: 'Zavřít',
+      providers: 'Poskytovatelé',
+      globals: 'Globální emoty',
+      animated: 'Animované emoty',
+      size: 'Velikost emotů v chatu',
+      options: 'Možnosti',
+      recent: 'Nedávno použité',
+      providersNote: 'Skrytím poskytovatele zmizí všechny jeho emoty, i z chatu.',
+      globalsNote: 'Emoty každého poskytovatele pro všechny kanály. Vypni je a zůstane jen vlastní sada streamera.',
+      reducedNote: 'V systému je zapnuté Omezit pohyb, takže emoty zůstanou v klidu, ať vybereš cokoli.',
+      bttvNote: 'BTTV nemá statické snímky, takže jeho animované emoty se hýbou vždy.',
+      always: 'Vždy',
+      hover: 'Při najetí',
+      never: 'Nikdy',
+      small: 'Malé',
+      medium: 'Střední',
+      large: 'Velké',
+      suggest: 'Navrhovat emoty při psaní',
+      preview: 'Velký náhled při najetí',
+      clear: 'Vymazat nedávno použité',
+      confirmClear: 'Potvrdit vymazání',
+      cancel: 'Zrušit',
+      usedNote: 'Zapamatované emoty: {n}. Slouží pro Nedávno použité ve výběru a pořadí našeptávače. Oblíbené zůstanou.',
+      usedNone: 'Zatím nic zapamatováno. Emoty, které vložíš, se objeví v Nedávno použitých ve výběru.',
+    }),
+    da: Object.freeze({
+      close: 'Luk',
+      providers: 'Udbydere',
+      globals: 'Globale emotes',
+      animated: 'Animerede emotes',
+      size: 'Emote-størrelse i chatten',
+      options: 'Indstillinger',
+      recent: 'Senest brugt',
+      providersNote: 'Skjuler du en udbyder, forsvinder alle dens emotes, også fra chatten.',
+      globalsNote: 'Hver udbyders emotes til alle kanaler. Slå dem fra for kun at beholde streamerens eget sæt.',
+      reducedNote: 'Systemets Reducer bevægelse er slået til, så emotes står stille, uanset hvad du vælger.',
+      bttvNote: 'BTTV har ingen stillbilleder, så dens animerede emotes bevæger sig altid.',
+      always: 'Altid',
+      hover: 'Ved hover',
+      never: 'Aldrig',
+      small: 'Lille',
+      medium: 'Mellem',
+      large: 'Stor',
+      suggest: 'Foreslå emotes, mens du skriver',
+      preview: 'Stor forhåndsvisning ved hover',
+      clear: 'Ryd senest brugt',
+      confirmClear: 'Bekræft rydning',
+      cancel: 'Annuller',
+      usedNote: 'Huskede emotes: {n}. Bruges til vælgerens Senest brugt og rækkefølgen i autofuldførelse. Favoritter beholdes.',
+      usedNone: 'Intet husket endnu. Emotes, du indsætter, vises under Senest brugt i vælgeren.',
+    }),
+    de: Object.freeze({
+      close: 'Schließen',
+      providers: 'Anbieter',
+      globals: 'Globale Emotes',
+      animated: 'Animierte Emotes',
+      size: 'Emote-Größe im Chat',
+      options: 'Optionen',
+      recent: 'Zuletzt verwendet',
+      providersNote: 'Ein ausgeblendeter Anbieter verliert alle seine Emotes, auch im Chat.',
+      globalsNote: 'Die Emotes jedes Anbieters für alle Kanäle. Aus, und es bleibt nur das eigene Set des Streamers.',
+      reducedNote: 'In deinem System ist „Bewegung reduzieren“ an, daher bleiben Emotes still, egal was du wählst.',
+      bttvNote: 'BTTV liefert keine Standbilder, daher bewegen sich seine animierten Emotes immer.',
+      always: 'Immer',
+      hover: 'Beim Hover',
+      never: 'Nie',
+      small: 'Klein',
+      medium: 'Mittel',
+      large: 'Groß',
+      suggest: 'Emotes beim Tippen vorschlagen',
+      preview: 'Große Vorschau beim Darüberfahren',
+      clear: 'Zuletzt verwendet leeren',
+      confirmClear: 'Leeren bestätigen',
+      cancel: 'Abbrechen',
+      usedNote: 'Gemerkte Emotes: {n}. Für „Zuletzt verwendet“ in der Auswahl und die Reihenfolge der Vorschläge. Favoriten bleiben.',
+      usedNone: 'Noch nichts gemerkt. Eingefügte Emotes erscheinen unter „Zuletzt verwendet“ in der Auswahl.',
+    }),
+    el: Object.freeze({
+      close: 'Κλείσιμο',
+      providers: 'Πάροχοι',
+      globals: 'Καθολικά emotes',
+      animated: 'Κινούμενα emotes',
+      size: 'Μέγεθος emotes στη συνομιλία',
+      options: 'Επιλογές',
+      recent: 'Πρόσφατα',
+      providersNote: 'Η απόκρυψη ενός παρόχου αφαιρεί όλα τα emotes του, και από τη συνομιλία.',
+      globalsNote: 'Τα emotes κάθε παρόχου για όλα τα κανάλια. Απενεργοποίησέ τα για να μείνει μόνο το σετ του streamer.',
+      reducedNote: 'Η ρύθμιση Μείωση κίνησης του συστήματος είναι ενεργή, οπότε τα emotes μένουν ακίνητα ό,τι κι αν διαλέξεις.',
+      bttvNote: 'Το BTTV δεν δίνει στατικά καρέ, οπότε τα κινούμενα emotes του κινούνται πάντα.',
+      always: 'Πάντα',
+      hover: 'Στο πέρασμα',
+      never: 'Ποτέ',
+      small: 'Μικρό',
+      medium: 'Μεσαίο',
+      large: 'Μεγάλο',
+      suggest: 'Προτάσεις emotes κατά την πληκτρολόγηση',
+      preview: 'Μεγάλη προεπισκόπηση στο πέρασμα',
+      clear: 'Εκκαθάριση πρόσφατων',
+      confirmClear: 'Επιβεβαίωση',
+      cancel: 'Άκυρο',
+      usedNote: 'Αποθηκευμένα emotes: {n}. Για την ενότητα Πρόσφατα του επιλογέα και τη σειρά της αυτόματης συμπλήρωσης. Τα αγαπημένα μένουν.',
+      usedNone: 'Τίποτα ακόμη. Τα emotes που εισάγεις εμφανίζονται στα Πρόσφατα του επιλογέα.',
+    }),
+    es: Object.freeze({
+      close: 'Cerrar',
+      providers: 'Proveedores',
+      globals: 'Emotes globales',
+      animated: 'Emotes animados',
+      size: 'Tamaño de los emotes en el chat',
+      options: 'Opciones',
+      recent: 'Usados recientemente',
+      providersNote: 'Ocultar un proveedor quita todos sus emotes, también del chat.',
+      globalsNote: 'Los emotes de cada proveedor para todos los canales. Desactívalos para quedarte solo con los del streamer.',
+      reducedNote: 'La opción Reducir movimiento de tu sistema está activada, así que los emotes quedan quietos elijas lo que elijas.',
+      bttvNote: 'BTTV no ofrece fotogramas fijos, así que sus emotes animados siempre se mueven.',
+      always: 'Siempre',
+      hover: 'Al pasar',
+      never: 'Nunca',
+      small: 'Pequeño',
+      medium: 'Mediano',
+      large: 'Grande',
+      suggest: 'Sugerir emotes al escribir',
+      preview: 'Vista previa grande al pasar el ratón',
+      clear: 'Borrar usados recientemente',
+      confirmClear: 'Confirmar borrado',
+      cancel: 'Cancelar',
+      usedNote: 'Emotes recordados: {n}. Para Usados recientemente del selector y el orden del autocompletado. Los favoritos se conservan.',
+      usedNone: 'Aún no hay nada. Los emotes que insertes aparecen en Usados recientemente del selector.',
+    }),
+    fi: Object.freeze({
+      close: 'Sulje',
+      providers: 'Palveluntarjoajat',
+      globals: 'Yleiset emotet',
+      animated: 'Animoidut emotet',
+      size: 'Emotejen koko chatissa',
+      options: 'Asetukset',
+      recent: 'Viimeksi käytetyt',
+      providersNote: 'Piilotetun palveluntarjoajan kaikki emotet katoavat, myös chatista.',
+      globalsNote: 'Jokaisen palveluntarjoajan emotet kaikilla kanavilla. Poista ne käytöstä, niin jäljelle jää vain striimaajan oma setti.',
+      reducedNote: 'Järjestelmän Vähennä liikettä on päällä, joten emotet pysyvät paikallaan valinnasta riippumatta.',
+      bttvNote: 'BTTV ei tarjoa pysäytyskuvia, joten sen animoidut emotet liikkuvat aina.',
+      always: 'Aina',
+      hover: 'Osoitettaessa',
+      never: 'Ei koskaan',
+      small: 'Pieni',
+      medium: 'Keskikoko',
+      large: 'Suuri',
+      suggest: 'Ehdota emoteja kirjoittaessa',
+      preview: 'Suuri esikatselu osoitettaessa',
+      clear: 'Tyhjennä viimeksi käytetyt',
+      confirmClear: 'Vahvista tyhjennys',
+      cancel: 'Peruuta',
+      usedNote: 'Muistettuja emoteja: {n}. Valitsimen Viimeksi käytetyt -osioon ja automaattitäydennyksen järjestykseen. Suosikit säilyvät.',
+      usedNone: 'Mitään ei ole vielä muistettu. Lisäämäsi emotet näkyvät valitsimen Viimeksi käytetyissä.',
+    }),
+    fr: Object.freeze({
+      close: 'Fermer',
+      providers: 'Fournisseurs',
+      globals: 'Emotes globales',
+      animated: 'Emotes animées',
+      size: 'Taille des emotes dans le chat',
+      options: 'Options',
+      recent: 'Utilisées récemment',
+      providersNote: 'Masquer un fournisseur retire toutes ses emotes, du chat aussi.',
+      globalsNote: 'Les emotes de chaque fournisseur pour toutes les chaînes. Désactivez-les pour ne garder que celles du streamer.',
+      reducedNote: 'Le réglage Réduire les animations de votre système est activé : les emotes restent fixes, quel que soit votre choix.',
+      bttvNote: 'BTTV ne fournit pas d’images fixes, ses emotes animées bougent donc toujours.',
+      always: 'Toujours',
+      hover: 'Au survol',
+      never: 'Jamais',
+      small: 'Petite',
+      medium: 'Moyenne',
+      large: 'Grande',
+      suggest: 'Suggérer des emotes pendant la saisie',
+      preview: 'Grand aperçu au survol',
+      clear: 'Effacer les utilisées récemment',
+      confirmClear: 'Confirmer l’effacement',
+      cancel: 'Annuler',
+      usedNote: 'Emotes mémorisées : {n}. Pour la section Utilisées récemment du sélecteur et l’ordre de l’autocomplétion. Les favoris sont conservés.',
+      usedNone: 'Rien de mémorisé pour l’instant. Les emotes que vous insérez apparaissent dans Utilisées récemment.',
+    }),
+    hu: Object.freeze({
+      close: 'Bezárás',
+      providers: 'Szolgáltatók',
+      globals: 'Globális emote-ok',
+      animated: 'Animált emote-ok',
+      size: 'Emote-méret a chatben',
+      options: 'Beállítások',
+      recent: 'Legutóbb használt',
+      providersNote: 'Egy szolgáltató elrejtése az összes emote-ját eltünteti, a chatből is.',
+      globalsNote: 'Minden szolgáltató emote-jai minden csatornán. Kapcsold ki, és csak a streamer saját készlete marad.',
+      reducedNote: 'A rendszerben be van kapcsolva a Mozgás csökkentése, így az emote-ok állók maradnak, bármit is választasz.',
+      bttvNote: 'A BTTV nem ad állóképet, ezért az animált emote-jai mindig mozognak.',
+      always: 'Mindig',
+      hover: 'Rámutatáskor',
+      never: 'Soha',
+      small: 'Kicsi',
+      medium: 'Közepes',
+      large: 'Nagy',
+      suggest: 'Emote-javaslatok gépelés közben',
+      preview: 'Nagy előnézet rámutatáskor',
+      clear: 'Legutóbb használtak törlése',
+      confirmClear: 'Törlés megerősítése',
+      cancel: 'Mégse',
+      usedNote: 'Megjegyzett emote-ok: {n}. A választó Legutóbb használt részéhez és az automatikus kiegészítés sorrendjéhez. A kedvencek megmaradnak.',
+      usedNone: 'Még nincs megjegyzett emote. A beszúrt emote-ok a választó Legutóbb használt részében jelennek meg.',
+    }),
+    id: Object.freeze({
+      close: 'Tutup',
+      providers: 'Penyedia',
+      globals: 'Emote global',
+      animated: 'Emote animasi',
+      size: 'Ukuran emote di chat',
+      options: 'Opsi',
+      recent: 'Baru dipakai',
+      providersNote: 'Menyembunyikan penyedia menghapus semua emote-nya, dari chat juga.',
+      globalsNote: 'Emote tiap penyedia untuk semua channel. Matikan agar hanya set milik streamer yang tersisa.',
+      reducedNote: 'Pengaturan Kurangi gerakan di sistemmu aktif, jadi emote tetap diam apa pun pilihanmu.',
+      bttvNote: 'BTTV tidak menyediakan bingkai diam, jadi emote animasinya selalu bergerak.',
+      always: 'Selalu',
+      hover: 'Saat diarahkan',
+      never: 'Tidak pernah',
+      small: 'Kecil',
+      medium: 'Sedang',
+      large: 'Besar',
+      suggest: 'Sarankan emote saat mengetik',
+      preview: 'Pratinjau besar saat diarahkan',
+      clear: 'Hapus yang baru dipakai',
+      confirmClear: 'Konfirmasi hapus',
+      cancel: 'Batal',
+      usedNote: 'Emote yang diingat: {n}. Untuk bagian Baru dipakai di pemilih dan urutan pelengkapan otomatis. Favorit tetap disimpan.',
+      usedNone: 'Belum ada yang diingat. Emote yang kamu sisipkan muncul di bagian Baru dipakai di pemilih.',
+    }),
+    it: Object.freeze({
+      close: 'Chiudi',
+      providers: 'Fornitori',
+      globals: 'Emote globali',
+      animated: 'Emote animate',
+      size: 'Dimensione delle emote in chat',
+      options: 'Opzioni',
+      recent: 'Usate di recente',
+      providersNote: 'Nascondere un fornitore rimuove tutte le sue emote, anche dalla chat.',
+      globalsNote: 'Le emote di ogni fornitore per tutti i canali. Disattivale per tenere solo il set dello streamer.',
+      reducedNote: 'L’impostazione Riduci movimento del sistema è attiva, quindi le emote restano ferme qualunque cosa scegli.',
+      bttvNote: 'BTTV non fornisce fotogrammi fissi, quindi le sue emote animate si muovono sempre.',
+      always: 'Sempre',
+      hover: 'Al passaggio',
+      never: 'Mai',
+      small: 'Piccola',
+      medium: 'Media',
+      large: 'Grande',
+      suggest: 'Suggerisci emote mentre scrivi',
+      preview: 'Anteprima grande al passaggio',
+      clear: 'Cancella usate di recente',
+      confirmClear: 'Conferma cancellazione',
+      cancel: 'Annulla',
+      usedNote: 'Emote memorizzate: {n}. Per la sezione Usate di recente del selettore e l’ordine del completamento automatico. I preferiti restano.',
+      usedNone: 'Ancora niente. Le emote che inserisci compaiono in Usate di recente nel selettore.',
+    }),
+    ja: Object.freeze({
+      close: '閉じる',
+      providers: 'プロバイダー',
+      globals: 'グローバルエモート',
+      animated: 'アニメーションエモート',
+      size: 'チャットでのエモートサイズ',
+      options: 'オプション',
+      recent: '最近使用',
+      providersNote: 'プロバイダーを非表示にすると、そのエモートはチャットからも消えます。',
+      globalsNote: '各プロバイダーの全チャンネル共通エモート。オフにすると配信者自身のセットだけが残ります。',
+      reducedNote: 'システムの「視差効果を減らす」がオンなので、どれを選んでもエモートは静止したままです。',
+      bttvNote: 'BTTVは静止画を提供しないため、アニメーションエモートは常に動きます。',
+      always: '常に',
+      hover: 'ホバー時',
+      never: 'しない',
+      small: '小',
+      medium: '中',
+      large: '大',
+      suggest: '入力中にエモートを候補表示',
+      preview: 'ホバーで大きくプレビュー',
+      clear: '最近使用をクリア',
+      confirmClear: 'クリアを確定',
+      cancel: 'キャンセル',
+      usedNote: '記憶しているエモート: {n}。ピッカーの「最近使用」と入力補完の並び順に使います。お気に入りは残ります。',
+      usedNone: 'まだ記憶はありません。挿入したエモートはピッカーの「最近使用」に表示されます。',
+    }),
+    ko: Object.freeze({
+      close: '닫기',
+      providers: '제공자',
+      globals: '전역 이모트',
+      animated: '움직이는 이모트',
+      size: '채팅 이모트 크기',
+      options: '옵션',
+      recent: '최근 사용',
+      providersNote: '제공자를 숨기면 해당 이모트가 채팅에서도 모두 사라집니다.',
+      globalsNote: '모든 채널에서 쓰는 각 제공자의 이모트입니다. 끄면 스트리머 자신의 세트만 남습니다.',
+      reducedNote: '시스템의 동작 줄이기 설정이 켜져 있어 무엇을 고르든 이모트가 멈춰 있습니다.',
+      bttvNote: 'BTTV는 정지 프레임을 제공하지 않아 움직이는 이모트가 항상 움직입니다.',
+      always: '항상',
+      hover: '마우스를 올릴 때',
+      never: '안 함',
+      small: '작게',
+      medium: '보통',
+      large: '크게',
+      suggest: '입력할 때 이모트 추천',
+      preview: '마우스를 올리면 크게 미리 보기',
+      clear: '최근 사용 지우기',
+      confirmClear: '지우기 확인',
+      cancel: '취소',
+      usedNote: '기억된 이모트: {n}개. 선택기의 최근 사용 섹션과 자동 완성 순서에 쓰입니다. 즐겨찾기는 유지됩니다.',
+      usedNone: '아직 기억된 것이 없습니다. 넣은 이모트는 선택기의 최근 사용에 표시됩니다.',
+    }),
+    nl: Object.freeze({
+      close: 'Sluiten',
+      providers: 'Aanbieders',
+      globals: 'Globale emotes',
+      animated: 'Geanimeerde emotes',
+      size: 'Emotegrootte in de chat',
+      options: 'Opties',
+      recent: 'Recent gebruikt',
+      providersNote: 'Een verborgen aanbieder verliest al zijn emotes, ook in de chat.',
+      globalsNote: 'De emotes van elke aanbieder voor alle kanalen. Zet ze uit om alleen de eigen set van de streamer te houden.',
+      reducedNote: 'De systeeminstelling Verminder beweging staat aan, dus emotes blijven stil wat je ook kiest.',
+      bttvNote: 'BTTV levert geen stilstaande beelden, dus de geanimeerde emotes bewegen altijd.',
+      always: 'Altijd',
+      hover: 'Bij aanwijzen',
+      never: 'Nooit',
+      small: 'Klein',
+      medium: 'Middel',
+      large: 'Groot',
+      suggest: 'Emotes voorstellen tijdens typen',
+      preview: 'Grote voorvertoning bij aanwijzen',
+      clear: 'Recent gebruikt wissen',
+      confirmClear: 'Wissen bevestigen',
+      cancel: 'Annuleren',
+      usedNote: 'Onthouden emotes: {n}. Voor Recent gebruikt in de kiezer en de volgorde van automatisch aanvullen. Favorieten blijven.',
+      usedNone: 'Nog niets onthouden. Emotes die je invoegt, verschijnen bij Recent gebruikt in de kiezer.',
+    }),
+    no: Object.freeze({
+      close: 'Lukk',
+      providers: 'Leverandører',
+      globals: 'Globale emotes',
+      animated: 'Animerte emotes',
+      size: 'Emote-størrelse i chatten',
+      options: 'Alternativer',
+      recent: 'Nylig brukt',
+      providersNote: 'Skjuler du en leverandør, forsvinner alle emotene dens, også fra chatten.',
+      globalsNote: 'Hver leverandørs emotes for alle kanaler. Slå dem av for å beholde bare streamerens eget sett.',
+      reducedNote: 'Systemets Reduser bevegelse er på, så emotes står stille uansett hva du velger.',
+      bttvNote: 'BTTV har ingen stillbilder, så de animerte emotene beveger seg alltid.',
+      always: 'Alltid',
+      hover: 'Ved peking',
+      never: 'Aldri',
+      small: 'Liten',
+      medium: 'Middels',
+      large: 'Stor',
+      suggest: 'Foreslå emotes mens du skriver',
+      preview: 'Stor forhåndsvisning ved peking',
+      clear: 'Tøm nylig brukt',
+      confirmClear: 'Bekreft tømming',
+      cancel: 'Avbryt',
+      usedNote: 'Husket emotes: {n}. Brukes til Nylig brukt i velgeren og rekkefølgen i autofullføring. Favoritter beholdes.',
+      usedNone: 'Ingenting husket ennå. Emotes du setter inn, vises under Nylig brukt i velgeren.',
+    }),
+    pl: Object.freeze({
+      close: 'Zamknij',
+      providers: 'Dostawcy',
+      globals: 'Emotki globalne',
+      animated: 'Emotki animowane',
+      size: 'Rozmiar emotek na czacie',
+      options: 'Opcje',
+      recent: 'Ostatnio używane',
+      providersNote: 'Ukrycie dostawcy usuwa wszystkie jego emotki, także z czatu.',
+      globalsNote: 'Emotki każdego dostawcy na wszystkich kanałach. Wyłącz je, by zostawić tylko zestaw streamera.',
+      reducedNote: 'Systemowe Ogranicz ruch jest włączone, więc emotki pozostają nieruchome bez względu na wybór.',
+      bttvNote: 'BTTV nie udostępnia nieruchomych klatek, więc jego animowane emotki zawsze się ruszają.',
+      always: 'Zawsze',
+      hover: 'Po najechaniu',
+      never: 'Nigdy',
+      small: 'Małe',
+      medium: 'Średnie',
+      large: 'Duże',
+      suggest: 'Podpowiadaj emotki podczas pisania',
+      preview: 'Duży podgląd po najechaniu',
+      clear: 'Wyczyść ostatnio używane',
+      confirmClear: 'Potwierdź czyszczenie',
+      cancel: 'Anuluj',
+      usedNote: 'Zapamiętane emotki: {n}. Do sekcji Ostatnio używane w wyborze i kolejności podpowiedzi. Ulubione zostają.',
+      usedNone: 'Nic jeszcze nie zapamiętano. Wstawione emotki pojawią się w Ostatnio używanych w wyborze.',
+    }),
+    pt: Object.freeze({
+      close: 'Fechar',
+      providers: 'Provedores',
+      globals: 'Emotes globais',
+      animated: 'Emotes animados',
+      size: 'Tamanho dos emotes no chat',
+      options: 'Opções',
+      recent: 'Usados recentemente',
+      providersNote: 'Ocultar um provedor remove todos os emotes dele, do chat também.',
+      globalsNote: 'Os emotes de cada provedor para todos os canais. Desative para manter só o conjunto do streamer.',
+      reducedNote: 'A opção Reduzir movimento do sistema está ativa, então os emotes ficam parados seja qual for a escolha.',
+      bttvNote: 'O BTTV não oferece quadros estáticos, então os emotes animados dele sempre se mexem.',
+      always: 'Sempre',
+      hover: 'Ao passar',
+      never: 'Nunca',
+      small: 'Pequeno',
+      medium: 'Médio',
+      large: 'Grande',
+      suggest: 'Sugerir emotes ao digitar',
+      preview: 'Prévia grande ao passar o mouse',
+      clear: 'Limpar usados recentemente',
+      confirmClear: 'Confirmar limpeza',
+      cancel: 'Cancelar',
+      usedNote: 'Emotes lembrados: {n}. Para Usados recentemente no seletor e a ordem do preenchimento automático. Os favoritos ficam.',
+      usedNone: 'Nada lembrado ainda. Os emotes que você inserir aparecem em Usados recentemente no seletor.',
+    }),
+    ro: Object.freeze({
+      close: 'Închide',
+      providers: 'Furnizori',
+      globals: 'Emote-uri globale',
+      animated: 'Emote-uri animate',
+      size: 'Mărimea emote-urilor în chat',
+      options: 'Opțiuni',
+      recent: 'Folosite recent',
+      providersNote: 'Ascunderea unui furnizor elimină toate emote-urile lui, și din chat.',
+      globalsNote: 'Emote-urile fiecărui furnizor pentru toate canalele. Dezactivează-le ca să rămână doar setul streamerului.',
+      reducedNote: 'Setarea Reducere mișcare a sistemului este activă, deci emote-urile rămân statice orice ai alege.',
+      bttvNote: 'BTTV nu oferă cadre statice, așa că emote-urile lui animate se mișcă mereu.',
+      always: 'Mereu',
+      hover: 'La trecere',
+      never: 'Niciodată',
+      small: 'Mică',
+      medium: 'Medie',
+      large: 'Mare',
+      suggest: 'Sugerează emote-uri la scriere',
+      preview: 'Previzualizare mare la trecerea mouse-ului',
+      clear: 'Șterge folosite recent',
+      confirmClear: 'Confirmă ștergerea',
+      cancel: 'Anulează',
+      usedNote: 'Emote-uri reținute: {n}. Pentru secțiunea Folosite recent și ordinea completării automate. Favoritele rămân.',
+      usedNone: 'Nimic reținut încă. Emote-urile pe care le inserezi apar în Folosite recent.',
+    }),
+    ru: Object.freeze({
+      close: 'Закрыть',
+      providers: 'Источники',
+      globals: 'Глобальные эмоуты',
+      animated: 'Анимированные эмоуты',
+      size: 'Размер эмоутов в чате',
+      options: 'Настройки',
+      recent: 'Недавние',
+      providersNote: 'Если скрыть источник, исчезнут все его эмоуты, и в чате тоже.',
+      globalsNote: 'Эмоуты каждого источника для всех каналов. Выключите, чтобы остался только набор стримера.',
+      reducedNote: 'В системе включено «Уменьшение движения», поэтому эмоуты не двигаются, что бы вы ни выбрали.',
+      bttvNote: 'BTTV не отдаёт статичные кадры, поэтому его анимированные эмоуты всегда движутся.',
+      always: 'Всегда',
+      hover: 'Под курсором',
+      never: 'Никогда',
+      small: 'Маленький',
+      medium: 'Средний',
+      large: 'Большой',
+      suggest: 'Подсказывать эмоуты при вводе',
+      preview: 'Крупный просмотр при наведении',
+      clear: 'Очистить недавние',
+      confirmClear: 'Подтвердить очистку',
+      cancel: 'Отмена',
+      usedNote: 'Запомнено эмоутов: {n}. Для раздела «Недавние» и порядка подсказок. Избранное сохраняется.',
+      usedNone: 'Пока ничего не запомнено. Вставленные эмоуты появятся в разделе «Недавние».',
+    }),
+    sk: Object.freeze({
+      close: 'Zavrieť',
+      providers: 'Poskytovatelia',
+      globals: 'Globálne emoty',
+      animated: 'Animované emoty',
+      size: 'Veľkosť emotov v chate',
+      options: 'Možnosti',
+      recent: 'Nedávno použité',
+      providersNote: 'Skrytím poskytovateľa zmiznú všetky jeho emoty, aj z chatu.',
+      globalsNote: 'Emoty každého poskytovateľa pre všetky kanály. Vypni ich a ostane len vlastná sada streamera.',
+      reducedNote: 'V systéme je zapnuté Obmedziť pohyb, takže emoty ostanú v pokoji, nech vyberieš čokoľvek.',
+      bttvNote: 'BTTV nemá statické snímky, takže jeho animované emoty sa hýbu vždy.',
+      always: 'Vždy',
+      hover: 'Pri prejdení',
+      never: 'Nikdy',
+      small: 'Malé',
+      medium: 'Stredné',
+      large: 'Veľké',
+      suggest: 'Navrhovať emoty pri písaní',
+      preview: 'Veľký náhľad pri prejdení',
+      clear: 'Vymazať nedávno použité',
+      confirmClear: 'Potvrdiť vymazanie',
+      cancel: 'Zrušiť',
+      usedNote: 'Zapamätané emoty: {n}. Slúžia pre Nedávno použité vo výbere a poradie návrhov. Obľúbené ostanú.',
+      usedNone: 'Zatiaľ nič zapamätané. Emoty, ktoré vložíš, sa objavia v Nedávno použitých vo výbere.',
+    }),
+    sv: Object.freeze({
+      close: 'Stäng',
+      providers: 'Leverantörer',
+      globals: 'Globala emotes',
+      animated: 'Animerade emotes',
+      size: 'Emote-storlek i chatten',
+      options: 'Alternativ',
+      recent: 'Senast använda',
+      providersNote: 'Döljer du en leverantör försvinner alla dess emotes, även från chatten.',
+      globalsNote: 'Varje leverantörs emotes för alla kanaler. Stäng av dem för att bara behålla streamerns egen uppsättning.',
+      reducedNote: 'Systemets Minska rörelse är på, så emotes står still vad du än väljer.',
+      bttvNote: 'BTTV har inga stillbilder, så dess animerade emotes rör sig alltid.',
+      always: 'Alltid',
+      hover: 'Vid hovring',
+      never: 'Aldrig',
+      small: 'Liten',
+      medium: 'Mellan',
+      large: 'Stor',
+      suggest: 'Föreslå emotes medan du skriver',
+      preview: 'Stor förhandsvisning vid hovring',
+      clear: 'Rensa senast använda',
+      confirmClear: 'Bekräfta rensning',
+      cancel: 'Avbryt',
+      usedNote: 'Ihågkomna emotes: {n}. För väljarens Senast använda och ordningen i autoslutförandet. Favoriter behålls.',
+      usedNone: 'Inget ihågkommet än. Emotes du infogar visas under Senast använda i väljaren.',
+    }),
+    th: Object.freeze({
+      close: 'ปิด',
+      providers: 'ผู้ให้บริการ',
+      globals: 'อีโมตทั่วไป',
+      animated: 'อีโมตเคลื่อนไหว',
+      size: 'ขนาดอีโมตในแชท',
+      options: 'ตัวเลือก',
+      recent: 'ใช้ล่าสุด',
+      providersNote: 'การซ่อนผู้ให้บริการจะลบอีโมตทั้งหมดของผู้ให้บริการนั้น รวมถึงในแชทด้วย',
+      globalsNote: 'อีโมตของผู้ให้บริการแต่ละรายสำหรับทุกช่อง ปิดไว้เพื่อเหลือเฉพาะชุดของสตรีมเมอร์',
+      reducedNote: 'การตั้งค่าลดการเคลื่อนไหวของระบบเปิดอยู่ อีโมตจึงหยุดนิ่งไม่ว่าคุณจะเลือกอะไร',
+      bttvNote: 'BTTV ไม่มีเฟรมภาพนิ่ง อีโมตเคลื่อนไหวของ BTTV จึงขยับเสมอ',
+      always: 'เสมอ',
+      hover: 'เมื่อชี้',
+      never: 'ไม่เลย',
+      small: 'เล็ก',
+      medium: 'กลาง',
+      large: 'ใหญ่',
+      suggest: 'แนะนำอีโมตขณะพิมพ์',
+      preview: 'ดูตัวอย่างขนาดใหญ่เมื่อชี้',
+      clear: 'ล้างรายการใช้ล่าสุด',
+      confirmClear: 'ยืนยันการล้าง',
+      cancel: 'ยกเลิก',
+      usedNote: 'อีโมตที่จำไว้: {n} ใช้สำหรับส่วนใช้ล่าสุดในตัวเลือกและลำดับการเติมอัตโนมัติ รายการโปรดยังอยู่',
+      usedNone: 'ยังไม่มีอะไรจำไว้ อีโมตที่คุณแทรกจะแสดงในส่วนใช้ล่าสุดของตัวเลือก',
+    }),
+    tr: Object.freeze({
+      close: 'Kapat',
+      providers: 'Sağlayıcılar',
+      globals: 'Genel emote’lar',
+      animated: 'Hareketli emote’lar',
+      size: 'Sohbette emote boyutu',
+      options: 'Seçenekler',
+      recent: 'Son kullanılanlar',
+      providersNote: 'Bir sağlayıcıyı gizlemek tüm emote’larını sohbetten de kaldırır.',
+      globalsNote: 'Her sağlayıcının tüm kanallardaki emote’ları. Kapatırsan yalnızca yayıncının kendi seti kalır.',
+      reducedNote: 'Sistemindeki Hareketi azalt ayarı açık; ne seçersen seç emote’lar sabit kalır.',
+      bttvNote: 'BTTV sabit kare sunmuyor, bu yüzden hareketli emote’ları hep hareket eder.',
+      always: 'Her zaman',
+      hover: 'Üzerindeyken',
+      never: 'Asla',
+      small: 'Küçük',
+      medium: 'Orta',
+      large: 'Büyük',
+      suggest: 'Yazarken emote öner',
+      preview: 'Üzerine gelince büyük önizleme',
+      clear: 'Son kullanılanları temizle',
+      confirmClear: 'Temizlemeyi onayla',
+      cancel: 'İptal',
+      usedNote: 'Hatırlanan emote: {n}. Seçicinin Son kullanılanlar bölümü ve otomatik tamamlama sırası için. Favoriler kalır.',
+      usedNone: 'Henüz hatırlanan yok. Eklediğin emote’lar seçicinin Son kullanılanlar bölümünde görünür.',
+    }),
+    vi: Object.freeze({
+      close: 'Đóng',
+      providers: 'Nhà cung cấp',
+      globals: 'Emote toàn cục',
+      animated: 'Emote động',
+      size: 'Cỡ emote trong chat',
+      options: 'Tùy chọn',
+      recent: 'Dùng gần đây',
+      providersNote: 'Ẩn một nhà cung cấp sẽ gỡ mọi emote của họ, cả trong chat.',
+      globalsNote: 'Emote của từng nhà cung cấp cho mọi kênh. Tắt đi để chỉ giữ bộ riêng của streamer.',
+      reducedNote: 'Cài đặt Giảm chuyển động của hệ thống đang bật, nên emote đứng yên dù bạn chọn gì.',
+      bttvNote: 'BTTV không có khung hình tĩnh, nên emote động của nó luôn chuyển động.',
+      always: 'Luôn luôn',
+      hover: 'Khi rê chuột',
+      never: 'Không bao giờ',
+      small: 'Nhỏ',
+      medium: 'Vừa',
+      large: 'Lớn',
+      suggest: 'Gợi ý emote khi gõ',
+      preview: 'Xem trước cỡ lớn khi rê chuột',
+      clear: 'Xóa mục dùng gần đây',
+      confirmClear: 'Xác nhận xóa',
+      cancel: 'Hủy',
+      usedNote: 'Emote đã nhớ: {n}. Dùng cho mục Dùng gần đây trong bộ chọn và thứ tự tự hoàn thành. Mục yêu thích được giữ.',
+      usedNone: 'Chưa nhớ gì. Emote bạn chèn sẽ hiện trong mục Dùng gần đây của bộ chọn.',
+    }),
+    zh: Object.freeze({
+      close: '关闭',
+      providers: '提供方',
+      globals: '全局表情',
+      animated: '动态表情',
+      size: '聊天中的表情大小',
+      options: '选项',
+      recent: '最近使用',
+      providersNote: '隐藏某个提供方会移除它的所有表情，聊天中也是。',
+      globalsNote: '每个提供方在所有频道通用的表情。关闭后只保留主播自己的表情。',
+      reducedNote: '系统已开启“减弱动态效果”，所以无论选什么，表情都保持静止。',
+      bttvNote: 'BTTV 不提供静止帧，所以它的动态表情总是在动。',
+      always: '始终',
+      hover: '悬停时',
+      never: '从不',
+      small: '小',
+      medium: '中',
+      large: '大',
+      suggest: '输入时推荐表情',
+      preview: '悬停时大图预览',
+      clear: '清除最近使用',
+      confirmClear: '确认清除',
+      cancel: '取消',
+      usedNote: '已记住的表情：{n}。用于选择器的“最近使用”和自动补全排序。收藏会保留。',
+      usedNone: '还没有记住任何表情。你插入的表情会出现在选择器的“最近使用”中。',
+    }),
+  });
+  function panelText() {
+    const lang = kickLang();
+    return Object.hasOwn(PANEL_TEXT, lang) ? PANEL_TEXT[lang] : PANEL_TEXT.en;
+  }
 
   // The 7TV+ face as a line glyph in currentColor, for the header mark: the
   // siblings put a flat green icon on that tinted tile, and the filled tab
@@ -2929,38 +3643,41 @@
     const scrollTop = card.scrollTop;
     if (tipAnchor && card.contains(tipAnchor)) hideTooltip();
     const store = settingsLoad();
+    const t = panelText();
     card.textContent = '';
 
     const head = panelEl('div', 'kte-panel-head');
     const mark = panelEl('div', 'kte-panel-mark');
     mark.appendChild(panelMarkIcon());
     const titles = panelEl('div', 'kte-panel-titles');
-    titles.appendChild(panelEl('div', 'kte-panel-title', 'Third-party emotes'));
+    titles.appendChild(panelEl('div', 'kte-panel-title', chatSettingsRowLabel()));
     const close = panelEl('button', 'kte-panel-close', '✕');
     close.type = 'button';
     close.dataset.kteKey = 'close';
-    close.setAttribute('aria-label', 'Close emote settings');
+    close.setAttribute('aria-label', t.close);
+    close.title = t.close;
     close.addEventListener('click', settingsPanelClose);
     head.append(mark, titles, close);
     card.appendChild(head);
 
-    card.appendChild(panelGroup('Providers',
+    card.setAttribute('aria-label', chatSettingsRowLabel());
+    card.appendChild(panelGroup(t.providers,
       panelProviderChips('providers', providerEnabled, (store, provider) => {
         store.providers[provider] = !store.providers[provider];
       }),
-      panelEl('div', 'kte-panel-note', 'Hiding a provider removes all of its emotes, from chat too.'),
+      panelEl('div', 'kte-panel-note', t.providersNote),
     ));
 
-    card.appendChild(panelGroup('Global emotes',
+    card.appendChild(panelGroup(t.globals,
       panelProviderChips('globals', globalsEnabled, (store, provider) => {
         store.globals[provider] = !store.globals[provider];
       }),
-      panelEl('div', 'kte-panel-note', 'Each provider\'s emotes for every channel. Turn them off to keep only the streamer\'s own set.'),
+      panelEl('div', 'kte-panel-note', t.globalsNote),
     ));
 
     const motionRow = panelEl('div', 'kte-panel-chips');
     for (const mode of MOTION_MODES) {
-      const chip = panelChip(MOTION_LABELS[mode], store.motion === mode, () => {
+      const chip = panelChip(t[mode], store.motion === mode, () => {
         settingsUpdate(store => { store.motion = mode; });
         rerenderEmotes();
         pickerRefreshIfBuilt();
@@ -2969,14 +3686,12 @@
       chip.dataset.kteKey = `motion:${mode}`;
       motionRow.appendChild(chip);
     }
-    const motionNote = prefersReducedMotion()
-      ? 'Your system\'s Reduce motion setting is on, so emotes stay still whatever you pick.'
-      : 'BTTV serves no still frames, so its animated emotes always move.';
-    card.appendChild(panelGroup('Animated emotes', motionRow, panelEl('div', 'kte-panel-note', motionNote)));
+    const motionNote = prefersReducedMotion() ? t.reducedNote : t.bttvNote;
+    card.appendChild(panelGroup(t.animated, motionRow, panelEl('div', 'kte-panel-note', motionNote)));
 
     const sizeRow = panelEl('div', 'kte-panel-chips');
     for (const size of Object.keys(EMOTE_SIZES)) {
-      const chip = panelChip(SIZE_LABELS[size], store.size === size, () => {
+      const chip = panelChip(t[size], store.size === size, () => {
         settingsUpdate(store => { store.size = size; });
         applyEmoteSize();
         hideTooltip(); // anchored to an emote that just changed size
@@ -2985,24 +3700,24 @@
       chip.dataset.kteKey = `size:${size}`;
       sizeRow.appendChild(chip);
     }
-    card.appendChild(panelGroup('Emote size in chat', sizeRow));
+    card.appendChild(panelGroup(t.size, sizeRow));
 
     const switches = panelEl('div', 'kte-switches');
     switches.append(
-      panelSwitch('autocomplete', 'Suggest emotes while typing', store.autocomplete, next => {
+      panelSwitch('autocomplete', t.suggest, store.autocomplete, next => {
         next.autocomplete = !next.autocomplete;
         if (!next.autocomplete) acHide();
       }),
-      panelSwitch('preview', 'Large preview on hover', store.preview, next => {
+      panelSwitch('preview', t.preview, store.preview, next => {
         next.preview = !next.preview;
       }),
     );
-    card.appendChild(panelGroup('Options', switches));
+    card.appendChild(panelGroup(t.options, switches));
 
     const used = usageLoad().size;
     const clearRow = panelEl('div', 'kte-panel-chips');
     clearRow.style.gridTemplateColumns = panelConfirmClear ? 'repeat(2, minmax(0, 1fr))' : '1fr';
-    const clear = panelChip(panelConfirmClear ? 'Confirm clear' : 'Clear recently used', panelConfirmClear, () => {
+    const clear = panelChip(panelConfirmClear ? t.confirmClear : t.clear, panelConfirmClear, () => {
       if (!panelConfirmClear) {
         panelConfirmClear = true;
         settingsPanelRender();
@@ -3019,18 +3734,18 @@
     clear.disabled = !used;
     clearRow.appendChild(clear);
     if (panelConfirmClear) {
-      const cancel = panelChip('Cancel', false, () => {
+      const cancel = panelChip(t.cancel, false, () => {
         panelConfirmClear = false;
         settingsPanelRender();
       });
       cancel.dataset.kteKey = 'cancel';
       clearRow.appendChild(cancel);
     }
-    const usedNote = used
-      ? `${used} emote${used === 1 ? '' : 's'} remembered for the picker's Recently used section and the autocomplete ranking. Favourites are kept.`
-      : 'Nothing remembered yet. Emotes you insert show up in the picker\'s Recently used section.';
+    const usedNote = !used ? t.usedNone
+      : used === 1 && t.usedOne ? t.usedOne
+      : t.usedNote.replace('{n}', String(used));
     const recent = pickerRecentEmotes('');
-    card.appendChild(panelGroup('Recently used',
+    card.appendChild(panelGroup(t.recent,
       ...(recent.length ? [panelRecentStrip(recent)] : []),
       panelEl('div', 'kte-panel-note', usedNote),
       clearRow,
@@ -3098,7 +3813,6 @@
     card.id = 'kte-panel';
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-modal', 'true');
-    card.setAttribute('aria-label', 'Third-party emote settings');
     panelBackdrop.addEventListener('click', e => {
       if (e.target === panelBackdrop) settingsPanelClose();
     });
