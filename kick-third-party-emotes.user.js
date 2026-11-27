@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.18.0
+// @version      2.19.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.18.0';
+  const VERSION = '2.19.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2239,12 +2239,13 @@
       menu.appendChild(btn);
     };
 
-    addItem(favHas(code) ? 'Remove from favourites' : 'Add to favourites', () => favToggleAndRefresh(code));
-    addItem('Copy name', () => copyText(code));
+    const t = uiText();
+    addItem(favHas(code) ? t.favRemove : t.favAdd, () => favToggleAndRefresh(code));
+    addItem(t.copyName, () => copyText(code));
     const imgUrl = safeUrl(emote.url);
-    if (imgUrl) addItem('Copy image URL', () => copyText(imgUrl));
+    if (imgUrl) addItem(t.copyUrl, () => copyText(imgUrl));
     const pageUrl = emotePageUrl(emote);
-    if (pageUrl) addItem(`Open on ${sourceName(emote.source)}`, () => window.open(pageUrl, '_blank', 'noopener'));
+    if (pageUrl) addItem(t.openOn.replace('{provider}', sourceName(emote.source)), () => window.open(pageUrl, '_blank', 'noopener'));
 
     overlayParent().appendChild(menu);
     const rect = menu.getBoundingClientRect();
@@ -2711,7 +2712,8 @@
 
     const header = document.createElement('div');
     header.id = 'kte-ac-header';
-    header.textContent = 'Emotes';
+    const t = uiText();
+    header.textContent = t.acHeader;
     popup.appendChild(header);
 
     for (let i = 0; i < matches.length; i++) {
@@ -2752,7 +2754,7 @@
 
     const footer = document.createElement('div');
     footer.id = 'kte-ac-footer';
-    footer.textContent = '↑↓ navigate  ·  Tab/Enter select  ·  Esc close';
+    footer.textContent = t.acHint;
     popup.appendChild(footer);
 
     overlayParent().appendChild(popup);
@@ -2839,15 +2841,16 @@
   // Never survives a close, so the panel can't reopen one click from wiping.
   let panelConfirmClear = false;
 
-  // The settings panel's (2.17.0) and the picker tab's (2.18.0) words in
-  // Kick's language, English for any other — the same languages as the chat
+  // Every word the script shows, in Kick's language, English for any other:
+  // the settings panel (2.17.0), the picker tab (2.18.0), the right-click
+  // menu and the autocomplete (2.19.0). The same languages as the chat
   // settings row (CHAT_SETTINGS_ROW_LABELS, which is also the panel's title
   // and the tab's name). Read on every build, so a language change shows the
-  // next time the panel or the tab draws. Provider names stay as they are;
-  // the autocomplete and the right-click menu stay English. `usedNote` takes
-  // the count as {n}, phrased so no plural form is needed; English alone has
-  // a `usedOne` for a count of 1. `insert`, `chipTip` and `showing` take
-  // {code}, {provider} and {shown}/{total}.
+  // next time each one draws. Provider names stay as they are. `usedNote`
+  // takes the count as {n}, phrased so no plural form is needed; English
+  // alone has a `usedOne` for a count of 1. `insert`, `chipTip`, `openOn` and
+  // `showing` take {code}, {provider} and {shown}/{total}. `acHint` keeps
+  // the key names (↑↓, Tab/Enter, Esc) as they are on the keyboard.
   const UI_TEXT = Object.freeze({
     en: Object.freeze({
       close: 'Close',
@@ -2889,6 +2892,13 @@
       emptyLoading: 'Emotes loading…',
       emptyGlobalsOff: 'No channel emotes here, and global emotes are off — turn them back on in Settings',
       emptyChannel: 'No emotes for this channel',
+      favAdd: 'Add to favourites',
+      favRemove: 'Remove from favourites',
+      copyName: 'Copy name',
+      copyUrl: 'Copy image URL',
+      openOn: 'Open on {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ navigate  ·  Tab/Enter select  ·  Esc close',
       usedOne: '1 emote remembered for the picker\'s Recently used section and the autocomplete ranking. Favourites are kept.',
     }),
     ar: Object.freeze({
@@ -2931,6 +2941,13 @@
       emptyLoading: 'جارٍ تحميل الرموز…',
       emptyGlobalsOff: 'لا رموز للقناة هنا، والرموز العامة متوقفة — أعد تشغيلها من الإعدادات',
       emptyChannel: 'لا توجد رموز لهذه القناة',
+      favAdd: 'إضافة إلى المفضلة',
+      favRemove: 'إزالة من المفضلة',
+      copyName: 'نسخ الاسم',
+      copyUrl: 'نسخ رابط الصورة',
+      openOn: 'فتح في {provider}',
+      acHeader: 'الرموز',
+      acHint: '↑↓ تنقّل  ·  Tab/Enter اختيار  ·  Esc إغلاق',
     }),
     bg: Object.freeze({
       close: 'Затвори',
@@ -2972,6 +2989,13 @@
       emptyLoading: 'Емоутите се зареждат…',
       emptyGlobalsOff: 'Тук няма емоути на канала, а глобалните са изключени — включи ги в настройките',
       emptyChannel: 'Няма емоути за този канал',
+      favAdd: 'Добави в любими',
+      favRemove: 'Премахни от любими',
+      copyName: 'Копирай името',
+      copyUrl: 'Копирай URL на изображението',
+      openOn: 'Отвори в {provider}',
+      acHeader: 'Емоути',
+      acHint: '↑↓ придвижване  ·  Tab/Enter избор  ·  Esc затваряне',
     }),
     cs: Object.freeze({
       close: 'Zavřít',
@@ -3013,6 +3037,13 @@
       emptyLoading: 'Emoty se načítají…',
       emptyGlobalsOff: 'Kanál tu nemá žádné emoty a globální emoty jsou vypnuté — zapni je v nastavení',
       emptyChannel: 'Tento kanál nemá žádné emoty',
+      favAdd: 'Přidat do oblíbených',
+      favRemove: 'Odebrat z oblíbených',
+      copyName: 'Kopírovat název',
+      copyUrl: 'Kopírovat URL obrázku',
+      openOn: 'Otevřít na {provider}',
+      acHeader: 'Emoty',
+      acHint: '↑↓ pohyb  ·  Tab/Enter výběr  ·  Esc zavřít',
     }),
     da: Object.freeze({
       close: 'Luk',
@@ -3054,6 +3085,13 @@
       emptyLoading: 'Emotes indlæses…',
       emptyGlobalsOff: 'Ingen kanal-emotes her, og globale emotes er slået fra — slå dem til igen i indstillingerne',
       emptyChannel: 'Ingen emotes til denne kanal',
+      favAdd: 'Føj til favoritter',
+      favRemove: 'Fjern fra favoritter',
+      copyName: 'Kopiér navn',
+      copyUrl: 'Kopiér billed-URL',
+      openOn: 'Åbn på {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ naviger  ·  Tab/Enter vælg  ·  Esc luk',
     }),
     de: Object.freeze({
       close: 'Schließen',
@@ -3095,6 +3133,13 @@
       emptyLoading: 'Emotes werden geladen…',
       emptyGlobalsOff: 'Keine Kanal-Emotes hier, und globale Emotes sind aus — schalte sie in den Einstellungen wieder ein',
       emptyChannel: 'Keine Emotes für diesen Kanal',
+      favAdd: 'Zu Favoriten hinzufügen',
+      favRemove: 'Aus Favoriten entfernen',
+      copyName: 'Namen kopieren',
+      copyUrl: 'Bild-URL kopieren',
+      openOn: 'Auf {provider} öffnen',
+      acHeader: 'Emotes',
+      acHint: '↑↓ navigieren  ·  Tab/Enter auswählen  ·  Esc schließen',
     }),
     el: Object.freeze({
       close: 'Κλείσιμο',
@@ -3136,6 +3181,13 @@
       emptyLoading: 'Φόρτωση emotes…',
       emptyGlobalsOff: 'Δεν υπάρχουν emotes καναλιού και τα καθολικά είναι ανενεργά — ενεργοποίησέ τα στις ρυθμίσεις',
       emptyChannel: 'Δεν υπάρχουν emotes για αυτό το κανάλι',
+      favAdd: 'Προσθήκη στα αγαπημένα',
+      favRemove: 'Αφαίρεση από τα αγαπημένα',
+      copyName: 'Αντιγραφή ονόματος',
+      copyUrl: 'Αντιγραφή URL εικόνας',
+      openOn: 'Άνοιγμα στο {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ πλοήγηση  ·  Tab/Enter επιλογή  ·  Esc κλείσιμο',
     }),
     es: Object.freeze({
       close: 'Cerrar',
@@ -3177,6 +3229,13 @@
       emptyLoading: 'Cargando emotes…',
       emptyGlobalsOff: 'Este canal no tiene emotes y los globales están desactivados: actívalos en los ajustes',
       emptyChannel: 'Este canal no tiene emotes',
+      favAdd: 'Añadir a favoritos',
+      favRemove: 'Quitar de favoritos',
+      copyName: 'Copiar nombre',
+      copyUrl: 'Copiar URL de la imagen',
+      openOn: 'Abrir en {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ moverse  ·  Tab/Enter elegir  ·  Esc cerrar',
     }),
     fi: Object.freeze({
       close: 'Sulje',
@@ -3218,6 +3277,13 @@
       emptyLoading: 'Emoteja ladataan…',
       emptyGlobalsOff: 'Kanavalla ei ole emoteja, ja yleiset emotet ovat pois päältä — ota ne käyttöön asetuksista',
       emptyChannel: 'Tällä kanavalla ei ole emoteja',
+      favAdd: 'Lisää suosikkeihin',
+      favRemove: 'Poista suosikeista',
+      copyName: 'Kopioi nimi',
+      copyUrl: 'Kopioi kuvan URL',
+      openOn: 'Avaa palvelussa {provider}',
+      acHeader: 'Emotet',
+      acHint: '↑↓ liiku  ·  Tab/Enter valitse  ·  Esc sulje',
     }),
     fr: Object.freeze({
       close: 'Fermer',
@@ -3259,6 +3325,13 @@
       emptyLoading: 'Chargement des emotes…',
       emptyGlobalsOff: 'Aucune emote de chaîne ici et les emotes globales sont désactivées : réactivez-les dans les réglages',
       emptyChannel: 'Aucune emote pour cette chaîne',
+      favAdd: 'Ajouter aux favoris',
+      favRemove: 'Retirer des favoris',
+      copyName: 'Copier le nom',
+      copyUrl: 'Copier l’URL de l’image',
+      openOn: 'Ouvrir sur {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ naviguer  ·  Tab/Entrée choisir  ·  Échap fermer',
     }),
     hu: Object.freeze({
       close: 'Bezárás',
@@ -3300,6 +3373,13 @@
       emptyLoading: 'Emote-ok betöltése…',
       emptyGlobalsOff: 'Itt nincsenek csatorna-emote-ok, a globálisak pedig ki vannak kapcsolva — kapcsold be őket a beállításokban',
       emptyChannel: 'Ennek a csatornának nincsenek emote-jai',
+      favAdd: 'Hozzáadás a kedvencekhez',
+      favRemove: 'Eltávolítás a kedvencekből',
+      copyName: 'Név másolása',
+      copyUrl: 'Kép URL-jének másolása',
+      openOn: 'Megnyitás: {provider}',
+      acHeader: 'Emote-ok',
+      acHint: '↑↓ mozgás  ·  Tab/Enter kiválasztás  ·  Esc bezárás',
     }),
     id: Object.freeze({
       close: 'Tutup',
@@ -3341,6 +3421,13 @@
       emptyLoading: 'Memuat emote…',
       emptyGlobalsOff: 'Channel ini tidak punya emote dan emote global mati — aktifkan lagi di pengaturan',
       emptyChannel: 'Tidak ada emote untuk channel ini',
+      favAdd: 'Tambah ke favorit',
+      favRemove: 'Hapus dari favorit',
+      copyName: 'Salin nama',
+      copyUrl: 'Salin URL gambar',
+      openOn: 'Buka di {provider}',
+      acHeader: 'Emote',
+      acHint: '↑↓ pindah  ·  Tab/Enter pilih  ·  Esc tutup',
     }),
     it: Object.freeze({
       close: 'Chiudi',
@@ -3382,6 +3469,13 @@
       emptyLoading: 'Caricamento emote…',
       emptyGlobalsOff: 'Nessuna emote del canale e le emote globali sono disattivate: riattivale nelle impostazioni',
       emptyChannel: 'Nessuna emote per questo canale',
+      favAdd: 'Aggiungi ai preferiti',
+      favRemove: 'Rimuovi dai preferiti',
+      copyName: 'Copia nome',
+      copyUrl: 'Copia URL immagine',
+      openOn: 'Apri su {provider}',
+      acHeader: 'Emote',
+      acHint: '↑↓ sposta  ·  Tab/Invio scegli  ·  Esc chiudi',
     }),
     ja: Object.freeze({
       close: '閉じる',
@@ -3423,6 +3517,13 @@
       emptyLoading: 'エモートを読み込み中…',
       emptyGlobalsOff: 'チャンネルのエモートがなく、グローバルエモートもオフです — 設定でオンにしてください',
       emptyChannel: 'このチャンネルのエモートはありません',
+      favAdd: 'お気に入りに追加',
+      favRemove: 'お気に入りから削除',
+      copyName: '名前をコピー',
+      copyUrl: '画像URLをコピー',
+      openOn: '{provider} で開く',
+      acHeader: 'エモート',
+      acHint: '↑↓ 移動  ·  Tab/Enter 選択  ·  Esc 閉じる',
     }),
     ko: Object.freeze({
       close: '닫기',
@@ -3464,6 +3565,13 @@
       emptyLoading: '이모트를 불러오는 중…',
       emptyGlobalsOff: '채널 이모트가 없고 전역 이모트가 꺼져 있습니다 — 설정에서 다시 켜세요',
       emptyChannel: '이 채널의 이모트가 없습니다',
+      favAdd: '즐겨찾기에 추가',
+      favRemove: '즐겨찾기에서 제거',
+      copyName: '이름 복사',
+      copyUrl: '이미지 URL 복사',
+      openOn: '{provider}에서 열기',
+      acHeader: '이모트',
+      acHint: '↑↓ 이동  ·  Tab/Enter 선택  ·  Esc 닫기',
     }),
     nl: Object.freeze({
       close: 'Sluiten',
@@ -3505,6 +3613,13 @@
       emptyLoading: 'Emotes laden…',
       emptyGlobalsOff: 'Geen kanaalemotes hier, en globale emotes staan uit — zet ze weer aan in de instellingen',
       emptyChannel: 'Geen emotes voor dit kanaal',
+      favAdd: 'Toevoegen aan favorieten',
+      favRemove: 'Verwijderen uit favorieten',
+      copyName: 'Naam kopiëren',
+      copyUrl: 'Afbeeldings-URL kopiëren',
+      openOn: 'Openen op {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ navigeren  ·  Tab/Enter kiezen  ·  Esc sluiten',
     }),
     no: Object.freeze({
       close: 'Lukk',
@@ -3546,6 +3661,13 @@
       emptyLoading: 'Laster emotes…',
       emptyGlobalsOff: 'Ingen kanal-emotes her, og globale emotes er av — slå dem på igjen i innstillingene',
       emptyChannel: 'Ingen emotes for denne kanalen',
+      favAdd: 'Legg til i favoritter',
+      favRemove: 'Fjern fra favoritter',
+      copyName: 'Kopier navn',
+      copyUrl: 'Kopier bilde-URL',
+      openOn: 'Åpne på {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ naviger  ·  Tab/Enter velg  ·  Esc lukk',
     }),
     pl: Object.freeze({
       close: 'Zamknij',
@@ -3587,6 +3709,13 @@
       emptyLoading: 'Wczytywanie emotek…',
       emptyGlobalsOff: 'Brak emotek kanału, a globalne są wyłączone — włącz je w ustawieniach',
       emptyChannel: 'Ten kanał nie ma emotek',
+      favAdd: 'Dodaj do ulubionych',
+      favRemove: 'Usuń z ulubionych',
+      copyName: 'Kopiuj nazwę',
+      copyUrl: 'Kopiuj URL obrazu',
+      openOn: 'Otwórz w {provider}',
+      acHeader: 'Emotki',
+      acHint: '↑↓ nawigacja  ·  Tab/Enter wybór  ·  Esc zamknij',
     }),
     pt: Object.freeze({
       close: 'Fechar',
@@ -3628,6 +3757,13 @@
       emptyLoading: 'Carregando emotes…',
       emptyGlobalsOff: 'Sem emotes do canal aqui, e os globais estão desativados — ative-os nas configurações',
       emptyChannel: 'Nenhum emote neste canal',
+      favAdd: 'Adicionar aos favoritos',
+      favRemove: 'Remover dos favoritos',
+      copyName: 'Copiar nome',
+      copyUrl: 'Copiar URL da imagem',
+      openOn: 'Abrir no {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ navegar  ·  Tab/Enter escolher  ·  Esc fechar',
     }),
     ro: Object.freeze({
       close: 'Închide',
@@ -3669,6 +3805,13 @@
       emptyLoading: 'Se încarcă emote-urile…',
       emptyGlobalsOff: 'Niciun emote al canalului aici, iar cele globale sunt oprite — activează-le din setări',
       emptyChannel: 'Niciun emote pentru acest canal',
+      favAdd: 'Adaugă la favorite',
+      favRemove: 'Elimină din favorite',
+      copyName: 'Copiază numele',
+      copyUrl: 'Copiază URL-ul imaginii',
+      openOn: 'Deschide pe {provider}',
+      acHeader: 'Emote-uri',
+      acHint: '↑↓ navigare  ·  Tab/Enter alege  ·  Esc închide',
     }),
     ru: Object.freeze({
       close: 'Закрыть',
@@ -3710,6 +3853,13 @@
       emptyLoading: 'Эмоуты загружаются…',
       emptyGlobalsOff: 'Здесь нет эмоутов канала, а глобальные выключены — включите их в настройках',
       emptyChannel: 'У этого канала нет эмоутов',
+      favAdd: 'Добавить в избранное',
+      favRemove: 'Убрать из избранного',
+      copyName: 'Копировать название',
+      copyUrl: 'Копировать URL изображения',
+      openOn: 'Открыть на {provider}',
+      acHeader: 'Эмоуты',
+      acHint: '↑↓ выбор  ·  Tab/Enter вставить  ·  Esc закрыть',
     }),
     sk: Object.freeze({
       close: 'Zavrieť',
@@ -3751,6 +3901,13 @@
       emptyLoading: 'Emoty sa načítavajú…',
       emptyGlobalsOff: 'Kanál tu nemá žiadne emoty a globálne emoty sú vypnuté — zapni ich v nastaveniach',
       emptyChannel: 'Tento kanál nemá žiadne emoty',
+      favAdd: 'Pridať do obľúbených',
+      favRemove: 'Odobrať z obľúbených',
+      copyName: 'Kopírovať názov',
+      copyUrl: 'Kopírovať URL obrázka',
+      openOn: 'Otvoriť na {provider}',
+      acHeader: 'Emoty',
+      acHint: '↑↓ pohyb  ·  Tab/Enter výber  ·  Esc zavrieť',
     }),
     sv: Object.freeze({
       close: 'Stäng',
@@ -3792,6 +3949,13 @@
       emptyLoading: 'Läser in emotes…',
       emptyGlobalsOff: 'Inga kanal-emotes här, och globala emotes är av — slå på dem igen i inställningarna',
       emptyChannel: 'Inga emotes för den här kanalen',
+      favAdd: 'Lägg till i favoriter',
+      favRemove: 'Ta bort från favoriter',
+      copyName: 'Kopiera namn',
+      copyUrl: 'Kopiera bild-URL',
+      openOn: 'Öppna på {provider}',
+      acHeader: 'Emotes',
+      acHint: '↑↓ navigera  ·  Tab/Enter välj  ·  Esc stäng',
     }),
     th: Object.freeze({
       close: 'ปิด',
@@ -3833,6 +3997,13 @@
       emptyLoading: 'กำลังโหลดอีโมต…',
       emptyGlobalsOff: 'ช่องนี้ไม่มีอีโมต และอีโมตทั่วไปปิดอยู่ — เปิดได้ในการตั้งค่า',
       emptyChannel: 'ไม่มีอีโมตสำหรับช่องนี้',
+      favAdd: 'เพิ่มในรายการโปรด',
+      favRemove: 'นำออกจากรายการโปรด',
+      copyName: 'คัดลอกชื่อ',
+      copyUrl: 'คัดลอก URL รูปภาพ',
+      openOn: 'เปิดใน {provider}',
+      acHeader: 'อีโมต',
+      acHint: '↑↓ เลื่อน  ·  Tab/Enter เลือก  ·  Esc ปิด',
     }),
     tr: Object.freeze({
       close: 'Kapat',
@@ -3874,6 +4045,13 @@
       emptyLoading: 'Emote’lar yükleniyor…',
       emptyGlobalsOff: 'Burada kanal emote’u yok ve genel emote’lar kapalı — ayarlardan aç',
       emptyChannel: 'Bu kanal için emote yok',
+      favAdd: 'Favorilere ekle',
+      favRemove: 'Favorilerden çıkar',
+      copyName: 'Adı kopyala',
+      copyUrl: 'Görsel URL’sini kopyala',
+      openOn: '{provider} üzerinde aç',
+      acHeader: 'Emote’lar',
+      acHint: '↑↓ gezin  ·  Tab/Enter seç  ·  Esc kapat',
     }),
     vi: Object.freeze({
       close: 'Đóng',
@@ -3915,6 +4093,13 @@
       emptyLoading: 'Đang tải emote…',
       emptyGlobalsOff: 'Kênh không có emote, còn emote toàn cục đang tắt — bật lại trong phần cài đặt',
       emptyChannel: 'Kênh này không có emote',
+      favAdd: 'Thêm vào yêu thích',
+      favRemove: 'Bỏ khỏi yêu thích',
+      copyName: 'Sao chép tên',
+      copyUrl: 'Sao chép URL ảnh',
+      openOn: 'Mở trên {provider}',
+      acHeader: 'Emote',
+      acHint: '↑↓ di chuyển  ·  Tab/Enter chọn  ·  Esc đóng',
     }),
     zh: Object.freeze({
       close: '关闭',
@@ -3956,6 +4141,13 @@
       emptyLoading: '表情加载中…',
       emptyGlobalsOff: '此频道没有表情，全局表情也已关闭 — 在设置中重新打开',
       emptyChannel: '此频道没有表情',
+      favAdd: '添加到收藏',
+      favRemove: '从收藏中移除',
+      copyName: '复制名称',
+      copyUrl: '复制图片链接',
+      openOn: '在 {provider} 打开',
+      acHeader: '表情',
+      acHint: '↑↓ 移动  ·  Tab/Enter 选择  ·  Esc 关闭',
     }),
   });
   function uiText() {

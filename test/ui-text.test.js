@@ -1,5 +1,5 @@
-// The settings panel (2.17.0) and the picker tab (2.18.0) in Kick's
-// language: UI_TEXT, picked by
+// The settings panel (2.17.0), the picker tab (2.18.0), the right-click menu
+// and the autocomplete (2.19.0) in Kick's language: UI_TEXT, picked by
 // <html lang> like the chat settings row, English for anything else.
 
 loadConst(['UI_TEXT', 'CHAT_SETTINGS_ROW_LABELS', 'MOTION_MODES', 'EMOTE_SIZES']);
@@ -30,7 +30,7 @@ check('the count goes in {n}, once, and the empty note has none', langs.every(l 
   UI_TEXT[l].usedNote.split('{n}').length === 2 && UI_TEXT[l].usedNone.indexOf('{n}') < 0));
 check('English says "1 emote" for one', en.usedOne.indexOf('1 emote remembered') === 0);
 check('each placeholder is there, once', langs.every(l => [['insert', '{code}'], ['chipTip', '{provider}'],
-  ['showing', '{shown}'], ['showing', '{total}']].every(([k, ph]) => UI_TEXT[l][k].split(ph).length === 2)));
+  ['showing', '{shown}'], ['showing', '{total}'], ['openOn', '{provider}']].every(([k, ph]) => UI_TEXT[l][k].split(ph).length === 2)));
 
 // No English left behind in the panel itself.
 var src = fnSource('settingsPanelRender');
@@ -40,5 +40,9 @@ var pickerSrc = ['pickerBuildButton', 'pickerBuildFooter', 'pickerBuildContent',
   .map(fnSource).join('\n');
 check('…and so does the picker tab', !/'(Load more|Show less|Loading\.\.\.|Favourites'\, favourites|No matching emotes|Third-party emotes|7TV \/ BTTV \/ FFZ emotes)'/.test(pickerSrc) &&
   !/`(Insert|Showing|Show or hide) /.test(pickerSrc));
+var popupSrc = fnSource('showEmoteMenu') + '\n' + fnSource('acRender');
+check('…and the right-click menu and autocomplete', /uiText\(\)/.test(fnSource('showEmoteMenu')) && /uiText\(\)/.test(fnSource('acRender')) &&
+  !/'(Add to favourites|Remove from favourites|Copy name|Copy image URL|Emotes)'/.test(popupSrc) && !/`Open on /.test(popupSrc) && !/navigate {2}·/.test(popupSrc));
+check('the autocomplete hint keeps the keys as they are on the keyboard', langs.every(l => /^↑↓ .+ {2}· {2}Tab\/(Enter|Entrée|Invio) .+ {2}· {2}(Esc|Échap) /.test(UI_TEXT[l].acHint)));
 
 if (savedDoc !== undefined) globalThis.document = savedDoc;

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.0] - 2026-11-27
+
+### Added
+- **The right-click menu and autocomplete speak Kick's language.** The emote menu's *Add to favourites* / *Remove from favourites*, *Copy name*, *Copy image URL* and *Open on 7TV/BTTV/FFZ*, and the autocomplete's heading and key hint, now follow the language Kick is shown in, for the same 28 languages as the rest of the script, and English otherwise. The hint keeps the key names as they are on the keyboard (↑↓, Tab/Enter, Esc). With this, everything the script shows is translated; provider names and emote names stay as they are.
+
 ## [2.18.0] - 2026-11-27
 
 ### Added
