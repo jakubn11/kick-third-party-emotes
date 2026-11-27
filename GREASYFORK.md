@@ -4,10 +4,9 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.15.12** — the settings row in Kick's chat menu, in the script's own style
+**2.16.0** — the settings row in your language
 
-- **The row looks like the script's own UI.** It stays in the same place in Kick's chat settings menu, but sits on its own dark card, apart from Kick's rows, with the settings panel's green icon tile.
-- **Green hover and focus.** Hovering the row or tabbing to it shows the green tint the script's other buttons use, never Kick's grey.
+- **The menu row speaks Kick's language.** The **Third-party emotes** row in Kick's chat settings menu now uses the language Kick is shown in, for all 28 languages Kick offers (*Emoty třetích stran* in Czech, *Drittanbieter-Emotes* in German, …), and English otherwise. It follows a language change straight away. The settings panel itself is still in English.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
@@ -36,7 +35,7 @@ Open any Kick channel. Emotes load automatically and replace matching words in c
 | Enter | Insert the highlighted emote, or send the message if nothing is highlighted |
 | Esc | Close autocomplete |
 
-Open Kick's emote picker and choose the **7TV+** tab to browse, search and toggle providers; the settings panel is under **Third-party emotes** in Kick's chat settings menu (the gear beside **Chat**) and **Emote settings** in your userscript manager's menu. Right-click any third-party emote for the context menu.
+Open Kick's emote picker and choose the **7TV+** tab to browse, search and toggle providers; the settings panel is under **Third-party emotes** (shown in Kick's language) in Kick's chat settings menu (the gear beside **Chat**) and **Emote settings** in your userscript manager's menu. Right-click any third-party emote for the context menu.
 
 ## Privacy & permissions
 
