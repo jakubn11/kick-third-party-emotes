@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.17.0
+// @version      2.18.0
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.17.0';
+  const VERSION = '2.18.0';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -2839,14 +2839,16 @@
   // Never survives a close, so the panel can't reopen one click from wiping.
   let panelConfirmClear = false;
 
-  // The panel's words in Kick's language (2.17.0), English for any other —
-  // the same languages as the chat settings row (CHAT_SETTINGS_ROW_LABELS,
-  // which is also the panel's title). Read on every render, so a language
-  // change shows the next time the panel draws. Provider names stay as they
-  // are; the picker and the autocomplete stay English. `usedNote` takes the
-  // count as {n}, phrased so no plural form is needed; English alone has a
-  // `usedOne` for a count of 1.
-  const PANEL_TEXT = Object.freeze({
+  // The settings panel's (2.17.0) and the picker tab's (2.18.0) words in
+  // Kick's language, English for any other — the same languages as the chat
+  // settings row (CHAT_SETTINGS_ROW_LABELS, which is also the panel's title
+  // and the tab's name). Read on every build, so a language change shows the
+  // next time the panel or the tab draws. Provider names stay as they are;
+  // the autocomplete and the right-click menu stay English. `usedNote` takes
+  // the count as {n}, phrased so no plural form is needed; English alone has
+  // a `usedOne` for a count of 1. `insert`, `chipTip` and `showing` take
+  // {code}, {provider} and {shown}/{total}.
+  const UI_TEXT = Object.freeze({
     en: Object.freeze({
       close: 'Close',
       providers: 'Providers',
@@ -2872,6 +2874,21 @@
       cancel: 'Cancel',
       usedNote: '{n} emotes remembered for the picker\'s Recently used section and the autocomplete ranking. Favourites are kept.',
       usedNone: 'Nothing remembered yet. Emotes you insert show up in the picker\'s Recently used section.',
+      favourites: 'Favourites',
+      insert: 'Insert {code}',
+      loadMore: 'Load more',
+      loadMoreLabel: 'Load more emotes',
+      showLess: 'Show less',
+      showLessLabel: 'Show fewer emotes',
+      showing: 'Showing {shown} of {total}',
+      loading: 'Loading…',
+      chipTip: 'Show or hide {provider} emotes',
+      tabTip: '7TV / BTTV / FFZ emotes',
+      emptySearch: 'No matching emotes',
+      emptyHidden: 'Every provider is hidden — turn one back on above',
+      emptyLoading: 'Emotes loading…',
+      emptyGlobalsOff: 'No channel emotes here, and global emotes are off — turn them back on in Settings',
+      emptyChannel: 'No emotes for this channel',
       usedOne: '1 emote remembered for the picker\'s Recently used section and the autocomplete ranking. Favourites are kept.',
     }),
     ar: Object.freeze({
@@ -2899,6 +2916,21 @@
       cancel: 'إلغاء',
       usedNote: 'رموز محفوظة: {n}. تُستخدم لقسم «المستخدمة مؤخرًا» في المنتقي ولترتيب الإكمال التلقائي. المفضلة تبقى.',
       usedNone: 'لا شيء محفوظ بعد. الرموز التي تُدرجها تظهر في قسم «المستخدمة مؤخرًا» في المنتقي.',
+      favourites: 'المفضلة',
+      insert: 'إدراج {code}',
+      loadMore: 'تحميل المزيد',
+      loadMoreLabel: 'تحميل المزيد من الرموز',
+      showLess: 'عرض أقل',
+      showLessLabel: 'عرض رموز أقل',
+      showing: 'معروض {shown} من {total}',
+      loading: 'جارٍ التحميل…',
+      chipTip: 'إظهار رموز {provider} أو إخفاؤها',
+      tabTip: 'رموز 7TV / BTTV / FFZ',
+      emptySearch: 'لا توجد رموز مطابقة',
+      emptyHidden: 'كل المزوّدين مخفيون — أعد تشغيل أحدهم في الأعلى',
+      emptyLoading: 'جارٍ تحميل الرموز…',
+      emptyGlobalsOff: 'لا رموز للقناة هنا، والرموز العامة متوقفة — أعد تشغيلها من الإعدادات',
+      emptyChannel: 'لا توجد رموز لهذه القناة',
     }),
     bg: Object.freeze({
       close: 'Затвори',
@@ -2925,6 +2957,21 @@
       cancel: 'Отказ',
       usedNote: 'Запомнени емоути: {n}. За секцията „Наскоро използвани“ и за подредбата при автодовършване. Любимите остават.',
       usedNone: 'Още нищо не е запомнено. Емоутите, които вмъкнеш, се появяват в „Наскоро използвани“.',
+      favourites: 'Любими',
+      insert: 'Вмъкни {code}',
+      loadMore: 'Зареди още',
+      loadMoreLabel: 'Зареди още емоути',
+      showLess: 'Покажи по-малко',
+      showLessLabel: 'Покажи по-малко емоути',
+      showing: '{shown} от {total}',
+      loading: 'Зареждане…',
+      chipTip: 'Покажи или скрий емоутите от {provider}',
+      tabTip: 'Емоути от 7TV / BTTV / FFZ',
+      emptySearch: 'Няма съвпадащи емоути',
+      emptyHidden: 'Всички доставчици са скрити — включи някой отгоре',
+      emptyLoading: 'Емоутите се зареждат…',
+      emptyGlobalsOff: 'Тук няма емоути на канала, а глобалните са изключени — включи ги в настройките',
+      emptyChannel: 'Няма емоути за този канал',
     }),
     cs: Object.freeze({
       close: 'Zavřít',
@@ -2951,6 +2998,21 @@
       cancel: 'Zrušit',
       usedNote: 'Zapamatované emoty: {n}. Slouží pro Nedávno použité ve výběru a pořadí našeptávače. Oblíbené zůstanou.',
       usedNone: 'Zatím nic zapamatováno. Emoty, které vložíš, se objeví v Nedávno použitých ve výběru.',
+      favourites: 'Oblíbené',
+      insert: 'Vložit {code}',
+      loadMore: 'Načíst další',
+      loadMoreLabel: 'Načíst další emoty',
+      showLess: 'Zobrazit méně',
+      showLessLabel: 'Zobrazit méně emotů',
+      showing: 'Zobrazeno {shown} z {total}',
+      loading: 'Načítání…',
+      chipTip: 'Zobrazit nebo skrýt emoty {provider}',
+      tabTip: 'Emoty 7TV / BTTV / FFZ',
+      emptySearch: 'Žádné odpovídající emoty',
+      emptyHidden: 'Všichni poskytovatelé jsou skrytí — zapni některého výše',
+      emptyLoading: 'Emoty se načítají…',
+      emptyGlobalsOff: 'Kanál tu nemá žádné emoty a globální emoty jsou vypnuté — zapni je v nastavení',
+      emptyChannel: 'Tento kanál nemá žádné emoty',
     }),
     da: Object.freeze({
       close: 'Luk',
@@ -2977,6 +3039,21 @@
       cancel: 'Annuller',
       usedNote: 'Huskede emotes: {n}. Bruges til vælgerens Senest brugt og rækkefølgen i autofuldførelse. Favoritter beholdes.',
       usedNone: 'Intet husket endnu. Emotes, du indsætter, vises under Senest brugt i vælgeren.',
+      favourites: 'Favoritter',
+      insert: 'Indsæt {code}',
+      loadMore: 'Indlæs flere',
+      loadMoreLabel: 'Indlæs flere emotes',
+      showLess: 'Vis færre',
+      showLessLabel: 'Vis færre emotes',
+      showing: 'Viser {shown} af {total}',
+      loading: 'Indlæser…',
+      chipTip: 'Vis eller skjul emotes fra {provider}',
+      tabTip: 'Emotes fra 7TV / BTTV / FFZ',
+      emptySearch: 'Ingen matchende emotes',
+      emptyHidden: 'Alle udbydere er skjult — slå en til igen ovenfor',
+      emptyLoading: 'Emotes indlæses…',
+      emptyGlobalsOff: 'Ingen kanal-emotes her, og globale emotes er slået fra — slå dem til igen i indstillingerne',
+      emptyChannel: 'Ingen emotes til denne kanal',
     }),
     de: Object.freeze({
       close: 'Schließen',
@@ -3003,6 +3080,21 @@
       cancel: 'Abbrechen',
       usedNote: 'Gemerkte Emotes: {n}. Für „Zuletzt verwendet“ in der Auswahl und die Reihenfolge der Vorschläge. Favoriten bleiben.',
       usedNone: 'Noch nichts gemerkt. Eingefügte Emotes erscheinen unter „Zuletzt verwendet“ in der Auswahl.',
+      favourites: 'Favoriten',
+      insert: '{code} einfügen',
+      loadMore: 'Mehr laden',
+      loadMoreLabel: 'Mehr Emotes laden',
+      showLess: 'Weniger',
+      showLessLabel: 'Weniger Emotes zeigen',
+      showing: '{shown} von {total}',
+      loading: 'Lädt…',
+      chipTip: 'Emotes von {provider} zeigen oder ausblenden',
+      tabTip: 'Emotes von 7TV / BTTV / FFZ',
+      emptySearch: 'Keine passenden Emotes',
+      emptyHidden: 'Alle Anbieter sind ausgeblendet — schalte oben einen wieder ein',
+      emptyLoading: 'Emotes werden geladen…',
+      emptyGlobalsOff: 'Keine Kanal-Emotes hier, und globale Emotes sind aus — schalte sie in den Einstellungen wieder ein',
+      emptyChannel: 'Keine Emotes für diesen Kanal',
     }),
     el: Object.freeze({
       close: 'Κλείσιμο',
@@ -3029,6 +3121,21 @@
       cancel: 'Άκυρο',
       usedNote: 'Αποθηκευμένα emotes: {n}. Για την ενότητα Πρόσφατα του επιλογέα και τη σειρά της αυτόματης συμπλήρωσης. Τα αγαπημένα μένουν.',
       usedNone: 'Τίποτα ακόμη. Τα emotes που εισάγεις εμφανίζονται στα Πρόσφατα του επιλογέα.',
+      favourites: 'Αγαπημένα',
+      insert: 'Εισαγωγή {code}',
+      loadMore: 'Περισσότερα',
+      loadMoreLabel: 'Φόρτωση περισσότερων emotes',
+      showLess: 'Λιγότερα',
+      showLessLabel: 'Λιγότερα emotes',
+      showing: '{shown} από {total}',
+      loading: 'Φόρτωση…',
+      chipTip: 'Εμφάνιση ή απόκρυψη emotes του {provider}',
+      tabTip: 'Emotes 7TV / BTTV / FFZ',
+      emptySearch: 'Κανένα emote δεν ταιριάζει',
+      emptyHidden: 'Όλοι οι πάροχοι είναι κρυμμένοι — ενεργοποίησε έναν παραπάνω',
+      emptyLoading: 'Φόρτωση emotes…',
+      emptyGlobalsOff: 'Δεν υπάρχουν emotes καναλιού και τα καθολικά είναι ανενεργά — ενεργοποίησέ τα στις ρυθμίσεις',
+      emptyChannel: 'Δεν υπάρχουν emotes για αυτό το κανάλι',
     }),
     es: Object.freeze({
       close: 'Cerrar',
@@ -3055,6 +3162,21 @@
       cancel: 'Cancelar',
       usedNote: 'Emotes recordados: {n}. Para Usados recientemente del selector y el orden del autocompletado. Los favoritos se conservan.',
       usedNone: 'Aún no hay nada. Los emotes que insertes aparecen en Usados recientemente del selector.',
+      favourites: 'Favoritos',
+      insert: 'Insertar {code}',
+      loadMore: 'Cargar más',
+      loadMoreLabel: 'Cargar más emotes',
+      showLess: 'Ver menos',
+      showLessLabel: 'Ver menos emotes',
+      showing: '{shown} de {total}',
+      loading: 'Cargando…',
+      chipTip: 'Mostrar u ocultar los emotes de {provider}',
+      tabTip: 'Emotes de 7TV / BTTV / FFZ',
+      emptySearch: 'Ningún emote coincide',
+      emptyHidden: 'Todos los proveedores están ocultos: activa uno arriba',
+      emptyLoading: 'Cargando emotes…',
+      emptyGlobalsOff: 'Este canal no tiene emotes y los globales están desactivados: actívalos en los ajustes',
+      emptyChannel: 'Este canal no tiene emotes',
     }),
     fi: Object.freeze({
       close: 'Sulje',
@@ -3081,6 +3203,21 @@
       cancel: 'Peruuta',
       usedNote: 'Muistettuja emoteja: {n}. Valitsimen Viimeksi käytetyt -osioon ja automaattitäydennyksen järjestykseen. Suosikit säilyvät.',
       usedNone: 'Mitään ei ole vielä muistettu. Lisäämäsi emotet näkyvät valitsimen Viimeksi käytetyissä.',
+      favourites: 'Suosikit',
+      insert: 'Lisää {code}',
+      loadMore: 'Lataa lisää',
+      loadMoreLabel: 'Lataa lisää emoteja',
+      showLess: 'Näytä vähemmän',
+      showLessLabel: 'Näytä vähemmän emoteja',
+      showing: '{shown}/{total}',
+      loading: 'Ladataan…',
+      chipTip: 'Näytä tai piilota {provider}-emotet',
+      tabTip: '7TV / BTTV / FFZ -emotet',
+      emptySearch: 'Ei osuvia emoteja',
+      emptyHidden: 'Kaikki palveluntarjoajat on piilotettu — ota yksi käyttöön yllä',
+      emptyLoading: 'Emoteja ladataan…',
+      emptyGlobalsOff: 'Kanavalla ei ole emoteja, ja yleiset emotet ovat pois päältä — ota ne käyttöön asetuksista',
+      emptyChannel: 'Tällä kanavalla ei ole emoteja',
     }),
     fr: Object.freeze({
       close: 'Fermer',
@@ -3107,6 +3244,21 @@
       cancel: 'Annuler',
       usedNote: 'Emotes mémorisées : {n}. Pour la section Utilisées récemment du sélecteur et l’ordre de l’autocomplétion. Les favoris sont conservés.',
       usedNone: 'Rien de mémorisé pour l’instant. Les emotes que vous insérez apparaissent dans Utilisées récemment.',
+      favourites: 'Favoris',
+      insert: 'Insérer {code}',
+      loadMore: 'Plus',
+      loadMoreLabel: 'Charger plus d’emotes',
+      showLess: 'Moins',
+      showLessLabel: 'Afficher moins d’emotes',
+      showing: '{shown} sur {total}',
+      loading: 'Chargement…',
+      chipTip: 'Afficher ou masquer les emotes {provider}',
+      tabTip: 'Emotes 7TV / BTTV / FFZ',
+      emptySearch: 'Aucune emote correspondante',
+      emptyHidden: 'Tous les fournisseurs sont masqués : réactivez-en un ci-dessus',
+      emptyLoading: 'Chargement des emotes…',
+      emptyGlobalsOff: 'Aucune emote de chaîne ici et les emotes globales sont désactivées : réactivez-les dans les réglages',
+      emptyChannel: 'Aucune emote pour cette chaîne',
     }),
     hu: Object.freeze({
       close: 'Bezárás',
@@ -3133,6 +3285,21 @@
       cancel: 'Mégse',
       usedNote: 'Megjegyzett emote-ok: {n}. A választó Legutóbb használt részéhez és az automatikus kiegészítés sorrendjéhez. A kedvencek megmaradnak.',
       usedNone: 'Még nincs megjegyzett emote. A beszúrt emote-ok a választó Legutóbb használt részében jelennek meg.',
+      favourites: 'Kedvencek',
+      insert: '{code} beszúrása',
+      loadMore: 'Továbbiak',
+      loadMoreLabel: 'További emote-ok betöltése',
+      showLess: 'Kevesebb',
+      showLessLabel: 'Kevesebb emote',
+      showing: '{shown} / {total}',
+      loading: 'Betöltés…',
+      chipTip: '{provider} emote-ok megjelenítése vagy elrejtése',
+      tabTip: '7TV / BTTV / FFZ emote-ok',
+      emptySearch: 'Nincs egyező emote',
+      emptyHidden: 'Minden szolgáltató el van rejtve — kapcsolj be egyet fent',
+      emptyLoading: 'Emote-ok betöltése…',
+      emptyGlobalsOff: 'Itt nincsenek csatorna-emote-ok, a globálisak pedig ki vannak kapcsolva — kapcsold be őket a beállításokban',
+      emptyChannel: 'Ennek a csatornának nincsenek emote-jai',
     }),
     id: Object.freeze({
       close: 'Tutup',
@@ -3159,6 +3326,21 @@
       cancel: 'Batal',
       usedNote: 'Emote yang diingat: {n}. Untuk bagian Baru dipakai di pemilih dan urutan pelengkapan otomatis. Favorit tetap disimpan.',
       usedNone: 'Belum ada yang diingat. Emote yang kamu sisipkan muncul di bagian Baru dipakai di pemilih.',
+      favourites: 'Favorit',
+      insert: 'Sisipkan {code}',
+      loadMore: 'Muat lagi',
+      loadMoreLabel: 'Muat lebih banyak emote',
+      showLess: 'Lebih sedikit',
+      showLessLabel: 'Tampilkan lebih sedikit emote',
+      showing: '{shown} dari {total}',
+      loading: 'Memuat…',
+      chipTip: 'Tampilkan atau sembunyikan emote {provider}',
+      tabTip: 'Emote 7TV / BTTV / FFZ',
+      emptySearch: 'Tidak ada emote yang cocok',
+      emptyHidden: 'Semua penyedia disembunyikan — aktifkan lagi salah satu di atas',
+      emptyLoading: 'Memuat emote…',
+      emptyGlobalsOff: 'Channel ini tidak punya emote dan emote global mati — aktifkan lagi di pengaturan',
+      emptyChannel: 'Tidak ada emote untuk channel ini',
     }),
     it: Object.freeze({
       close: 'Chiudi',
@@ -3185,6 +3367,21 @@
       cancel: 'Annulla',
       usedNote: 'Emote memorizzate: {n}. Per la sezione Usate di recente del selettore e l’ordine del completamento automatico. I preferiti restano.',
       usedNone: 'Ancora niente. Le emote che inserisci compaiono in Usate di recente nel selettore.',
+      favourites: 'Preferiti',
+      insert: 'Inserisci {code}',
+      loadMore: 'Carica altre',
+      loadMoreLabel: 'Carica altre emote',
+      showLess: 'Mostra meno',
+      showLessLabel: 'Mostra meno emote',
+      showing: '{shown} di {total}',
+      loading: 'Caricamento…',
+      chipTip: 'Mostra o nascondi le emote di {provider}',
+      tabTip: 'Emote di 7TV / BTTV / FFZ',
+      emptySearch: 'Nessuna emote corrispondente',
+      emptyHidden: 'Tutti i fornitori sono nascosti: riattivane uno qui sopra',
+      emptyLoading: 'Caricamento emote…',
+      emptyGlobalsOff: 'Nessuna emote del canale e le emote globali sono disattivate: riattivale nelle impostazioni',
+      emptyChannel: 'Nessuna emote per questo canale',
     }),
     ja: Object.freeze({
       close: '閉じる',
@@ -3211,6 +3408,21 @@
       cancel: 'キャンセル',
       usedNote: '記憶しているエモート: {n}。ピッカーの「最近使用」と入力補完の並び順に使います。お気に入りは残ります。',
       usedNone: 'まだ記憶はありません。挿入したエモートはピッカーの「最近使用」に表示されます。',
+      favourites: 'お気に入り',
+      insert: '{code} を挿入',
+      loadMore: 'さらに読み込む',
+      loadMoreLabel: 'エモートをさらに読み込む',
+      showLess: '表示を減らす',
+      showLessLabel: '表示するエモートを減らす',
+      showing: '{total}件中{shown}件',
+      loading: '読み込み中…',
+      chipTip: '{provider} のエモートを表示/非表示',
+      tabTip: '7TV / BTTV / FFZ のエモート',
+      emptySearch: '一致するエモートはありません',
+      emptyHidden: 'すべてのプロバイダーが非表示です — 上でどれかをオンにしてください',
+      emptyLoading: 'エモートを読み込み中…',
+      emptyGlobalsOff: 'チャンネルのエモートがなく、グローバルエモートもオフです — 設定でオンにしてください',
+      emptyChannel: 'このチャンネルのエモートはありません',
     }),
     ko: Object.freeze({
       close: '닫기',
@@ -3237,6 +3449,21 @@
       cancel: '취소',
       usedNote: '기억된 이모트: {n}개. 선택기의 최근 사용 섹션과 자동 완성 순서에 쓰입니다. 즐겨찾기는 유지됩니다.',
       usedNone: '아직 기억된 것이 없습니다. 넣은 이모트는 선택기의 최근 사용에 표시됩니다.',
+      favourites: '즐겨찾기',
+      insert: '{code} 넣기',
+      loadMore: '더 보기',
+      loadMoreLabel: '이모트 더 불러오기',
+      showLess: '접기',
+      showLessLabel: '이모트 적게 보기',
+      showing: '{total}개 중 {shown}개',
+      loading: '불러오는 중…',
+      chipTip: '{provider} 이모트 표시/숨기기',
+      tabTip: '7TV / BTTV / FFZ 이모트',
+      emptySearch: '일치하는 이모트가 없습니다',
+      emptyHidden: '모든 제공자가 숨겨져 있습니다 — 위에서 하나를 켜세요',
+      emptyLoading: '이모트를 불러오는 중…',
+      emptyGlobalsOff: '채널 이모트가 없고 전역 이모트가 꺼져 있습니다 — 설정에서 다시 켜세요',
+      emptyChannel: '이 채널의 이모트가 없습니다',
     }),
     nl: Object.freeze({
       close: 'Sluiten',
@@ -3263,6 +3490,21 @@
       cancel: 'Annuleren',
       usedNote: 'Onthouden emotes: {n}. Voor Recent gebruikt in de kiezer en de volgorde van automatisch aanvullen. Favorieten blijven.',
       usedNone: 'Nog niets onthouden. Emotes die je invoegt, verschijnen bij Recent gebruikt in de kiezer.',
+      favourites: 'Favorieten',
+      insert: '{code} invoegen',
+      loadMore: 'Meer laden',
+      loadMoreLabel: 'Meer emotes laden',
+      showLess: 'Minder',
+      showLessLabel: 'Minder emotes tonen',
+      showing: '{shown} van {total}',
+      loading: 'Laden…',
+      chipTip: 'Emotes van {provider} tonen of verbergen',
+      tabTip: 'Emotes van 7TV / BTTV / FFZ',
+      emptySearch: 'Geen passende emotes',
+      emptyHidden: 'Alle aanbieders zijn verborgen — zet er hierboven een aan',
+      emptyLoading: 'Emotes laden…',
+      emptyGlobalsOff: 'Geen kanaalemotes hier, en globale emotes staan uit — zet ze weer aan in de instellingen',
+      emptyChannel: 'Geen emotes voor dit kanaal',
     }),
     no: Object.freeze({
       close: 'Lukk',
@@ -3289,6 +3531,21 @@
       cancel: 'Avbryt',
       usedNote: 'Husket emotes: {n}. Brukes til Nylig brukt i velgeren og rekkefølgen i autofullføring. Favoritter beholdes.',
       usedNone: 'Ingenting husket ennå. Emotes du setter inn, vises under Nylig brukt i velgeren.',
+      favourites: 'Favoritter',
+      insert: 'Sett inn {code}',
+      loadMore: 'Last inn flere',
+      loadMoreLabel: 'Last inn flere emotes',
+      showLess: 'Vis færre',
+      showLessLabel: 'Vis færre emotes',
+      showing: 'Viser {shown} av {total}',
+      loading: 'Laster…',
+      chipTip: 'Vis eller skjul emotes fra {provider}',
+      tabTip: 'Emotes fra 7TV / BTTV / FFZ',
+      emptySearch: 'Ingen samsvarende emotes',
+      emptyHidden: 'Alle leverandører er skjult — slå på en ovenfor',
+      emptyLoading: 'Laster emotes…',
+      emptyGlobalsOff: 'Ingen kanal-emotes her, og globale emotes er av — slå dem på igjen i innstillingene',
+      emptyChannel: 'Ingen emotes for denne kanalen',
     }),
     pl: Object.freeze({
       close: 'Zamknij',
@@ -3315,6 +3572,21 @@
       cancel: 'Anuluj',
       usedNote: 'Zapamiętane emotki: {n}. Do sekcji Ostatnio używane w wyborze i kolejności podpowiedzi. Ulubione zostają.',
       usedNone: 'Nic jeszcze nie zapamiętano. Wstawione emotki pojawią się w Ostatnio używanych w wyborze.',
+      favourites: 'Ulubione',
+      insert: 'Wstaw {code}',
+      loadMore: 'Wczytaj więcej',
+      loadMoreLabel: 'Wczytaj więcej emotek',
+      showLess: 'Pokaż mniej',
+      showLessLabel: 'Pokaż mniej emotek',
+      showing: '{shown} z {total}',
+      loading: 'Wczytywanie…',
+      chipTip: 'Pokaż lub ukryj emotki {provider}',
+      tabTip: 'Emotki 7TV / BTTV / FFZ',
+      emptySearch: 'Brak pasujących emotek',
+      emptyHidden: 'Wszyscy dostawcy są ukryci — włącz któregoś powyżej',
+      emptyLoading: 'Wczytywanie emotek…',
+      emptyGlobalsOff: 'Brak emotek kanału, a globalne są wyłączone — włącz je w ustawieniach',
+      emptyChannel: 'Ten kanał nie ma emotek',
     }),
     pt: Object.freeze({
       close: 'Fechar',
@@ -3341,6 +3613,21 @@
       cancel: 'Cancelar',
       usedNote: 'Emotes lembrados: {n}. Para Usados recentemente no seletor e a ordem do preenchimento automático. Os favoritos ficam.',
       usedNone: 'Nada lembrado ainda. Os emotes que você inserir aparecem em Usados recentemente no seletor.',
+      favourites: 'Favoritos',
+      insert: 'Inserir {code}',
+      loadMore: 'Carregar mais',
+      loadMoreLabel: 'Carregar mais emotes',
+      showLess: 'Ver menos',
+      showLessLabel: 'Ver menos emotes',
+      showing: '{shown} de {total}',
+      loading: 'Carregando…',
+      chipTip: 'Mostrar ou ocultar emotes do {provider}',
+      tabTip: 'Emotes do 7TV / BTTV / FFZ',
+      emptySearch: 'Nenhum emote corresponde',
+      emptyHidden: 'Todos os provedores estão ocultos — ative um acima',
+      emptyLoading: 'Carregando emotes…',
+      emptyGlobalsOff: 'Sem emotes do canal aqui, e os globais estão desativados — ative-os nas configurações',
+      emptyChannel: 'Nenhum emote neste canal',
     }),
     ro: Object.freeze({
       close: 'Închide',
@@ -3367,6 +3654,21 @@
       cancel: 'Anulează',
       usedNote: 'Emote-uri reținute: {n}. Pentru secțiunea Folosite recent și ordinea completării automate. Favoritele rămân.',
       usedNone: 'Nimic reținut încă. Emote-urile pe care le inserezi apar în Folosite recent.',
+      favourites: 'Favorite',
+      insert: 'Inserează {code}',
+      loadMore: 'Încarcă mai multe',
+      loadMoreLabel: 'Încarcă mai multe emote-uri',
+      showLess: 'Mai puține',
+      showLessLabel: 'Arată mai puține emote-uri',
+      showing: '{shown} din {total}',
+      loading: 'Se încarcă…',
+      chipTip: 'Arată sau ascunde emote-urile {provider}',
+      tabTip: 'Emote-uri 7TV / BTTV / FFZ',
+      emptySearch: 'Niciun emote potrivit',
+      emptyHidden: 'Toți furnizorii sunt ascunși — activează unul mai sus',
+      emptyLoading: 'Se încarcă emote-urile…',
+      emptyGlobalsOff: 'Niciun emote al canalului aici, iar cele globale sunt oprite — activează-le din setări',
+      emptyChannel: 'Niciun emote pentru acest canal',
     }),
     ru: Object.freeze({
       close: 'Закрыть',
@@ -3393,6 +3695,21 @@
       cancel: 'Отмена',
       usedNote: 'Запомнено эмоутов: {n}. Для раздела «Недавние» и порядка подсказок. Избранное сохраняется.',
       usedNone: 'Пока ничего не запомнено. Вставленные эмоуты появятся в разделе «Недавние».',
+      favourites: 'Избранное',
+      insert: 'Вставить {code}',
+      loadMore: 'Загрузить ещё',
+      loadMoreLabel: 'Загрузить ещё эмоуты',
+      showLess: 'Свернуть',
+      showLessLabel: 'Показать меньше эмоутов',
+      showing: '{shown} из {total}',
+      loading: 'Загрузка…',
+      chipTip: 'Показать или скрыть эмоуты {provider}',
+      tabTip: 'Эмоуты 7TV / BTTV / FFZ',
+      emptySearch: 'Нет подходящих эмоутов',
+      emptyHidden: 'Все источники скрыты — включите один выше',
+      emptyLoading: 'Эмоуты загружаются…',
+      emptyGlobalsOff: 'Здесь нет эмоутов канала, а глобальные выключены — включите их в настройках',
+      emptyChannel: 'У этого канала нет эмоутов',
     }),
     sk: Object.freeze({
       close: 'Zavrieť',
@@ -3419,6 +3736,21 @@
       cancel: 'Zrušiť',
       usedNote: 'Zapamätané emoty: {n}. Slúžia pre Nedávno použité vo výbere a poradie návrhov. Obľúbené ostanú.',
       usedNone: 'Zatiaľ nič zapamätané. Emoty, ktoré vložíš, sa objavia v Nedávno použitých vo výbere.',
+      favourites: 'Obľúbené',
+      insert: 'Vložiť {code}',
+      loadMore: 'Načítať ďalšie',
+      loadMoreLabel: 'Načítať ďalšie emoty',
+      showLess: 'Zobraziť menej',
+      showLessLabel: 'Zobraziť menej emotov',
+      showing: 'Zobrazené {shown} z {total}',
+      loading: 'Načítava sa…',
+      chipTip: 'Zobraziť alebo skryť emoty {provider}',
+      tabTip: 'Emoty 7TV / BTTV / FFZ',
+      emptySearch: 'Žiadne zodpovedajúce emoty',
+      emptyHidden: 'Všetci poskytovatelia sú skrytí — zapni niektorého vyššie',
+      emptyLoading: 'Emoty sa načítavajú…',
+      emptyGlobalsOff: 'Kanál tu nemá žiadne emoty a globálne emoty sú vypnuté — zapni ich v nastaveniach',
+      emptyChannel: 'Tento kanál nemá žiadne emoty',
     }),
     sv: Object.freeze({
       close: 'Stäng',
@@ -3445,6 +3777,21 @@
       cancel: 'Avbryt',
       usedNote: 'Ihågkomna emotes: {n}. För väljarens Senast använda och ordningen i autoslutförandet. Favoriter behålls.',
       usedNone: 'Inget ihågkommet än. Emotes du infogar visas under Senast använda i väljaren.',
+      favourites: 'Favoriter',
+      insert: 'Infoga {code}',
+      loadMore: 'Läs in fler',
+      loadMoreLabel: 'Läs in fler emotes',
+      showLess: 'Visa färre',
+      showLessLabel: 'Visa färre emotes',
+      showing: 'Visar {shown} av {total}',
+      loading: 'Läser in…',
+      chipTip: 'Visa eller dölj emotes från {provider}',
+      tabTip: 'Emotes från 7TV / BTTV / FFZ',
+      emptySearch: 'Inga matchande emotes',
+      emptyHidden: 'Alla leverantörer är dolda — slå på en ovan',
+      emptyLoading: 'Läser in emotes…',
+      emptyGlobalsOff: 'Inga kanal-emotes här, och globala emotes är av — slå på dem igen i inställningarna',
+      emptyChannel: 'Inga emotes för den här kanalen',
     }),
     th: Object.freeze({
       close: 'ปิด',
@@ -3471,6 +3818,21 @@
       cancel: 'ยกเลิก',
       usedNote: 'อีโมตที่จำไว้: {n} ใช้สำหรับส่วนใช้ล่าสุดในตัวเลือกและลำดับการเติมอัตโนมัติ รายการโปรดยังอยู่',
       usedNone: 'ยังไม่มีอะไรจำไว้ อีโมตที่คุณแทรกจะแสดงในส่วนใช้ล่าสุดของตัวเลือก',
+      favourites: 'รายการโปรด',
+      insert: 'แทรก {code}',
+      loadMore: 'โหลดเพิ่ม',
+      loadMoreLabel: 'โหลดอีโมตเพิ่ม',
+      showLess: 'แสดงน้อยลง',
+      showLessLabel: 'แสดงอีโมตน้อยลง',
+      showing: '{shown} จาก {total}',
+      loading: 'กำลังโหลด…',
+      chipTip: 'แสดงหรือซ่อนอีโมตของ {provider}',
+      tabTip: 'อีโมต 7TV / BTTV / FFZ',
+      emptySearch: 'ไม่มีอีโมตที่ตรงกัน',
+      emptyHidden: 'ซ่อนผู้ให้บริการทั้งหมดอยู่ — เปิดสักรายด้านบน',
+      emptyLoading: 'กำลังโหลดอีโมต…',
+      emptyGlobalsOff: 'ช่องนี้ไม่มีอีโมต และอีโมตทั่วไปปิดอยู่ — เปิดได้ในการตั้งค่า',
+      emptyChannel: 'ไม่มีอีโมตสำหรับช่องนี้',
     }),
     tr: Object.freeze({
       close: 'Kapat',
@@ -3497,6 +3859,21 @@
       cancel: 'İptal',
       usedNote: 'Hatırlanan emote: {n}. Seçicinin Son kullanılanlar bölümü ve otomatik tamamlama sırası için. Favoriler kalır.',
       usedNone: 'Henüz hatırlanan yok. Eklediğin emote’lar seçicinin Son kullanılanlar bölümünde görünür.',
+      favourites: 'Favoriler',
+      insert: '{code} ekle',
+      loadMore: 'Daha fazla',
+      loadMoreLabel: 'Daha fazla emote yükle',
+      showLess: 'Daha az',
+      showLessLabel: 'Daha az emote göster',
+      showing: '{shown} / {total}',
+      loading: 'Yükleniyor…',
+      chipTip: '{provider} emote’larını göster veya gizle',
+      tabTip: '7TV / BTTV / FFZ emote’ları',
+      emptySearch: 'Eşleşen emote yok',
+      emptyHidden: 'Tüm sağlayıcılar gizli — yukarıdan birini aç',
+      emptyLoading: 'Emote’lar yükleniyor…',
+      emptyGlobalsOff: 'Burada kanal emote’u yok ve genel emote’lar kapalı — ayarlardan aç',
+      emptyChannel: 'Bu kanal için emote yok',
     }),
     vi: Object.freeze({
       close: 'Đóng',
@@ -3523,6 +3900,21 @@
       cancel: 'Hủy',
       usedNote: 'Emote đã nhớ: {n}. Dùng cho mục Dùng gần đây trong bộ chọn và thứ tự tự hoàn thành. Mục yêu thích được giữ.',
       usedNone: 'Chưa nhớ gì. Emote bạn chèn sẽ hiện trong mục Dùng gần đây của bộ chọn.',
+      favourites: 'Yêu thích',
+      insert: 'Chèn {code}',
+      loadMore: 'Tải thêm',
+      loadMoreLabel: 'Tải thêm emote',
+      showLess: 'Thu gọn',
+      showLessLabel: 'Hiện ít emote hơn',
+      showing: '{shown}/{total}',
+      loading: 'Đang tải…',
+      chipTip: 'Hiện hoặc ẩn emote {provider}',
+      tabTip: 'Emote 7TV / BTTV / FFZ',
+      emptySearch: 'Không có emote phù hợp',
+      emptyHidden: 'Mọi nhà cung cấp đều đang ẩn — bật lại một cái ở trên',
+      emptyLoading: 'Đang tải emote…',
+      emptyGlobalsOff: 'Kênh không có emote, còn emote toàn cục đang tắt — bật lại trong phần cài đặt',
+      emptyChannel: 'Kênh này không có emote',
     }),
     zh: Object.freeze({
       close: '关闭',
@@ -3549,11 +3941,26 @@
       cancel: '取消',
       usedNote: '已记住的表情：{n}。用于选择器的“最近使用”和自动补全排序。收藏会保留。',
       usedNone: '还没有记住任何表情。你插入的表情会出现在选择器的“最近使用”中。',
+      favourites: '收藏',
+      insert: '插入 {code}',
+      loadMore: '加载更多',
+      loadMoreLabel: '加载更多表情',
+      showLess: '收起',
+      showLessLabel: '显示更少表情',
+      showing: '{shown} / {total}',
+      loading: '加载中…',
+      chipTip: '显示或隐藏 {provider} 表情',
+      tabTip: '7TV / BTTV / FFZ 表情',
+      emptySearch: '没有匹配的表情',
+      emptyHidden: '所有提供方都已隐藏 — 在上方重新打开一个',
+      emptyLoading: '表情加载中…',
+      emptyGlobalsOff: '此频道没有表情，全局表情也已关闭 — 在设置中重新打开',
+      emptyChannel: '此频道没有表情',
     }),
   });
-  function panelText() {
+  function uiText() {
     const lang = kickLang();
-    return Object.hasOwn(PANEL_TEXT, lang) ? PANEL_TEXT[lang] : PANEL_TEXT.en;
+    return Object.hasOwn(UI_TEXT, lang) ? UI_TEXT[lang] : UI_TEXT.en;
   }
 
   // The 7TV+ face as a line glyph in currentColor, for the header mark: the
@@ -3643,7 +4050,7 @@
     const scrollTop = card.scrollTop;
     if (tipAnchor && card.contains(tipAnchor)) hideTooltip();
     const store = settingsLoad();
-    const t = panelText();
+    const t = uiText();
     card.textContent = '';
 
     const head = panelEl('div', 'kte-panel-head');
@@ -3990,7 +4397,7 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'kte-picker-btn';
-    btn.setAttribute('aria-label', `Insert ${code}`);
+    btn.setAttribute('aria-label', uiText().insert.replace('{code}', code));
     btn.dataset.code = code;
     setEmoteTooltip(btn, code, emote.source, emoteHoverUrl(emote));
     if (favHas(code)) btn.dataset.kteFav = '1';
@@ -4330,6 +4737,7 @@
       shown = restoreTo;
     }
 
+    const t = uiText();
     const footer = document.createElement('div');
     footer.className = 'kte-picker-footer';
     const limitEl = document.createElement('p');
@@ -4338,17 +4746,17 @@
     const more = document.createElement('button');
     more.type = 'button';
     more.className = 'kte-picker-more';
-    more.textContent = 'Load more';
-    more.setAttribute('aria-label', 'Load more emotes');
+    more.textContent = t.loadMore;
+    more.setAttribute('aria-label', t.loadMoreLabel);
 
     const less = document.createElement('button');
     less.type = 'button';
     less.className = 'kte-picker-less';
-    less.textContent = 'Show less';
-    less.setAttribute('aria-label', 'Show fewer emotes');
+    less.textContent = t.showLess;
+    less.setAttribute('aria-label', t.showLessLabel);
 
     function sync() {
-      limitEl.textContent = `Showing ${shown} of ${emotes.length}`;
+      limitEl.textContent = t.showing.replace('{shown}', String(shown)).replace('{total}', String(emotes.length));
       section.dataset.kteShown = String(shown);
       more.hidden = shown >= emotes.length;
       less.hidden = shown <= baseShown;
@@ -4359,7 +4767,7 @@
       const next = Math.min(shown + PICKER_PROVIDER_LIMIT, emotes.length);
       more.disabled = true;
       less.disabled = true;
-      more.textContent = 'Loading...';
+      more.textContent = t.loading;
       const content = grid.closest('#kte-picker-content');
       if (content) content._kteAppendingMore = true;
 
@@ -4379,7 +4787,7 @@
         if (!more.isConnected) return;
         more.disabled = false;
         less.disabled = false;
-        more.textContent = 'Load more';
+        more.textContent = t.loadMore;
         sync();
       });
     });
@@ -4477,10 +4885,12 @@
     return grid;
   }
 
-  function pickerBuildSection(label, emotes, savedShown) {
+  // `key` names the section for the shown-count restore (pickerShownCounts),
+  // so it stays the same whatever language `label` is in.
+  function pickerBuildSection(label, emotes, savedShown, key = label) {
     const section = document.createElement('div');
     section.className = 'kte-picker-section grid gap-2';
-    section.dataset.kteLabel = label;
+    section.dataset.kteLabel = key;
 
     const hdr = document.createElement('span');
     hdr.className = 'kte-picker-provider text-xs font-medium text-neutral-400';
@@ -4549,7 +4959,7 @@
     row.className = 'kte-picker-settings';
 
     for (const provider of PROVIDERS) {
-      const chip = pickerBuildChip(provider, `Show or hide ${provider} emotes`);
+      const chip = pickerBuildChip(provider, uiText().chipTip.replace('{provider}', provider));
       chip.dataset.provider = provider;
       pickerChipState(chip, providerEnabled(provider));
       chip.addEventListener('click', () => {
@@ -4603,6 +5013,7 @@
     const sectionsContainer = document.createElement('div');
     sectionsContainer.className = 'grid gap-2';
 
+    const t = uiText();
     const lower = (query ?? '').trim().toLowerCase();
     const groups = new Map();
     for (const [code, emote] of emoteMap) {
@@ -4623,13 +5034,13 @@
     const favourites = pickerFavouriteEmotes(lower);
     if (favourites.length) {
       any = true;
-      sectionsContainer.appendChild(pickerBuildSection('Favourites', favourites, savedShown.get('Favourites')));
+      sectionsContainer.appendChild(pickerBuildSection(t.favourites, favourites, savedShown.get('Favourites'), 'Favourites'));
     }
 
     const recent = pickerRecentEmotes(lower);
     if (recent.length) {
       any = true;
-      sectionsContainer.appendChild(pickerBuildSection('Recently used', recent, savedShown.get('Recently used')));
+      sectionsContainer.appendChild(pickerBuildSection(t.recent, recent, savedShown.get('Recently used'), 'Recently used'));
     }
 
     for (const [source, emotes] of orderedGroups) {
@@ -4665,14 +5076,13 @@
   }
 
   function pickerEmptyMessage(query) {
-    if (query) return 'No matching emotes';
+    const t = uiText();
+    if (query) return t.emptySearch;
     const shown = PROVIDERS.filter(provider => providerEnabled(provider));
-    if (!shown.length) return 'Every provider is hidden — turn one back on above';
-    if (!emotesSettled) return 'Emotes loading…';
-    if (shown.some(provider => !globalsEnabled(provider))) {
-      return 'No channel emotes here, and global emotes are off — turn them back on in Settings';
-    }
-    return 'No emotes for this channel';
+    if (!shown.length) return t.emptyHidden;
+    if (!emotesSettled) return t.emptyLoading;
+    if (shown.some(provider => !globalsEnabled(provider))) return t.emptyGlobalsOff;
+    return t.emptyChannel;
   }
 
   function pickerCommonAncestor(a, b, limit) {
@@ -4928,10 +5338,10 @@
     tab.id = 'kte-picker-tab';
     tab.type = 'button';
     tab.removeAttribute('title');
-    tab.dataset.kteTip = '7TV / BTTV / FFZ emotes';
+    tab.dataset.kteTip = uiText().tabTip;
     tab.addEventListener('mouseenter', () => showTooltip(tab));
     tab.addEventListener('mouseleave', hideTooltip);
-    tab.setAttribute('aria-label', 'Third-party emotes');
+    tab.setAttribute('aria-label', chatSettingsRowLabel());
     tab.setAttribute('data-active', 'false');
     return tab;
   }

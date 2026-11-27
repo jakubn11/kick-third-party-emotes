@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.0] - 2026-11-27
+
+### Added
+- **The 7TV+ picker tab speaks Kick's language.** The Favourites and Recently used headings, **Load more** / **Show less** and the *Showing 40 of 120* count, the empty-tab messages, the provider chips' and the tab's tooltips, and the screen-reader labels now follow the language Kick is shown in, for the same 28 languages as the settings row and panel, and English otherwise. Provider names stay as they are. The tab picks up a language change the next time it's built (opening the picker, or a search). The autocomplete and the right-click menu stay in English.
+
 ## [2.17.0] - 2026-11-27
 
 ### Added

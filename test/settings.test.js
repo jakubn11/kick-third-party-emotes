@@ -29,7 +29,10 @@ var proto = settingsFromRecord(JSON.parse('{"__proto__": {"motion": "never"}, "p
 check('prototype keys are not read as settings', proto.motion === 'always' && proto.providers.BTTV === true);
 
 // pickerEmptyMessage: why the 7TV+ tab is empty.
-load(['pickerEmptyMessage']);
+loadConst(['UI_TEXT']);
+load(['pickerEmptyMessage', 'kickLang', 'uiText']);
+var savedDocument = typeof document === 'undefined' ? undefined : document;
+globalThis.document = { documentElement: { lang: 'en' } };
 var shownSet = new Set(PROVIDERS), globalsOn = new Set(PROVIDERS), emotesSettled = false;
 var providerEnabled = p => shownSet.has(p);
 var globalsEnabled = p => globalsOn.has(p);
@@ -41,3 +44,7 @@ globalsOn.clear();
 check('empty: global sets off points at Settings', /global emotes are off/.test(pickerEmptyMessage('')));
 shownSet.clear();
 check('empty: every provider hidden', /Every provider is hidden/.test(pickerEmptyMessage('')));
+document.documentElement.lang = 'cs';
+check('empty: in Kick\'s language (2.18.0)', /^Všichni poskytovatelé jsou skrytí/.test(pickerEmptyMessage('')) &&
+  pickerEmptyMessage('xyz') === 'Žádné odpovídající emoty');
+if (savedDocument !== undefined) globalThis.document = savedDocument; else delete globalThis.document;
