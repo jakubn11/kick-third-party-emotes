@@ -4,10 +4,9 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.20.0** — the console and manager menu in your language
+**2.21.0** — Ukrainian
 
-- **The manager menu speaks Kick's language.** The **Emote settings** entry in your userscript manager's menu follows the language Kick is shown in (*Nastavení emotů* in Czech), in the language Kick was in when the page loaded.
-- **So does the console.** The start-up line, the duplicate-copy warning and the loading, ready and retry lines follow Kick's language too, for the same 28 languages as the rest of the script, and English otherwise. A provider's *failed* line stays English, for bug reports.
+- **Ukrainian** — Kick offers Ukrainian, and the script showed English there. The settings row and panel, the 7TV+ tab, the right-click menu, autocomplete and the **Emote settings** menu entry now have their own Ukrainian text, so all 28 of Kick's languages are covered.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
