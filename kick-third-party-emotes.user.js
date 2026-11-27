@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.15.10
+// @version      2.15.11
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.15.10';
+  const VERSION = '2.15.11';
 
   // ── Single instance ────────────────────────────────────────────────────
   // Two copies on one page — a manual install left beside the Greasy Fork or
@@ -1390,32 +1390,62 @@
     .kte-switch[aria-checked="true"]::after {
       transform: translate(15px, -50%);
     }
-    /* Family rows in Kick's chat settings menu (2.15.10). They keep their
+    /* Family rows in Kick's chat settings menu (2.15.11). They keep their
        place and Kick's row metrics (cloned), but wear the family look so they
-       read as added by a script: a divider above the first one, the green
-       icon tile from the panels' headers, a green hover. The same block ships
-       in kick-chat-utils for its "Moderation history" row; keep them equal. */
+       read as added by a script: together they sit on one card of the family
+       surface (#101013, hairline border), set a little apart from Kick's rows,
+       with the green icon tile and a green hover. The same block ships in
+       kick-chat-utils for its "Moderation history" row; keep the two equal. */
     #chat-settings-panel li[data-kick-family-row] {
       cursor: pointer;
-    }
-    #chat-settings-panel li:not([data-kick-family-row]) + li[data-kick-family-row] {
       box-sizing: content-box;
-      margin-top: 6px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(255,255,255,.08);
+      border: 0 solid rgba(255,255,255,.08);
+      border-left-width: 1px;
+      border-right-width: 1px;
+      border-radius: 0;
+      background-color: #101013;
+    }
+    /* First of the group: the card's top edge, apart from Kick's rows. */
+    #chat-settings-panel li:not([data-kick-family-row]) + li[data-kick-family-row] {
+      margin-top: 8px;
+      padding-top: 4px;
+      border-top-width: 1px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    /* Last of the group: the card's bottom edge. */
+    #chat-settings-panel li[data-kick-family-row]:not(:has(+ li[data-kick-family-row])) {
+      padding-bottom: 4px;
+      border-bottom-width: 1px;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
     }
     #chat-settings-panel [data-kick-family-hit] {
-      border-radius: 8px;
       transition: background-color .12s ease;
     }
+    #chat-settings-panel [data-kick-family-hit]:not(li) {
+      border-radius: 8px;
+    }
+    /* Kick's own hover colour is dropped; the family green tint goes on top of
+       the card (when the li itself carries Kick's hover classes, it keeps the
+       card's colour under the tint). */
+    #chat-settings-panel [data-kick-family-hit]:not(li):hover,
+    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-hit]:not(li) {
+      background-color: transparent !important;
+    }
+    #chat-settings-panel li[data-kick-family-row][data-kick-family-hit]:hover,
+    #chat-settings-panel li[data-kick-family-row][data-kick-family-hit]:focus-visible {
+      background-color: #101013 !important;
+    }
     #chat-settings-panel [data-kick-family-hit]:hover,
-    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-hit] {
-      background: rgba(34,197,94,.1) !important;
+    #chat-settings-panel li[data-kick-family-row]:focus-visible [data-kick-family-hit],
+    #chat-settings-panel li[data-kick-family-row][data-kick-family-hit]:focus-visible {
+      background-image: linear-gradient(rgba(34,197,94,.1), rgba(34,197,94,.1)) !important;
     }
     #chat-settings-panel li[data-kick-family-row]:focus-visible {
       outline: 2px solid rgba(34,197,94,.65);
       outline-offset: -2px;
-      border-radius: 8px;
     }
     #chat-settings-panel [data-kick-family-tile] {
       flex: none;
