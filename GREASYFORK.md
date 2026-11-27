@@ -4,9 +4,10 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.18.0** — the picker tab in your language
+**2.19.0** — the whole script in your language
 
-- **The 7TV+ picker tab speaks Kick's language.** The Favourites and Recently used headings, **Load more** / **Show less** and the *Showing 40 of 120* count, the empty-tab messages, the tooltips and the screen-reader labels now follow the language Kick is shown in, for the same 28 languages as the settings row and panel, and English otherwise. Provider names stay as they are. The autocomplete and right-click menu stay in English.
+- **The right-click menu and autocomplete speak Kick's language.** The emote menu's *Add to favourites* / *Remove from favourites*, *Copy name*, *Copy image URL* and *Open on 7TV/BTTV/FFZ*, and the autocomplete's heading and key hint, now follow the language Kick is shown in, for the same 28 languages as the rest of the script, and English otherwise. The hint keeps the key names as they are on the keyboard.
+- **Everything is translated now.** With 2.16.0–2.19.0, the settings row, settings panel, 7TV+ picker tab, right-click menu and autocomplete all follow Kick's language. Provider names and emote names stay as they are.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
@@ -20,7 +21,7 @@ Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes
 - **Favourites** — star emotes from the right-click menu; up to 100 are kept
 - **Right-click menu** — favourite an emote, copy its name or image URL, or open its 7TV/BTTV/FFZ page
 - **7TV+ picker tab** inside Kick's emote picker, with Favourites and Recently used sections, search (closest names first), and **Load more** / **Show less** per provider (40 at a time)
-- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker; the settings panel switches off each provider's global emotes, sets how animated emotes play, resizes emotes in chat (24, 28 or 36 px), turns autocomplete or the large preview off, and shows your recently used emotes with a button to clear them. Changes apply instantly and carry over to your other open Kick tabs. The settings row, the settings panel and the 7TV+ tab follow the language Kick is shown in (28 languages, English otherwise)
+- **Settings** — turn 7TV, BTTV or FFZ off from chips in the picker; the settings panel switches off each provider's global emotes, sets how animated emotes play, resizes emotes in chat (24, 28 or 36 px), turns autocomplete or the large preview off, and shows your recently used emotes with a button to clear them. Changes apply instantly and carry over to your other open Kick tabs. Everything the script shows follows the language Kick is shown in (28 languages, English otherwise)
 - **Fast repeat visits** — emote sets are cached locally and refreshed in the background
 - A dark popup style with a green accent that matches the other kick-* userscripts
 
