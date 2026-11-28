@@ -146,7 +146,7 @@ When fixing Kick DOM breakage, prefer adding fallback selectors rather than repl
 
 ## UI Design System
 
-The family-wide spec (palette, type, radii, shadows, components, states, motion, layers) is [DESIGN.md](DESIGN.md), word for word the same in every kick-* repo and checked by `test/family-style.js`. Read it before adding or restyling UI. This section keeps only what is specific to this script; where the two disagree, DESIGN.md wins.
+The family-wide spec (palette, type, radii, shadows, components, states, motion, layers) is [DESIGN.md](../DESIGN.md), word for word the same in every kick-* repo and checked by `test/family-style.js`. Read it before adding or restyling UI. This section keeps only what is specific to this script; where the two disagree, DESIGN.md wins.
 
 Every value is a literal in `_style.textContent`. Earlier versions of this file listed `--kte-bg`, `--kte-green` and similar as if the script defined CSS variables; it never has, so don't add them or write `var(--kte-…)`.
 
