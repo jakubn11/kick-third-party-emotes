@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.2] - 2026-11-28
+
+### Fixed
+- **The settings panel's close button uses the script's own tooltip.** It showed the browser's plain tooltip; it now shows the same dark tooltip as the script's other controls.
+- **Reduced motion in the emote picker.** With *reduce motion* switched on in your system, the provider row at the top of the 7TV+ tab now fades in place as the grid scrolls instead of sliding up.
+
 ## [2.21.1] - 2026-11-28
 
 ### Fixed

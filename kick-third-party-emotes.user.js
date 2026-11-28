@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.21.1
+// @version      2.21.2
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.21.1';
+  const VERSION = '2.21.2';
 
   // ── Words in Kick's language ───────────────────────────────────────────
   // Every word the script shows, in Kick's language, English for any other:
@@ -3101,6 +3101,14 @@
       #kte-panel {
         animation: none;
       }
+      /* The picker's settings row fades in place instead of sliding up (2.21.2),
+         as kick-fullscreen-chat's toast does. */
+      .kte-picker-settings {
+        transition: opacity .12s ease;
+      }
+      .kte-picker-settings[data-kte-hidden="1"] {
+        transform: none;
+      }
       #kte-panel .kte-chip,
       .kte-panel-recent-emote,
       .kte-panel-close,
@@ -4561,7 +4569,11 @@
     close.type = 'button';
     close.dataset.kteKey = 'close';
     close.setAttribute('aria-label', t.close);
-    close.title = t.close;
+    // The script's own tooltip, not a native title (2.21.2), as on every other
+    // control it adds.
+    close.dataset.kteTip = t.close;
+    close.addEventListener('mouseenter', () => showTooltip(close));
+    close.addEventListener('mouseleave', hideTooltip);
     close.addEventListener('click', settingsPanelClose);
     head.append(mark, titles, close);
     card.appendChild(head);
