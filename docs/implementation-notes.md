@@ -185,3 +185,81 @@ family palette — do not add more without the same kind of justification.
 - `.kte-picker-more` — picker action button (green background tint, green border)
 - `.kte-picker-settings` / `.kte-chip` — the picker's settings row, a rounded card that auto-hides while the grid is scrolled. Its three chips share the row in equal grid columns, with a 6px inset all round and a 14px radius (the chip's 8px plus the inset). Its surface is the settings panel's inset group (`rgba(255,255,255,.026)`, `rgba(255,255,255,.06)` border), not the popups' opaque `#101013`, which reads as a black hole on Kick's grey panel; it hides before the grid scrolls under it, so it needs no opacity. It slides up as it hides; under `prefers-reduced-motion` it only fades (2.21.2). It counts as its own component for the one-accent rule: its accent is the selected-chip treatment (matching kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected`), which is why green appears here as well as on `.kte-picker-more`. Provider chips override it with their own brand colour when enabled — same justification as the source badges.
 
+## Tests
+
+Moved here word for word from AGENTS.md (2026-11-28).
+
+The userscript is one IIFE that touches the DOM as it loads, so the tests don't run it. `test/harness.js` pulls individual functions (`load([...])`) or top-level `const`s (`loadConst([...])`) out of the source by name and evaluates them globally; each test stubs whatever those reference (`localStorage`, `GM_xmlhttpRequest`, `setTimeout`, `matchMedia`, sibling functions) and calls `check(label, condition)`. jsc has no `URL`, so the harness supplies a minimal one. Each test file runs in its own `jsc` process.
+
+What is covered: emote precedence (`rebuildEmoteMap`), `fetchJSON`'s error paths and `init()`'s retry backoff, the cache budget, sweep and timestamps, `ffzEntries` against a trimmed live FFZ room (`test/fixtures/`), `emoteDisplayUrl` under reduced motion, `currentChannelSlug`, the emote menu's press guard and Esc (`emoteMenuGuard`, `emoteMenuKeydown`), the picker search debounce and result order (`pickerCompareEmotes`), the picker's restore of expanded groups across rebuilds (`pickerShownCounts` / `pickerRestoredShown`), autocomplete attach, saved settings and cross-tab sync (`settingsFromRecord`, `settingsUpdate`, `onStorageSync`), which control the settings panel refocuses after a rebuild (`panelFocusTarget`), the settings panel's, picker's, right-click menu's and autocomplete's text in every language (`uiText`, `UI_TEXT`), and which keys autocomplete takes from Kick (`acOnKeydown`). DOM processing, the picker and autocomplete are not — they still need the manual steps below; `familyTrapTab`'s Tab wrapping and what it skips (`test/focus-trap.test.js`).
+
+Renaming a function or `const` that a test loads breaks that test loudly (`no function …`), which is the point: update the test with it. When fixing a bug in pure logic, add a check that fails without the fix.
+
+Useful local checks:
+
+```bash
+sed -n '1,80p' kick-third-party-emotes.user.js
+wc -l kick-third-party-emotes.user.js INSTALL.md
+```
+
+## Implementation Map — moved from AGENTS.md
+
+Moved here word for word from AGENTS.md (2026-11-28).
+
+`kick-third-party-emotes.user.js`, in order. Full write-ups are under the same headings in the notes.
+
+- Metadata and constants; `VERSION` (logged at boot, named in the duplicate warning); `UI_TEXT`; single-instance guard on `<html>` (the sandbox may not share `window`).
+- Cache (`kte_v5_` prefix, swept once per load), usage tracker (`kte_v2_usage`), favourites (`kte_v2_favs`), settings (`kte_v2_settings`).
+- Settings panel `#kte-panel`, opened from a row in Kick's chat settings menu (`#kte-chat-settings-row`) and the manager menu command. The picker's chip row stays providers-only.
+- Cross-tab sync `onStorageSync()`.
+- Provider layers `loadedProviders` / `activeLoaders`, `rebuildEmoteMap()`, `loaderRank`.
+- Emote context menu `#kte-menu` (chat and picker emotes).
+- Channel lookup `kickChannel` → `sevenTvKickUser` / `ffzRoom` → `channelTwitchId`, memoised in `channelLookups`.
+- Provider loaders (BTTV, 7TV, FFZ) through `cachedLoad()`; message processing; autocomplete; the one body-wide chat `MutationObserver`; SPA route detection.
+
+Central structure: `Map<code, { url, source, animated, zeroWidth, staticUrl? }>`. On a code clash, every channel set outranks every global set, then `PROVIDERS` order (7TV, BTTV, FFZ).
+
+## Checks — run mentally before every commit
+
+Moved here word for word from AGENTS.md (2026-11-28).
+
+- Does any new code assign untrusted data to `innerHTML` or similar? → Fix it.
+- Does any new code load an image URL without going through `safeUrl`? → Fix it.
+- Does any new code add a `title` attribute to an injected element? → Replace with `data-kte-tip`.
+- Does any new code fetch from a domain not in `@connect`? → Add it to the metadata and justify why.
+- Does any new code introduce a new `localStorage` key? → Make sure reads are validated.
+- Does any new code use string-based dynamic execution (`eval`, etc.)? → Remove it.
+
+## Before Every Commit — moved from AGENTS.md
+
+Moved here word for word from AGENTS.md (2026-11-28): the version table and the release steps.
+
+Before committing any change, always:
+
+1. **Run `test/run.sh`** (see **Commands**) — it runs the syntax check and the tests, and must end with `all tests passed`. Add or update tests for any logic you change.
+2. **Bump `@version`** in the `kick-third-party-emotes.user.js` metadata header using these rules:
+
+   | Change | Bump | Example |
+   |---|---|---|
+   | New user-facing feature — new provider, new UI component, new keyboard shortcut | **minor** `x.+1.0` | `2.6.x → 2.7.0` |
+   | Bug fix, style tweak, refactor, internal change | **patch** `x.x.+1` | `2.6.x → 2.6.x+1` |
+   | Breaking change or full rewrite | **major** `+1.0.0` | `2.x.x → 3.0.0` |
+
+   Bump the `VERSION` constant inside the IIFE to the same value — it is what the boot line and the duplicate warning report. Verify both with:
+
+   ```bash
+   grep -n "@version\|const VERSION" kick-third-party-emotes.user.js
+   ```
+
+3. **Update `CHANGELOG.md`** — add an entry under the new version with a short summary of what changed.
+4. **Update `README.md`** if the change is user-facing: new or removed features, changed behaviour, new keyboard shortcuts, provider changes, or updated troubleshooting steps. Internal refactors and bug fixes that don't change user-facing behaviour do not require a README update.
+5. **Suggest a GitHub Release** after every commit if any of the following apply — say "this looks like a good point to publish a GitHub Release":
+   - A security fix was made
+   - A user-facing feature was added (new provider, new UI component, new keyboard shortcut)
+   - A bug affecting core functionality was fixed (emotes not loading, autocomplete broken, picker missing)
+
+   Do NOT suggest a release for: docs-only changes, internal refactors, formatting, style tweaks the user won't notice.
+
+   A release is what ships to users. Create it from the `vX.Y.Z` tag, attach `kick-third-party-emotes.user.js` under exactly that name, and use notes from the `release-notes` skill. Publish it promptly after pushing a version: until then, auto-updating users stay on the previous release. Before tagging, refresh **Latest changes** in `GREASYFORK.md` (the `release-notes` skill does this). Once the [Greasy Fork](https://greasyfork.org/scripts/578174-kick-third-party-emotes) listing's sync is set up (code from the latest-release URL above, page description from `GREASYFORK.md` on `main`, plus a GitHub webhook), publishing the release updates Greasy Fork too. Until then, upload the same version there by hand — Greasy Fork installs update only from Greasy Fork.
+
+**Commit when a task is finished** and the checks above pass — one commit per finished task, in this repo's commit-message style. **Push only when the user asks.**
