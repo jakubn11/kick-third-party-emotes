@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.1] - 2026-11-28
+
+### Fixed
+- **The Third-party emotes row's hover matches the family buttons.** Kick's own grey hover still sat under the row's green tint in the chat settings menu, so on hover the row turned a lighter grey-green than the other kick-* buttons. The row now drops Kick's hover styling and shows only the family's green tint over the dark card.
+
 ## [2.21.0] - 2026-11-27
 
 ### Added

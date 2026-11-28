@@ -71,7 +71,7 @@ check('init() adds the row at startup, after starting the observer', observerAt 
   };
   globalThis.chatSettingsRowOpen = () => {};
   loadConst(['CHAT_SETTINGS_ROW_LABELS']);
-  load(['panelMarkIcon', 'kickLang', 'chatSettingsRowLabel', 'chatSettingsBuildRow']);
+  load(['panelMarkIcon', 'kickLang', 'chatSettingsRowLabel', 'familyRowStripKickStates', 'chatSettingsBuildRow']);
 
   var li = new Node('li', 'h-10 px-1.5');
   var div = li.appendChild(new Node('div', 'flex items-center hover:bg-surface-tint rounded'));
@@ -85,6 +85,16 @@ check('init() adds the row at startup, after starting the observer', observerAt 
   check('the chevron is swapped for the tile holding the panel mark',
     !!tile && tile.kids[0].tag === 'svg' && !row.all().some(n => n.getAttribute('data-ds-icon') === 'ChevronRight'));
   check('Kick\'s own row is untouched', !li.hasAttribute('data-kick-family-row') && div.kids[1] === chev);
+
+  // Kick's layered !important hover would outrank the family hover (2.21.1).
+  var stateLi = new Node('li', 'h-10 betterhover:hover:bg-[#2A2D32]! focus-within:bg-[#2A2D32]! px-1.5');
+  var stateDiv = stateLi.appendChild(new Node('div', 'flex data-highlighted:bg-state-hovered hover:bg-white/10 active:scale-95 rounded'));
+  stateDiv.appendChild(new Node('span'));
+  stateDiv.appendChild(new Node('svg'));
+  var stateRow = chatSettingsBuildRow(stateLi);
+  check('Kick\'s hover, focus and highlight classes come off the copy, the rest stay',
+    stateRow.getAttribute('class') === 'h-10 px-1.5' && stateRow.kids[0].getAttribute('class') === 'flex rounded');
+  check('…and stay on Kick\'s own row', stateLi.getAttribute('class').includes('betterhover:hover:'));
 
   var labelOf = r => r.all().find(n => n.hasAttribute('data-kick-family-label'));
   check('the label is English by default, and tagged', labelOf(row) && labelOf(row).text === 'Third-party emotes');
