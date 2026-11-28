@@ -14,7 +14,7 @@ Browser userscript that adds BetterTTV, 7TV, and FrankerFaceZ emotes to Kick.com
 
 There is no package manager, build step, or linter. Tests run on macOS's built-in JavaScript engine, with no Node or dependencies:
 
-- Tests: `test/run.sh` — the one entry point: runs the syntax check below, then every `test/*.test.js`, then `test/family-style.js` (shared by all five kick-* repos; only its config block differs) checks that every colour in the script is a family colour or a listed exception with its reason, and that the *Family rows* CSS block (up to its `/* End of family rows` marker) matches the copy in kick-chat-utils, when that repo is checked out next to this one. It exits non-zero on any failure, including a test file that throws partway (jsc's exit code is checked, not just the FAIL/PASS lines).
+- Tests: `test/run.sh` — the one entry point: runs the syntax check below, then every `test/*.test.js`, then `test/family-style.js` (shared by all five kick-* repos; only its config block differs) checks that every colour in the script is a family colour or a listed exception with its reason, and that the *Family rows* CSS block (up to its `/* End of family rows` marker) matches the copy in kick-chat-utils, when that repo is checked out next to this one, that `DESIGN.md` matches every sibling repo's copy and names every family colour. It exits non-zero on any failure, including a test file that throws partway (jsc's exit code is checked, not just the FAIL/PASS lines).
 - There is no CI — don't add GitHub workflows. `test/run.sh` is the gate, run locally before every commit.
 
 - Syntax check: `node --check kick-third-party-emotes.user.js`. Without Node installed, macOS ships a JavaScript engine that can parse-check without executing (the file is an IIFE, so it must not be *run* to be checked):
@@ -246,25 +246,17 @@ If modifying autocomplete, test both insertion and keyboard handling in the actu
 
 ## UI Design System
 
-Part of the **kick-\* family** design language (shared with the sibling `kick-fullscreen-chat`, `kick-quality-saver`, `kick-chat-utils`, and `kick-vod-resume` userscripts). All script-injected UI must follow this design language consistently. Do not deviate from it when adding new popups, overlays, or controls.
+The family-wide spec (palette, type, radii, shadows, components, states, motion, layers) is [DESIGN.md](DESIGN.md), word for word the same in every kick-* repo and checked by `test/family-style.js`. Read it before adding or restyling UI. This section keeps only what is specific to this script; where the two disagree, DESIGN.md wins.
 
-> **These are literal values, not CSS variables.** This table used to list `--kte-bg`, `--kte-green`, `--kte-border`, `--kte-text`, `--kte-muted` and `--kte-hover` as though the script defined custom properties. **It never has** — every value below is hardcoded in `_style.textContent`. If you came here looking for those variables, they don't exist; don't add them, and don't write `var(--kte-…)` in new rules. The family has no build step and no auto-update, so each script stays self-contained.
+Every value is a literal in `_style.textContent`. Earlier versions of this file listed `--kte-bg`, `--kte-green` and similar as if the script defined CSS variables; it never has, so don't add them or write `var(--kte-…)`.
 
-### Palette
-
-Values as actually used in the script (verified against `_style.textContent`):
+### Script-specific colours
 
 | Value | Usage |
 |---|---|
-| `#101013` | All popup/overlay backgrounds (`#kte-tip`, `#kte-ac`, `#kte-menu`) |
-| `#22c55e` | Signature accent — used exactly once per component |
-| `rgba(255,255,255,.1)` | Neutral borders on all sides |
-| `#fff` | Primary text (emote names, labels) |
-| `rgba(255,255,255,.4)` | Hint text (`#kte-ac-footer`) — the family's section-label / note grey |
+| `rgba(255,255,255,.4)` | Hint text (`#kte-ac-footer`) — the family's note grey |
 | `rgba(255,255,255,.25)` | The tooltip's `·` separator |
-| `rgba(255,255,255,.05)` / `.09` / `.85` | Chip at rest: fill / border / text (the family chip) |
-| `rgba(34,197,94,.1)` | Row / button hover/focus background |
-| `#71717a` | Dimmed/disabled hint text |
+| `#71717a` / `#efeff1` | Muted and primary text inside the 7TV+ tab, matching Kick's own emote picker around it |
 
 Provider brand colours are **deliberately not** family colours — telling sources apart at a
 glance is the feature: 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, anything else `#22c55e`.
@@ -272,22 +264,16 @@ glance is the feature: 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, anything el
 The favourite star (`#facc15`, used by `.kte-tip-star`, `.kte-ac-fav`, and the picker button's
 `::after` badge) is a semantic colour in the same sense: gold is the universal "starred"
 affordance, and reusing `#22c55e` would both break the one-accent-per-component rule and make
-the marker read as structure rather than state. It is the only non-provider colour outside the
+the marker read as structure rather than state. Apart from the 7TV+ tab's Kick-matching text, it is the only non-provider colour outside the
 family palette — do not add more without the same kind of justification.
 
 ### Rules
 
-- **One green accent per component.** Use `#22c55e` for one element only — a header label, the hover/selected tint, or a badge. Never paint large surfaces green, and **no coloured accent borders** (2.12.4 dropped the tooltip's and menu's left stripe and the autocomplete's top bar, which no sibling script has).
-- **Backgrounds:** opaque `#101013` with `backdrop-filter: blur(10px)`.
-- **Borders:** `rgba(255,255,255,.1)` on all sides.
-- **Box shadow:** small surfaces (`#kte-tip`, `#kte-menu`) take the family shadow `0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06)`; the autocomplete panel takes the family panel shadow `0 24px 64px -16px rgba(0,0,0,.8), 0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06)`, as kick-fullscreen-chat's and kick-quality-saver's settings cards do.
-- **Border radius:** the family's two steps — `8px` for controls and small popups (`#kte-tip`, `#kte-menu`, `.kte-chip`, `.kte-picker-more`), `14px` for panels (`#kte-ac`, `.kte-picker-settings`). The one exception is the picker's emote cells (`4px`), which mirror Kick's own grid.
-- **Typography:** `font-family: system-ui, -apple-system, "Segoe UI", sans-serif` — the family stack, shared with the sibling scripts. `font-weight: 600` for labels and names, `500` for hint text, matching the siblings' panels. *(Until 2.8.5 this was a bare `sans-serif`, which fell through to the browser default on Windows instead of Segoe UI.)*
-- **Chips** (`.kte-chip`) are the family chip — kick-fullscreen-chat's `.kfc-settings-chip`, kick-quality-saver's `.kqs-chip`: `8px` radius, `600 12px/1`, neutral `rgba(255,255,255,.05)` fill / `.09` border / `.85` text at rest, `.09` / `.16` / `#fff` on hover, and the green selected treatment (or the provider's brand colour) when on.
+- **Popups:** `#kte-tip` and `#kte-menu` are DESIGN.md's small popups; `#kte-ac` (autocomplete) is a large one (`14px`, the card shadow). Their rows and menu items take the green hover tint.
+- **Radius exception:** the picker's emote cells are `4px`, mirroring Kick's own grid.
 - **Source badges**: per-provider colors at `opacity: .85`, `font-size: 10px`, `font-weight: 600` — 7TV `#4da6ff`, BTTV `#ff6b6b`, FFZ `#c084fc`, other `#22c55e`.
-- **Hover states:** rows and menu items take a `rgba(34,197,94,.1)` background with no border change. The picker's **Load more** — the one accent-filled button — uses the family's selected-chip treatment instead: `rgba(34,197,94,.14)` fill / `rgba(34,197,94,.5)` border / `#4ade80` text at rest, hovering to `.18` / `.6`. Keep it in step with kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected` and kick-quality-saver's `.kqs-chip[data-active]`. **Show less** (`.kte-picker-less`), beside it once a group has been expanded, is the neutral family chip at rest so the green stays Load more's alone, with a grey minus disc matching Load more's plus disc (the disc is what sets both buttons' 32px height). The pair sits in `.kte-picker-actions` so it wraps as one under the count on a narrow picker; it trims the grid back to the children it had when the footer was built, unobserving and unloading the removed images. Each section records its count in `data-kte-shown` (keyed by `data-kte-label`), and `pickerRefreshContent()` passes those counts into the rebuild when the channel and search are unchanged, so starring an emote, a provider refresh or another tab's insert doesn't fold expanded groups back to 40.
-- **Transitions:** `transition: background .08s` on interactive rows/buttons (the picker uses `.12s ease`).
-- **No drop shadows in green.** Shadows are always `rgba(0,0,0,…)`.
+- **Load more and Show less:** the picker's **Load more** — the one accent-filled button — uses the family's selected-chip treatment: `rgba(34,197,94,.14)` fill / `rgba(34,197,94,.5)` border / `#4ade80` text at rest, hovering to `.18` / `.6`. Keep it in step with kick-fullscreen-chat's `.kfc-settings-chip.kfc-selected` and kick-quality-saver's `.kqs-chip[data-active]`. **Show less** (`.kte-picker-less`), beside it once a group has been expanded, is the neutral family chip at rest so the green stays Load more's alone, with a grey minus disc matching Load more's plus disc (the disc is what sets both buttons' 32px height). The pair sits in `.kte-picker-actions` so it wraps as one under the count on a narrow picker; it trims the grid back to the children it had when the footer was built, unobserving and unloading the removed images. Each section records its count in `data-kte-shown` (keyed by `data-kte-label`), and `pickerRefreshContent()` passes those counts into the rebuild when the channel and search are unchanged, so starring an emote, a provider refresh or another tab's insert doesn't fold expanded groups back to 40.
+- **Transitions:** popup rows and buttons fade their background over `.08s`; the picker's chips and buttons use `.12s ease`.
 - **Tooltips** (`#kte-tip`): use the shared `showTooltip(el)` / `hideTooltip()` helpers. Wire via `data-kte-tip` attribute and `mouseenter`/`mouseleave` events. Do not use native `title` attributes on any script-injected element. The tooltip is `position: fixed` and tracks its anchor through the module-level `tipAnchor` plus a capture-phase `scroll` listener — `mouseenter`/`mouseleave` alone are not enough, because chat scrolls under a stationary cursor and a recycled row is removed without ever firing `mouseleave`.
 
 ### Reference implementations
@@ -340,6 +326,8 @@ Manual testing is required in a browser with a userscript manager installed:
 ## Documentation
 
 Update `INSTALL.md` when installation steps, supported providers, troubleshooting guidance, or user-visible behavior changes.
+
+`DESIGN.md` is the kick-* family design spec, shared word for word by all five repos: change it in every repo at once (the command is at its top), never in one.
 
 `GREASYFORK.md` is the Greasy Fork page description, written for people reading the listing: what the script does now, a **Latest changes** section for the newest version, and no installation steps. Keep its features, numbers, permissions and storage keys in step with the code, as for `README.md`.
 
