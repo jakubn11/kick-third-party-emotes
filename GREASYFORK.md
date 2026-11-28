@@ -4,9 +4,9 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.21.0** — Ukrainian
+**2.21.1** — Settings row hover fix
 
-- **Ukrainian** — Kick offers Ukrainian, and the script showed English there. The settings row and panel, the 7TV+ tab, the right-click menu, autocomplete and the **Emote settings** menu entry now have their own Ukrainian text, so all 28 of Kick's languages are covered.
+- **Third-party emotes row** — in Kick's chat settings menu, the row turned a lighter grey-green on hover because Kick's own grey hover showed through. It now shows the same green tint as the script's other buttons.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
