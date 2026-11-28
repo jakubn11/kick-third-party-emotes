@@ -4,9 +4,10 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.21.1** — Settings row hover fix
+**2.21.2** — Close button tooltip and reduced motion
 
-- **Third-party emotes row** — in Kick's chat settings menu, the row turned a lighter grey-green on hover because Kick's own grey hover showed through. It now shows the same green tint as the script's other buttons.
+- **Close button tooltip** — the settings panel's ✕ showed the browser's plain tooltip; it now shows the same dark tooltip as the script's other controls.
+- **Reduced motion** — with *reduce motion* on in your system, the provider row at the top of the 7TV+ tab now fades in place as the grid scrolls instead of sliding up.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
