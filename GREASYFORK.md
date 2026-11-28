@@ -4,10 +4,9 @@ Brings **BetterTTV**, **7TV** and **FrankerFaceZ** emotes to **Kick.com chat** �
 
 ## Latest changes
 
-**2.21.2** — Close button tooltip and reduced motion
+**2.21.3** — Tab stays inside the settings panel
 
-- **Close button tooltip** — the settings panel's ✕ showed the browser's plain tooltip; it now shows the same dark tooltip as the script's other controls.
-- **Reduced motion** — with *reduce motion* on in your system, the provider row at the top of the 7TV+ tab now fades in place as the grid scrolls instead of sliding up.
+- **Keyboard focus** — Tab on the settings panel's last control wraps back to the first, Shift+Tab on the first wraps to the last, and Tab from elsewhere moves into the panel, so focus no longer wanders off to the page behind it.
 
 Full history: [CHANGELOG.md](https://github.com/jakubn11/kick-third-party-emotes/blob/main/CHANGELOG.md)
 
