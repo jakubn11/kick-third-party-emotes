@@ -100,6 +100,7 @@ Buttons over the player and on toasts: kick-fullscreen-chat's Chat and control b
 
 - `#101013`, `1px solid rgba(255,255,255,.1)`, `8px` radius, the small shadow, `blur(10px)`, `#fff` text in `500 13px/1.2`
 - Padding `7px 12px` with text, `7px` icon-only; an `18px` icon in `#22c55e`. Every one is 34px tall, so they line up side by side.
+- One variant sits inside Kick's own chat bar rather than over the player: the **Show more** button that folds points, Kicks and drops (kick-fullscreen-chat's `#kfc-bar-more` in its side chat, kick-chat-utils' `#kcu-bar-more` in normal view). It is `32px` tall, Kick's row height beside its send button, with `0 11px 0 7px` padding and no blur, since its surface is opaque. Open, it takes the pressed tint and its chevron turns up.
 - Hover and focus: `linear-gradient(rgba(34,197,94,.1), rgba(34,197,94,.1)), #101013`, faded with `transition: background .08s`
 - Pressed (a toggle that is on): `linear-gradient(rgba(34,197,94,.18), rgba(34,197,94,.18)), #101013` with a `rgba(34,197,94,.5)` border. A one-shot action has no pressed state.
 - Disabled: `opacity: .3; pointer-events: none`
