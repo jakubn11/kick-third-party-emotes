@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kick Third-Party Emotes
 // @namespace    https://kick.com
-// @version      2.21.2
+// @version      2.21.3
 // @description  Adds BetterTTV, 7TV & FrankerFaceZ emotes to Kick.com chat — animated & zero-width emotes, usage-ranked autocomplete, favourites, hover previews, right-click emote menu, native picker tab with recents, and settings for providers, global sets, animation, emote size, previews & autocomplete
 // @author       jakubnl94@gmail.com
 // @license      GPL-3.0-only
@@ -27,7 +27,7 @@
   // It names the running build in the boot line and in the duplicate warning
   // below — the only way to tell which copy is running once auto-update, a
   // Greasy Fork install and a manual copy can all be in play.
-  const VERSION = '2.21.2';
+  const VERSION = '2.21.3';
 
   // ── Words in Kick's language ───────────────────────────────────────────
   // Every word the script shows, in Kick's language, English for any other:
@@ -4713,9 +4713,33 @@
     return strip;
   }
 
+  // Keeps Tab inside an open card (DESIGN.md, 2.21.3): Tab from the last control
+  // wraps to the first, Shift+Tab from the first wraps to the last, and a Tab
+  // pressed while focus is outside the card brings it to the card's first (or,
+  // with Shift, last) control. Hidden and disabled controls are skipped.
+  function familyTrapTab(e, card) {
+    if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey || !card || !card.isConnected) return;
+    const items = Array.from(card.querySelectorAll('button, [href], input, select, textarea, [tabindex]'))
+      .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    let target = null;
+    if (!card.contains(active)) target = e.shiftKey ? last : first;
+    else if (!e.shiftKey && active === last) target = first;
+    else if (e.shiftKey && active === first) target = last;
+    if (!target) return;
+    e.preventDefault();
+    e.stopPropagation();
+    target.focus();
+  }
+
   // Escape closes the panel, swallowed so the same press can't also close
-  // something of Kick's. Only listening while the panel is open.
+  // something of Kick's; Tab stays inside it. Only listening while the panel
+  // is open.
   function settingsPanelKeydown(e) {
+    if (e.key === 'Tab') { familyTrapTab(e, panelBackdrop?.querySelector('#kte-panel')); return; }
     if (e.key !== 'Escape') return;
     e.preventDefault();
     e.stopPropagation();

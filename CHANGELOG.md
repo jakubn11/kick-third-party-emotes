@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.3] - 2026-11-28
+
+### Fixed
+- **Tab stays inside the settings panel.** Tab on its last control wraps back to the first, Shift+Tab on the first wraps to the last, and Tab from elsewhere moves into the panel, so keyboard focus no longer wanders off to the page behind the backdrop.
+
 ## [2.21.2] - 2026-11-28
 
 ### Fixed

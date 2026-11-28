@@ -198,12 +198,11 @@ UI that must appear in fullscreen is appended to the fullscreen element, not `do
 
 - Icon-only buttons carry an `aria-label`; decorative icons are `aria-hidden`.
 - Switches are `role="switch"` with `aria-checked`. Toggle chips expose their state with `aria-pressed`. Toasts are `role="status"`. Cards are `role="dialog"` with a name.
-- Settings cards close on Esc, on a click outside and on their ✕, and keep keyboard focus inside while open.
+- Settings cards close on Esc, on a click outside and on their ✕, and keep keyboard focus inside while open: Tab from the last control wraps to the first, Shift+Tab from the first to the last, and a Tab from outside lands in the card. Every script with a card does this with the same `familyTrapTab(e, card)` function, called from the card's keydown listener; change all four copies together.
 - Every visible word comes from the script's translation tables and follows the language Kick is shown in. Words that must fit a fixed width (chips, badges) are checked in the longest languages.
 
 ## Known gaps
 
 Places where a script doesn't meet this file yet. Fix them when touching that code, and remove the line here (in every copy) once fixed.
 
-- **kick-fullscreen-chat:** the settings panel doesn't close on Esc and has no `role="dialog"`.
-- **kick-fullscreen-chat, kick-quality-saver, kick-chat-utils:** Tab can leave an open card; only kick-third-party-emotes keeps focus inside.
+None right now.
